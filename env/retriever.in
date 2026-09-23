@@ -1,0 +1,10 @@
+# CUDA PyTorch / FAISS / Java are managed by micromamba; see setup.sh.
+transformers==4.47.1
+datasets==2.21.0
+pyserini==0.44.0
+numpy==1.26.4
+uvicorn
+fastapi
+# Pyserini 0.44 creates an unused OpenAI client during local BM25 imports.
+# SDK 3.x rejects its empty key; 1.x preserves the original import behavior.
+openai==1.59.9

@@ -276,6 +276,7 @@ class LLMGenerationManager:
             )
             
         # final LLM rollout
+        # 思考轮数达到上限，最后组织结果生成，禁止搜索
         if active_mask.sum():
             rollings.batch = self.tensor_fn.cut_to_effective_len(
                 rollings.batch,

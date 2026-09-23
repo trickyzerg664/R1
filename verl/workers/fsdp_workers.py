@@ -125,13 +125,13 @@ class ActorRolloutRefWorker(Worker):
         log_gpu_memory_usage('Before init from HF AutoModel', logger=logger)
         local_path = copy_local_path_from_hdfs(model_path)
 
-        # note that we have to create model in fp32. Otherwise, the optimizer is in bf16, which is incorrect
+        # Keep optimizer master parameters in FP32 for stable mixed-precision updates.
         # TODO(zhangchi.usc1992): 1. support create from random initialized model. 2. Support init with FSDP directly
         self.tokenizer = hf_tokenizer(local_path, trust_remote_code=trust_remote_code)
 
         torch_dtype = fsdp_config.get('model_dtype', None)
         if torch_dtype is None:
-            torch_dtype = torch.float32 if self._is_actor else torch.bfloat16
+            torch_dtype = torch.float32 if self._is_actor else torch.float16
         else:
             torch_dtype = PrecisionType.to_dtype(torch_dtype)
 
@@ -181,11 +181,11 @@ class ActorRolloutRefWorker(Worker):
         # We wrap FSDP for rollout as well
         mixed_precision_config = fsdp_config.get('mixed_precision', None)
         if mixed_precision_config is not None:
-            param_dtype = PrecisionType.to_dtype(mixed_precision_config.get('param_dtype', 'bf16'))
+            param_dtype = PrecisionType.to_dtype(mixed_precision_config.get('param_dtype', 'fp16'))
             reduce_dtype = PrecisionType.to_dtype(mixed_precision_config.get('reduce_dtype', 'fp32'))
             buffer_dtype = PrecisionType.to_dtype(mixed_precision_config.get('buffer_dtype', 'fp32'))
         else:
-            param_dtype = torch.bfloat16
+            param_dtype = torch.float16
             reduce_dtype = torch.float32
             buffer_dtype = torch.float32
 
@@ -636,11 +636,11 @@ class CriticWorker(Worker):
         fsdp_config = self.config.model.fsdp_config
         mixed_precision_config = fsdp_config.get('mixed_precision', None)
         if mixed_precision_config is not None:
-            param_dtype = PrecisionType.to_dtype(mixed_precision_config.get('param_dtype', 'bf16'))
+            param_dtype = PrecisionType.to_dtype(mixed_precision_config.get('param_dtype', 'fp16'))
             reduce_dtype = PrecisionType.to_dtype(mixed_precision_config.get('reduce_dtype', 'fp32'))
             buffer_dtype = PrecisionType.to_dtype(mixed_precision_config.get('buffer_dtype', 'fp32'))
         else:
-            param_dtype = torch.bfloat16
+            param_dtype = torch.float16
             reduce_dtype = torch.float32
             buffer_dtype = torch.float32
 
@@ -851,7 +851,7 @@ class RewardModelWorker(Worker):
             from verl.models.transformers.monkey_patch import apply_monkey_patch
             apply_monkey_patch(model_config, verbose=True)
 
-        # note that we have to create model in fp32. Otherwise, the optimizer is in bf16, which is incorrect
+        # The reward model is inference-only and can keep its parameters in FP16.
         init_context = get_init_weight_context_manager(use_meta_tensor=not model_config.tie_word_embeddings)
 
         with init_context(), warnings.catch_warnings():
@@ -859,10 +859,10 @@ class RewardModelWorker(Worker):
             setattr(model_config, 'classifier_dropout', 0.)
             reward_module = AutoModelForTokenClassification.from_pretrained(pretrained_model_name_or_path=local_path,
                                                                             config=model_config,
-                                                                            torch_dtype=torch.bfloat16,
+                                                                            torch_dtype=torch.float16,
                                                                             attn_implementation='flash_attention_2',
                                                                             trust_remote_code=trust_remote_code)
-            reward_module.to(torch.bfloat16)
+            reward_module.to(torch.float16)
         auto_wrap_policy = get_fsdp_wrap_policy(module=reward_module, config=self.config.model.fsdp_config)
 
         reward_module = FSDP(
@@ -889,7 +889,7 @@ class RewardModelWorker(Worker):
         from flash_attn.bert_padding import pad_input, unpad_input, index_first_axis, rearrange
         from verl.utils.ulysses import ulysses_pad_and_slice_inputs, gather_outpus_and_unpad
 
-        with torch.no_grad(), torch.autocast(device_type='cuda', dtype=torch.bfloat16):
+        with torch.no_grad(), torch.autocast(device_type='cuda', dtype=torch.float16):
             input_ids = micro_batch['input_ids']
             batch_size, seqlen = input_ids.shape
             attention_mask = micro_batch['attention_mask']

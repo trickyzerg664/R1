@@ -120,3 +120,56 @@ tests/e2e/toy_examples/deepspeed/synchronous/output.txt
 log/
 
 **logs
+# Project-local isolated runtime environments and tooling
+/.envs/
+/.tools/
+
+# Virtual environments (keep env/ scripts and lock files tracked)
+.venv/
+.venv-*/
+.conda/
+
+# Downloaded model weights and training artifacts
+/weights/
+/models/
+/pretrained_models/
+/hf_models/
+/verl_checkpoints/
+*.safetensors
+*.safetensors.index.json
+*.pth
+*.pt.index.json
+*.ckpt.index.json
+pytorch_model*.bin
+pytorch_model*.bin.index.json
+adapter_model*.bin
+*.gguf
+*.ggml
+consolidated.*.pth
+
+# Local corpora, datasets and retrieval indexes
+/datasets/
+/corpus/
+/corpora/
+/index/
+/indexes/
+/indices/
+*.parquet
+*.arrow
+*.faiss
+*.index
+
+# Local credentials and downloaded installers
+.env
+.env.*
+!.env.example
+*.whl
+
+# Machine-specific environment notes and validation reports
+/docs/local_environment.md
+/env/validation.md
+
+# Python test, type-checker and linter caches
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/

@@ -58,6 +58,7 @@ if __name__ == '__main__':
     def make_map_fn(split):
 
         def process_fn(example, idx):
+            #strip() 方法用于移除字符串头尾指定的字符
             example['question'] = example['question'].strip()
             if example['question'][-1] != '?':
                 example['question'] += '?'

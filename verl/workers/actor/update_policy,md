@@ -1,0 +1,619 @@
+# update_policy 核心流程与算法总结
+
+## Table-of-Contents
+
+* [Section-01 Overall-Flow](#section-01)
+* [Section-02 PPO-Policy-Update](#section-02)
+* [Section-03 Entropy-and-KL](#section-03)
+* [Section-04 Batch-and-Gradient](#section-04)
+* [Section-05 Final-Summary](#section-05)
+
+---
+
+## Section-01
+
+## Overall-Flow
+
+`update_policy()` 的作用是：
+
+> 使用 rollout 阶段生成的数据和已经计算好的 Advantage，通过 PPO Loss 更新 Actor 模型参数。
+
+整体流程：
+
+```text
+Rollout 数据
+    ↓
+responses / old_log_probs / advantages
+    ↓
+划分 Mini Batch
+    ↓
+Mini Batch 再划分 Micro Batch
+    ↓
+当前 Actor 重新 Forward
+    ↓
+计算 new_log_prob 和 entropy
+    ↓
+PPO Policy Loss
+    ↓
+加入 Entropy Bonus
+    ↓
+可选加入 Reference KL Loss
+    ↓
+Backward
+    ↓
+累积 Micro Batch 梯度
+    ↓
+Optimizer Step
+    ↓
+更新 Actor 参数
+```
+
+整个强化学习训练链路可以概括为：
+
+```text
+Response
+   ↓
+Reward
+   ↓
+Advantage
+   ↓
+PPO Loss
+   ↓
+Gradient
+   ↓
+Actor 参数更新
+```
+
+因此，Reward 并不会直接修改模型，而是先转化成 Advantage，再通过 Policy Loss 影响模型参数。
+
+---
+
+## Section-02
+
+## PPO-Policy-Update
+
+PPO 更新最核心的是比较：
+
+```text
+旧策略生成该 token 时的概率
+old_log_prob
+
+和
+
+当前策略重新计算的概率
+log_prob
+```
+
+分别对应：
+
+$$
+\log \pi_{\theta_{old}}(a_t|s_t)
+$$
+
+和：
+
+$$
+\log \pi_{\theta}(a_t|s_t)
+$$
+
+其中 `old_log_prob` 是 rollout 时保存的固定数据，而 `log_prob` 是当前 Actor Forward 重新计算得到的，因此与当前模型参数存在计算图。
+
+### Probability Ratio
+
+PPO 首先计算：
+
+$$
+r_t(\theta)
+=
+\frac{\pi_\theta(a_t|s_t)}
+{\pi_{\theta_{old}}(a_t|s_t)}
+$$
+
+代码中因为保存的是 log probability，所以通常等价于：
+
+$$
+r_t(\theta)
+=
+\exp(
+\log\pi_\theta
+-
+\log\pi_{\theta_{old}}
+)
+$$
+
+这个 ratio 表示：
+
+> 当前模型对这个 action 的概率，相比生成数据时改变了多少。
+
+例如：
+
+```text
+旧概率 = 0.2
+新概率 = 0.24
+
+ratio = 1.2
+```
+
+说明当前 Actor 把这个 action 的概率提高了 20%。
+
+---
+
+### Advantage 决定更新方向
+
+PPO 不是简单让所有生成过的 token 概率提高，而是根据 Advantage 判断：
+
+```text
+Advantage > 0
+→ 当前行为比平均水平好
+→ 提高该行为概率
+
+Advantage < 0
+→ 当前行为比平均水平差
+→ 降低该行为概率
+```
+
+因此可以把 PPO 理解为：
+
+```text
+Advantage
+    ↓
+判断这个行为该奖励还是惩罚
+    ↓
+ratio
+    ↓
+控制新策略概率应该如何变化
+```
+
+对于 GRPO，Advantage 一般来自：
+
+```text
+同一个 Prompt
+    ↓
+生成多个 Response
+    ↓
+分别计算 Reward
+    ↓
+组内归一化 / 相对比较
+    ↓
+得到 Advantage
+```
+
+所以 GRPO 最终虽然没有 Critic，也还是通过 PPO 风格的 Policy Loss 更新 Actor。
+
+---
+
+### PPO Clip
+
+PPO 不允许策略一次变化太大，因此使用：
+
+$$
+L_{PPO}
+=
+-\min
+\left(
+r_tA_t,
+\operatorname{clip}(r_t,1-\epsilon,1+\epsilon)A_t
+\right)
+$$
+
+例如：
+
+```text
+clip_ratio = 0.2
+```
+
+那么 ratio 的有效范围大致是：
+
+$$
+[0.8,1.2]
+$$
+
+PPO 的核心思想不是单纯：
+
+```text
+好行为 → 概率越高越好
+```
+
+而是：
+
+```text
+好行为 → 概率应该提高
+但一次不要提高太多
+```
+
+这样可以防止策略更新过猛导致训练不稳定。
+
+---
+
+## Section-03
+
+## Entropy-and-KL
+
+最终 Policy Loss 不只有 PPO Loss：
+
+```python
+policy_loss = pg_loss - entropy_loss * entropy_coeff
+```
+
+如果开启 KL：
+
+```python
+policy_loss = policy_loss + kl_loss * kl_loss_coef
+```
+
+因此可以近似理解为：
+
+$$
+L
+=
+L_{PPO}
+-
+\beta H(\pi)
++
+\lambda L_{KL}
+$$
+
+三个部分分别解决不同问题。
+
+---
+
+### Entropy：保持探索能力
+
+Entropy：
+
+$$
+H(\pi)
+=
+-\sum_a
+\pi(a|s)\log\pi(a|s)
+$$
+
+表示当前策略的不确定程度。
+
+例如：
+
+```text
+[0.98, 0.01, 0.01]
+
+分布集中
+→ 模型非常确定
+→ Entropy 小
+```
+
+而：
+
+```text
+[0.34, 0.33, 0.33]
+
+分布平均
+→ 模型不确定
+→ Entropy 大
+```
+
+如果强化学习只追求 Reward，模型可能很快变成：
+
+```text
+某一种推理路径概率极高
+其他路径概率接近 0
+```
+
+这样就会失去探索能力。
+
+因此代码使用：
+
+$$
+L = L_{PPO} - \beta H
+$$
+
+由于 optimizer 是最小化 Loss，因此减去 Entropy 相当于：
+
+> 鼓励模型保留一定随机性和探索能力。
+
+所以：
+
+```text
+PPO
+→ 学习哪些行为更好
+
+Entropy
+→ 不要太早只剩一种行为
+```
+
+---
+
+### KL：限制 Actor 偏离 Reference Model
+
+如果开启：
+
+```python
+use_kl_loss
+```
+
+还会比较：
+
+```text
+Current Actor
+
+和
+
+Reference Model
+```
+
+的概率分布。
+
+Reference Model 一般是固定的 SFT / Base Policy：
+
+```text
+Actor
+不断更新
+
+Reference Model
+参数固定
+```
+
+KL Loss 的目的：
+
+> 防止 RL 训练把模型更新得离原始语言模型太远。
+
+因此可以理解成：
+
+```text
+Reward：
+往高分方向走
+
+Entropy：
+保留探索能力
+
+KL：
+不要偏离基础模型太远
+```
+
+需要注意，代码中的 `ppo_kl` 和 `kl_loss` 不是完全同一个概念：
+
+```text
+ppo_kl
+Current Policy vs Old Policy
+主要用于观察 PPO 更新幅度
+
+kl_loss
+Current Policy vs Reference Policy
+主要用于约束模型偏移
+```
+
+---
+
+## Section-04
+
+## Batch-and-Gradient
+
+这段代码还有一个重要的工程设计：
+
+```text
+Batch
+ ↓
+Mini Batch
+ ↓
+Micro Batch
+```
+
+### Mini Batch
+
+Mini Batch 决定：
+
+> 一次参数更新使用多少训练样本。
+
+每处理完一个 Mini Batch：
+
+```python
+self._optimizer_step()
+```
+
+Actor 参数更新一次。
+
+---
+
+### Micro Batch
+
+Micro Batch 是为了节省显存。
+
+例如：
+
+```text
+Mini Batch = 64
+Micro Batch = 8
+```
+
+GPU 每次只处理：
+
+```text
+8 条数据
+```
+
+连续处理 8 次。
+
+但这 8 次中间不执行：
+
+```python
+optimizer.step()
+```
+
+而是不断：
+
+```python
+loss.backward()
+```
+
+因此梯度会累积：
+
+```text
+Micro Batch 1 → gradient g1
+
+Micro Batch 2 → g1 + g2
+
+Micro Batch 3 → g1 + g2 + g3
+
+...
+
+Micro Batch 8
+→ g1 + ... + g8
+```
+
+最后才：
+
+```python
+optimizer.step()
+```
+
+更新一次 Actor。
+
+这就是：
+
+> Gradient Accumulation。
+
+---
+
+为了让结果接近整个 Mini Batch 的平均梯度，代码使用：
+
+```python
+loss = policy_loss / self.gradient_accumulation
+```
+
+例如有 8 个 Micro Batch：
+
+$$
+L
+=
+\frac{
+L_1+L_2+\cdots+L_8
+}{8}
+$$
+
+这样就可以：
+
+> 用较小的 GPU 显存，模拟较大的 Batch Size。
+
+---
+
+### Backward 与 Optimizer Step
+
+这里要特别区分：
+
+```python
+loss.backward()
+```
+
+只是：
+
+```text
+计算梯度
+```
+
+即：
+
+$$
+\frac{\partial L}{\partial \theta}
+$$
+
+梯度保存到模型参数的 `.grad` 中。
+
+真正修改模型参数的是：
+
+```python
+self._optimizer_step()
+```
+
+本质上执行：
+
+$$
+\theta'
+=
+\theta
+-
+\eta\nabla_\theta L
+$$
+
+因此完整训练链路是：
+
+```text
+Actor Forward
+    ↓
+log_prob
+    ↓
+PPO / Entropy / KL Loss
+    ↓
+backward()
+    ↓
+Gradient
+    ↓
+optimizer.step()
+    ↓
+New Actor
+```
+
+---
+
+## Section-05
+
+## Final-Summary
+
+`update_policy()` 可以浓缩成下面这条主线：
+
+```text
+旧策略生成的数据
+        ↓
+old_log_prob + Advantage
+        ↓
+当前 Actor 重新计算 new_log_prob
+        ↓
+比较新旧策略概率
+        ↓
+PPO Clip 控制更新幅度
+        ↓
+Entropy 保持探索
+        ↓
+KL 限制偏离 Reference Model
+        ↓
+得到最终 Policy Loss
+        ↓
+Backward 计算梯度
+        ↓
+多个 Micro Batch 累积梯度
+        ↓
+Optimizer Step
+        ↓
+Actor 参数更新
+```
+
+其中最重要的三个算法思想：
+
+```text
+PPO：
+根据 Advantage 调整行为概率，
+同时通过 Clip 防止策略变化过大。
+
+Entropy：
+防止策略过早变得过于确定，
+保持一定探索能力。
+
+KL：
+限制强化学习后的 Actor
+不要偏离原始 Reference Model 太远。
+```
+
+最终可以把整个函数记成：
+
+$$
+\boxed{
+Reward
+\rightarrow
+Advantage
+\rightarrow
+PPO\ Loss
+\rightarrow
+Gradient
+\rightarrow
+Actor\ Update
+}
+$$
+
+而 Entropy、KL 和 PPO Clip 都是在保证这个更新过程更加稳定。

@@ -22,8 +22,10 @@ import torch.distributed
 from torch import nn, optim
 
 from torch.distributed.fsdp import FullyShardedDataParallel as FSDP
+from torch.distributed.fsdp.sharded_grad_scaler import ShardedGradScaler
 
 from verl import DataProto
+from verl.utils.torch_dtypes import PrecisionType
 from verl.trainer.ppo import core_algos
 from verl.workers.critic import BasePPOCritic
 from verl.utils.py_functional import append_to_dict
@@ -42,6 +44,14 @@ class DataParallelPPOCritic(BasePPOCritic):
         super().__init__(config=config)
         self.critic_module = critic_module
         self.critic_optimizer = critic_optimizer
+        precision = self.config.model.get('fsdp_config', {}).get('mixed_precision') or {}
+        self.compute_dtype = PrecisionType.to_dtype(precision.get('param_dtype', 'fp16'))
+        scale_gradients = self.compute_dtype == torch.float16 and critic_optimizer is not None
+        if isinstance(critic_module, FSDP):
+            self.grad_scaler = ShardedGradScaler(enabled=scale_gradients,
+                                                process_group=critic_module.process_group)
+        else:
+            self.grad_scaler = torch.amp.GradScaler('cuda', enabled=scale_gradients)
         self.use_remove_padding = self.config.model.get('use_remove_padding', False)
         print(f'Critic use_remove_padding={self.use_remove_padding}')
 
@@ -52,7 +62,7 @@ class DataParallelPPOCritic(BasePPOCritic):
 
     def _forward_micro_batch(self, micro_batch):
         response_length = micro_batch['responses'].size(-1)
-        with torch.autocast(device_type='cuda', dtype=torch.bfloat16):
+        with torch.autocast(device_type='cuda', dtype=self.compute_dtype):
             input_ids = micro_batch['input_ids']
             batch, seqlen = input_ids.shape
             attention_mask = micro_batch['attention_mask']
@@ -98,16 +108,18 @@ class DataParallelPPOCritic(BasePPOCritic):
                                             use_cache=False)  # prevent model thinks we are generating
                 values = output.logits
                 values = values[:, -response_length - 1:-1].squeeze(-1)
-            return values
+            return values.float()
 
     def _optimizer_step(self):
         assert self.config.grad_clip is not None
+        self.grad_scaler.unscale_(self.critic_optimizer)
 
         if isinstance(self.critic_module, FSDP):
             grad_norm = self.critic_module.clip_grad_norm_(self.config.grad_clip)
         else:
             grad_norm = torch.nn.utils.clip_grad_norm_(self.critic_module.parameters(), max_norm=self.config.grad_clip)
-        self.critic_optimizer.step()
+        self.grad_scaler.step(self.critic_optimizer)
+        self.grad_scaler.update()
         return grad_norm
 
     def compute_values(self, data: DataProto) -> torch.Tensor:
@@ -187,7 +199,7 @@ class DataParallelPPOCritic(BasePPOCritic):
                                                                      eos_mask=eos_mask,
                                                                      cliprange_value=self.config.cliprange_value)
                 loss = vf_loss / self.gradient_accumulation
-                loss.backward()
+                self.grad_scaler.scale(loss).backward()
 
                 data = {
                     'critic/vf_loss': vf_loss.detach().item(),

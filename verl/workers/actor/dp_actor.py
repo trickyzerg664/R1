@@ -21,8 +21,10 @@ from typing import Iterable, Tuple
 import torch
 from torch import nn
 from torch.distributed.fsdp import FullyShardedDataParallel as FSDP
+from torch.distributed.fsdp.sharded_grad_scaler import ShardedGradScaler
 
 from verl import DataProto
+from verl.utils.torch_dtypes import PrecisionType
 from verl.trainer.ppo import core_algos
 from verl.workers.actor import BasePPOActor
 from verl.utils.py_functional import append_to_dict
@@ -48,6 +50,14 @@ class DataParallelPPOActor(BasePPOActor):
         super().__init__(config)
         self.actor_module = actor_module
         self.actor_optimizer = actor_optimizer
+        precision = self.config.get('fsdp_config', {}).get('mixed_precision') or {}
+        self.compute_dtype = PrecisionType.to_dtype(precision.get('param_dtype', 'fp16'))
+        scale_gradients = self.compute_dtype == torch.float16 and actor_optimizer is not None
+        if isinstance(actor_module, FSDP):
+            self.grad_scaler = ShardedGradScaler(enabled=scale_gradients,
+                                                process_group=actor_module.process_group)
+        else:
+            self.grad_scaler = torch.amp.GradScaler('cuda', enabled=scale_gradients)
         self.use_remove_padding = self.config.get('use_remove_padding', False)
         print(f'Actor use_remove_padding={self.use_remove_padding}')
         self.ulysses_sequence_parallel_size = self.config.ulysses_sequence_parallel_size
@@ -62,7 +72,7 @@ class DataParallelPPOActor(BasePPOActor):
             log_probs: # (bs, response_len)
         """
         response_length = micro_batch['responses'].size(-1)
-        with torch.autocast(device_type='cuda', dtype=torch.bfloat16):
+        with torch.autocast(device_type='cuda', dtype=self.compute_dtype):
             input_ids = micro_batch['input_ids']
             batch_size, seqlen = input_ids.shape
             attention_mask = micro_batch['attention_mask']
@@ -95,7 +105,7 @@ class DataParallelPPOActor(BasePPOActor):
                                            attention_mask=None,
                                            position_ids=position_ids_rmpad,
                                            use_cache=False)  # prevent model thinks we are generating
-                logits_rmpad = output.logits.squeeze(0)  # (total_nnz, vocab_size)
+                logits_rmpad = output.logits.squeeze(0).float()  # (total_nnz, vocab_size)
 
                 logits_rmpad.div_(temperature)
 
@@ -132,7 +142,7 @@ class DataParallelPPOActor(BasePPOActor):
                                            attention_mask=attention_mask,
                                            position_ids=position_ids,
                                            use_cache=False)  # prevent model thinks we are generating
-                logits = output.logits
+                logits = output.logits.float()
                 logits.div_(temperature)
                 logits = logits[:, -response_length - 1:-1]  # (bsz, response_length)
                 log_probs = logprobs_from_logits(logits, micro_batch['responses'])
@@ -142,12 +152,14 @@ class DataParallelPPOActor(BasePPOActor):
 
     def _optimizer_step(self):
         assert self.config.grad_clip is not None
+        self.grad_scaler.unscale_(self.actor_optimizer)
 
         if isinstance(self.actor_module, FSDP):
             grad_norm = self.actor_module.clip_grad_norm_(max_norm=self.config.grad_clip)
         else:
             grad_norm = torch.nn.utils.clip_grad_norm_(self.actor_module.parameters(), max_norm=self.config.grad_clip)
-        self.actor_optimizer.step()
+        self.grad_scaler.step(self.actor_optimizer)
+        self.grad_scaler.update()
         return grad_norm
 
     def compute_log_prob(self, data: DataProto) -> torch.Tensor:
@@ -273,7 +285,7 @@ class DataParallelPPOActor(BasePPOActor):
                     metrics['actor/kl_coef'] = self.config.kl_loss_coef
 
                 loss = policy_loss / self.gradient_accumulation
-                loss.backward()
+                self.grad_scaler.scale(loss).backward()
 
                 data = {
                     'actor/entropy_loss': entropy_loss.detach().item(),
