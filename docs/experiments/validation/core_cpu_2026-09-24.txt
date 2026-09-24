@@ -1,0 +1,76 @@
+test_branch_and_refresh_preserve_exposure (test_difficulty_core.DifficultyCoreTests) ... ok
+test_complete_checkpoint_optimizer_scheduler_rng (test_difficulty_core.DifficultyCoreTests) ... ok
+test_controller_restore_policy_and_refresh_validation (test_difficulty_core.DifficultyCoreTests) ... ok
+test_disabled_configuration_and_invalid_experiment (test_difficulty_core.DifficultyCoreTests) ... ok
+test_invalid_labels_and_missing_bucket (test_difficulty_core.DifficultyCoreTests) ... ok
+test_prepare_branch_budget_and_fixed_reference (test_difficulty_core.DifficultyCoreTests) ... ok
+test_real_training_loop_exact_steps_refresh_and_resume (test_difficulty_core.DifficultyCoreTests) ... ok
+test_retrieval_errors_do_not_become_zero_reward (test_difficulty_core.DifficultyCoreTests) ... ok
+test_sampler_quotas_and_replay (test_difficulty_core.DifficultyCoreTests) ... ok
+test_scoring_resume_and_request_seed_independence (test_difficulty_core.DifficultyCoreTests) ... ok
+test_seed_attachment_preserves_dataproto_contract (test_difficulty_core.DifficultyCoreTests) ... ok
+test_attention_configuration_rejects_incompatible_padding (test_grpo_difficulty.DifficultyTests) ... ok
+test_duplicate_questions_remain_separate_groups_after_reordering (test_grpo_difficulty.DifficultyTests) ... ok
+test_multiturn_evaluation_preserves_sampling_flags (test_grpo_difficulty.DifficultyTests) ... ok
+test_padding_tiny_batches_preserves_rows_metadata_and_dataproto (test_grpo_difficulty.DifficultyTests) ... ok
+test_qwen_eager_and_sdpa_cpu_forward_backward (test_grpo_difficulty.DifficultyTests) ... ok
+test_validation_scores_every_row_including_tail (test_grpo_difficulty.DifficultyTests) ... ok
+test_wrong_group_size_fails_before_advantage (test_grpo_difficulty.DifficultyTests) ... ok
+
+----------------------------------------------------------------------
+Ran 18 tests in 1.570s
+
+OK
+epoch 0, step 1
+epoch 0, step 2
+epoch 0, step 3
+epoch 0, step 2
+epoch 0, step 3
+ACTIVE_TRAJ_NUM: [3, 2, 1, 0]
+filtered training dataset size: 4
+filtered validation dataset size: 1
+Size of train dataloader: 2
+Size of val dataloader: 1
+Total training steps: 60
+validation generation end
+filtered training dataset size: 4
+filtered validation dataset size: 3
+Size of train dataloader: 2
+Size of val dataloader: 1
+Total training steps: 60
+validation generation end
+filtered training dataset size: 4
+filtered validation dataset size: 5
+Size of train dataloader: 2
+Size of val dataloader: 2
+Total training steps: 60
+validation generation end
+validation generation end
+filtered training dataset size: 4
+filtered validation dataset size: 9
+Size of train dataloader: 2
+Size of val dataloader: 3
+Total training steps: 60
+validation generation end
+validation generation end
+validation generation end
+filtered training dataset size: 4
+filtered validation dataset size: 1
+Size of train dataloader: 2
+Size of val dataloader: 1
+Total training steps: 60
+filtered training dataset size: 4
+filtered validation dataset size: 3
+Size of train dataloader: 2
+Size of val dataloader: 1
+Total training steps: 60
+filtered training dataset size: 4
+filtered validation dataset size: 5
+Size of train dataloader: 2
+Size of val dataloader: 2
+Total training steps: 60
+filtered training dataset size: 4
+filtered validation dataset size: 9
+Size of train dataloader: 2
+Size of val dataloader: 3
+Total training steps: 60

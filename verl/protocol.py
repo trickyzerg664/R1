@@ -48,9 +48,15 @@ def pad_dataproto_to_divisor(data: 'DataProto', size_divisor: int):
         pad_size (int)
     """
     assert isinstance(data, DataProto), 'data must be a DataProto'
+    # [data-difficulty] 空批次无法提供补齐样本，非正除数也无法定义并行分片。
+    if size_divisor < 1 or len(data) == 0:
+        raise ValueError('Padding requires a positive divisor and a nonempty batch')
     if len(data) % size_divisor != 0:
         pad_size = size_divisor - len(data) % size_divisor
-        data_padded = DataProto.concat([data, data[:pad_size]])
+        # [data-difficulty] 尾批可能只有 1 条而并行数为 8，直接切片取不够补齐行。
+        # 按需重复原批次，再截取所需数量，保持所有 tensor/非 tensor 字段对应。
+        padding = data.repeat((pad_size + len(data) - 1) // len(data), interleave=False)
+        data_padded = DataProto.concat([data, padding[:pad_size]])
     else:
         pad_size = 0
         data_padded = data
@@ -59,7 +65,11 @@ def pad_dataproto_to_divisor(data: 'DataProto', size_divisor: int):
 
 def unpad_dataproto(data: 'DataProto', pad_size):
     if pad_size != 0:
-        data = data[:-pad_size]
+        # [data-difficulty] 普通切片返回 DataProtoItem；显式构造 DataProto 保留后续批操作能力。
+        # 仅裁剪逐样本字段，do_sample/temperature 等批次级元数据原样保留。
+        data = DataProto(batch=data.batch[:-pad_size],
+                         non_tensor_batch={key: value[:-pad_size] for key, value in data.non_tensor_batch.items()},
+                         meta_info=data.meta_info)
     return data
 
 

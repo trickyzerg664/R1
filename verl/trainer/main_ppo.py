@@ -120,6 +120,9 @@ def main_task(config):
     from omegaconf import OmegaConf
     pprint(OmegaConf.to_container(config, resolve=True))  # resolve=True will eval symbol values
     OmegaConf.resolve(config)
+    # [data-difficulty] 先解析恢复模型及固定 reference，再构建 tokenizer 和 workers。
+    from verl.experimental.difficulty.configuration import prepare_config
+    prepare_config(config)
 
     # env_class = ENV_CLASS_MAPPING[config.env.name]
 

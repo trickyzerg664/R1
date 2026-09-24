@@ -25,6 +25,19 @@ from transformers import AutoConfig, AutoModelForCausalLM, PretrainedConfig, Mis
 from verl.models.registry import ModelRegistry
 
 
+def get_attention_implementation(model_config):
+    """Validate the actor/reference attention choice before loading weights."""
+    # [data-difficulty] 未显式配置时保持原 FA2 行为；actor 和 reference 使用同一选择规则。
+    implementation = model_config.get('attn_implementation', 'flash_attention_2')
+    # [data-difficulty] 提前拒绝拼错或未支持的后端，避免加载大模型后才失败。
+    if implementation not in ('flash_attention_2', 'eager', 'sdpa'):
+        raise ValueError(f'Unsupported attention implementation: {implementation}')
+    # [data-difficulty] 当前去 padding 路径依赖 FA2 的变长序列处理；eager/sdpa 必须保留 padding。
+    if model_config.get('use_remove_padding', False) and implementation != 'flash_attention_2':
+        raise ValueError('use_remove_padding requires flash_attention_2; disable it for eager/sdpa')
+    return implementation
+
+
 class LambdaLayer(nn.Module):
 
     def __init__(self, fn):

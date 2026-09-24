@@ -116,6 +116,15 @@ class FSDPVLLMShardingManager(BaseShardingManager):
                                             group=vllm_ps.get_tensor_model_parallel_group(),
                                             dim=0)
 
+        # [data-difficulty] TP 收集请求张量时同步收集逐请求元数据（例如 rollout_seed）。
+        size = vllm_ps.get_tensor_model_parallel_world_size()
+        if size > 1 and data.non_tensor_batch:
+            import numpy as np
+            parts = [None] * size
+            torch.distributed.all_gather_object(parts, data.non_tensor_batch,
+                                                group=vllm_ps.get_tensor_model_parallel_group())
+            data.non_tensor_batch = {key: np.concatenate([part[key] for part in parts])
+                                     for key in data.non_tensor_batch}
         return data
 
     def postprocess_data(self, data: DataProto) -> DataProto:

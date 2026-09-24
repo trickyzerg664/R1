@@ -16,12 +16,17 @@ data:
   shuffle_train_dataloader: True
 
 actor_rollout_ref:
+  # [data-difficulty] 默认禁用独立实验随机流。
+  experiment_seed: null
   hybrid_engine: True
   model:
     path: ~/models/deepseek-llm-7b-chat
     external_lib: null
     override_config: { }
     enable_gradient_checkpointing: False
+    # [data-difficulty] 默认保留 FA2；本机可选 eager/sdpa，并须将 use_remove_padding 设为 False。
+    # 该选项控制 actor/reference 的训练前向，vLLM rollout 后端仍需单独配置和验证。
+    attn_implementation: flash_attention_2
     use_remove_padding: False
   actor:
     strategy: fsdp  # This is for backward-compatibility
@@ -41,6 +46,8 @@ actor_rollout_ref:
     ulysses_sequence_parallel_size: 1 # sp size
     optim:
       lr: 1e-6
+      # [data-difficulty] 固定绝对 warmup，恢复时不按追加预算重新计算。
+      warmup_steps: null
       lr_warmup_steps_ratio: 0.  # the total steps will be injected during runtime
       min_lr_ratio: null   # only useful for warmup with cosine
       warmup_style: constant  # select from constant/cosine
@@ -54,6 +61,8 @@ actor_rollout_ref:
       optimizer_offload: False
       fsdp_size: -1
   ref:
+    # [data-difficulty] null 兼容原路径；实验会固定为初始模型。
+    model_path: null
     fsdp_config:
       param_offload: False
       wrap_policy:
@@ -146,6 +155,8 @@ reward_model:
   retrieval_score: 0
 
 retriever:
+  # [data-difficulty] 请求失败直接中止当前批次，由评分断点机制重试。
+  timeout: 120.0
   url: "http://127.0.0.1:8000/retrieve"
   topk: 3
 
@@ -178,3 +189,23 @@ trainer:
 
 max_turns: 10
 do_search: true
+
+# [data-difficulty] 所有难度实验功能显式开启，关闭时保留原训练入口。
+difficulty:
+  enabled: false
+  mode: train # train 或 score
+  seed: 42
+  score_seed: 1729
+  score_batch_size: 8
+  output_dir: outputs/difficulty/run
+  labels: null
+  ratios: null # null 为来源分层自然采样；否则为 [H, M, E]
+  score_output: null
+  refresh_steps: []
+  refresh_every: 0
+  resume: null # 本地完整 checkpoint 目录
+  resume_mode: continue # continue 严格延续，branch 允许标签和比例变化
+  additional_steps: null # 恢复时目标为 parent_step + additional_steps
+  retrieval_id: null # 必须填写固定的索引、语料、编码器版本或组合哈希
+  lineage: null # 自动生成的父状态内容标识
+  initial_model_id: null # 初始化时自动计算，不手工修改

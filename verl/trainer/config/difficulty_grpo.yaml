@@ -1,0 +1,44 @@
+# [data-difficulty] 核心实验配置；模型、固定题池和开发集路径由命令行指定。
+# 本配置不会自行启动训练，沿用 main_ppo 的 Hydra 入口。
+defaults:
+  - ppo_trainer
+  - _self_
+
+# 每题四条独立检索轨迹，正确性奖励和 KL loss 分开。
+algorithm:
+  adv_estimator: grpo
+actor_rollout_ref:
+  actor:
+    use_kl_loss: true
+    state_masking: true
+    ppo_mini_batch_size: 32
+    ppo_micro_batch_size: 4
+    optim:
+      warmup_steps: 20
+  ref:
+    log_prob_micro_batch_size: 4
+  rollout:
+    n_agent: 4
+    n: 1
+    tensor_model_parallel_size: 1
+    log_prob_micro_batch_size: 4
+
+# [data-difficulty] 轮数属于实验协议，统一采用 10；GPU 数通过环境变量或命令行适配设备。
+max_turns: 10
+
+# micro batch 与 attention 后端在目标设备短流程验证后统一冻结。
+data:
+  train_batch_size: 32
+  val_batch_size: 32
+trainer:
+  total_training_steps: 200
+  # [data-difficulty] 卡数由运行设备显式给定；当前设备设为 2，迁移后不改实验算法。
+  n_gpus_per_node: ${oc.decode:${oc.env:SEARCH_R1_N_GPUS}}
+  default_hdfs_dir: null
+  save_freq: 100
+  test_freq: 50
+  logger: [console]
+
+# 默认自然配比；配额实验通过 labels 和 ratios 显式选择策略。
+difficulty:
+  enabled: true

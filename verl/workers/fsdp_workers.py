@@ -116,12 +116,15 @@ class ActorRolloutRefWorker(Worker):
                                use_remove_padding=False,
                                enable_gradient_checkpointing=False,
                                trust_remote_code=False):
-        from verl.utils.model import print_model_size, update_model_config
+        # [data-difficulty] 共用后端检查，避免 actor/reference 各自采用不同的兼容规则。
+        from verl.utils.model import print_model_size, update_model_config, get_attention_implementation
         from verl.utils.torch_dtypes import PrecisionType
         from transformers import AutoModelForCausalLM, AutoConfig
         from torch.distributed.fsdp import FullyShardedDataParallel as FSDP, ShardingStrategy, MixedPrecision
         from torch import optim
 
+        # [data-difficulty] 在读取权重前校验后端与去 padding 配置；本机可显式选择 eager。
+        attention_implementation = get_attention_implementation(self.config.model)
         log_gpu_memory_usage('Before init from HF AutoModel', logger=logger)
         local_path = copy_local_path_from_hdfs(model_path)
 
@@ -161,10 +164,11 @@ class ActorRolloutRefWorker(Worker):
 
         with init_context(), warnings.catch_warnings():
             warnings.simplefilter("ignore")
+            # [data-difficulty] 将已校验的后端传给模型；该构建函数同时服务 actor 和 reference。
             actor_module = AutoModelForCausalLM.from_pretrained(pretrained_model_name_or_path=local_path,
                                                                 torch_dtype=torch_dtype,
                                                                 config=actor_model_config,
-                                                                attn_implementation='flash_attention_2',
+                                                                attn_implementation=attention_implementation,
                                                                 trust_remote_code=trust_remote_code)
             # some parameters may not in torch_dtype. TODO(zhangchi.usc1992) remove this after we switch to fsdp2
             actor_module.to(torch_dtype)
@@ -233,7 +237,10 @@ class ActorRolloutRefWorker(Worker):
 
             total_steps = optim_config.get('total_training_steps', 0)
             num_warmup_steps_ratio = optim_config.get('lr_warmup_steps_ratio', 0.)
-            num_warmup_steps = int(num_warmup_steps_ratio * total_steps)
+            # [data-difficulty] 绝对 warmup 步数保持续训日程不变；未设置时兼容原比例。
+            num_warmup_steps = optim_config.get('warmup_steps')
+            if num_warmup_steps is None:
+                num_warmup_steps = int(num_warmup_steps_ratio * total_steps)
 
             print(f'Total steps: {total_steps}, num_warmup_steps: {num_warmup_steps}')
 
@@ -284,6 +291,10 @@ class ActorRolloutRefWorker(Worker):
     @register(dispatch_mode=Dispatch.ONE_TO_ALL)
     def init_model(self):
         from verl.workers.actor import DataParallelPPOActor
+        # [data-difficulty] 显式初始化 worker 随机流；默认配置不改变旧训练行为。
+        if self.config.get('experiment_seed') is not None:
+            from verl.experimental.difficulty.state import seed_all
+            seed_all(int(self.config.experiment_seed) + self.rank)
         # This is used to import external_lib into the huggingface systems
         import_external_libs(self.config.model.get('external_lib', None))
 
@@ -332,7 +343,7 @@ class ActorRolloutRefWorker(Worker):
             self.rollout, self.rollout_sharding_manager = self._build_rollout()
 
         if self._is_ref:
-            self.ref_module_fsdp = self._build_model_optimizer(model_path=self.config.model.path,
+            self.ref_module_fsdp = self._build_model_optimizer(model_path=self.config.ref.get('model_path') or self.config.model.path,
                                                                fsdp_config=self.config.ref.fsdp_config,
                                                                optim_config=None,
                                                                override_model_config=override_model_config,
@@ -533,6 +544,44 @@ class ActorRolloutRefWorker(Worker):
         torch.distributed.barrier()
         if self._is_offload_param:
             offload_fsdp_param_and_grad(module=self.actor_module_fsdp, offload_grad=self._is_offload_grad)
+
+
+    # [data-difficulty] 以下 RPC 仅由实验适配调用；权重导出与训练状态分开存储。
+    @register(dispatch_mode=Dispatch.ONE_TO_ALL)
+    def difficulty_runtime(self):
+        from verl.experimental.difficulty.checkpoint import runtime_state
+        return runtime_state(self.rollout_sharding_manager)
+
+    @register(dispatch_mode=Dispatch.ONE_TO_ALL)
+    def difficulty_restore_runtime(self, states):
+        from verl.experimental.difficulty.checkpoint import restore_runtime
+        restore_runtime(states[self.rank], self.rollout_sharding_manager)
+
+    @register(dispatch_mode=Dispatch.ONE_TO_ALL)
+    def save_training_checkpoint(self, local_path):
+        from verl.experimental.difficulty.checkpoint import save_rank_state, runtime_state
+        self.save_checkpoint(local_path)
+        save_rank_state(local_path, self.rank, torch.distributed.get_world_size(),
+                        self.actor_optimizer, self.actor_lr_scheduler, self.actor.grad_scaler,
+                        runtime_state(self.rollout_sharding_manager))
+        torch.distributed.barrier()
+
+    @register(dispatch_mode=Dispatch.ONE_TO_ALL)
+    def load_training_checkpoint(self, local_path):
+        from verl.experimental.difficulty.checkpoint import load_rank_state, restore_runtime
+        # 参数已由 init_model 从 actor 目录加载；此处补回 optimizer、日程、scaler 和各随机流。
+        # [data-difficulty] optimizer.load_state_dict 按参数当前设备放置状态，先显式恢复参数到计算设备。
+        if self._is_offload_param:
+            load_fsdp_param_and_grad(module=self.actor_module_fsdp, device_id=torch.cuda.current_device(),
+                                     load_grad=self._is_offload_grad)
+        runtime = load_rank_state(local_path, self.rank, torch.distributed.get_world_size(),
+                                  self.actor_optimizer, self.actor_lr_scheduler, self.actor.grad_scaler)
+        if self._is_offload_optimizer:
+            offload_fsdp_optimizer(optimizer=self.actor_optimizer)
+        if self._is_offload_param:
+            offload_fsdp_param_and_grad(module=self.actor_module_fsdp, offload_grad=self._is_offload_grad)
+        restore_runtime(runtime, self.rollout_sharding_manager)
+        torch.distributed.barrier()
 
 
 class CriticWorker(Worker):

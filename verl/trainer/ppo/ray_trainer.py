@@ -26,7 +26,8 @@ from typing import Type, Dict
 
 import re
 import json
-from collections import defaultdict
+# [data-difficulty] Counter 用于在优势计算前检查每个 GRPO 组的轨迹数。
+from collections import Counter, defaultdict
 
 import numpy as np
 from codetiming import Timer
@@ -120,6 +121,21 @@ def apply_kl_penalty(data: DataProto, kl_ctrl: core_algos.AdaptiveKLController, 
     return data, metrics
 
 
+def repeat_search_batch(batch: DataProto, group_size: int) -> DataProto:
+    """Assign an ID to each draw before expanding it into agent trajectories.
+
+    Dataset indices identify questions and may repeat across sources or draws.
+    They must not be used as GRPO group IDs.
+    """
+    # [data-difficulty] 分组大小必须有效；每次抽题创建新 uid，与原题 index 解耦。
+    if group_size < 1:
+        raise ValueError('rollout.n_agent must be positive')
+    batch.non_tensor_batch['uid'] = np.array(
+        [str(uuid.uuid4()) for _ in range(len(batch))], dtype=object)
+    # [data-difficulty] 先赋 uid 再展开，同次抽题的多条轨迹共享 uid；重复抽题仍属于不同组。
+    return batch.repeat(repeat_times=group_size, interleave=True)
+
+
 def compute_advantage(data: DataProto, adv_estimator, gamma=1.0, lam=1.0, num_repeat=1):
     # prepare response group
     # TODO: add other ways to estimate advantages
@@ -140,6 +156,9 @@ def compute_advantage(data: DataProto, adv_estimator, gamma=1.0, lam=1.0, num_re
     elif adv_estimator == 'grpo':
         token_level_rewards = data.batch['token_level_rewards']
         index = data.non_tensor_batch['uid']
+        # [data-difficulty] batch 重排不改变组身份；发现串组或缺轨迹时立即报错。
+        if num_repeat > 1 and any(count != num_repeat for count in Counter(index).values()):
+            raise ValueError(f'GRPO groups must each contain {num_repeat} trajectories')
         responses = data.batch['responses']
         response_length = responses.size(-1)
         attention_mask = data.batch['attention_mask']
@@ -407,16 +426,18 @@ class RayPPOTrainer(object):
                 self.val_dataset.dataframe = self.val_dataset.dataframe.sample(self.config.data.val_data_num, random_state=42)
         print(f"filtered validation dataset size: {len(self.val_dataset.dataframe)}")
 
+        # [data-difficulty] 评价必须覆盖全部题目；不足一批的尾部样本由生成阶段补齐后还原。
         self.val_dataloader = DataLoader(dataset=self.val_dataset,
                                          batch_size=self.config.data.val_batch_size,
                                          shuffle=False,
-                                         drop_last=True,
+                                         drop_last=False,
                                          collate_fn=collate_fn)
 
         print(f'Size of train dataloader: {len(self.train_dataloader)}')
         print(f'Size of val dataloader: {len(self.val_dataloader)}')
         
-        assert len(self.train_dataloader) >= 1
+        if not self.config.get('difficulty', {}).get('enabled', False):
+            assert len(self.train_dataloader) >= 1
         assert len(self.val_dataloader) >= 1
 
         # inject total_training_steps to actor/critic optim_config. This is hacky.
@@ -427,6 +448,25 @@ class RayPPOTrainer(object):
 
         self.total_training_steps = total_training_steps
         print(f'Total training steps: {self.total_training_steps}')
+
+        # [data-difficulty] 核心策略在独立模块；训练器只传入题池与解析后的配置。
+        self.difficulty = None
+        if self.config.get('difficulty', {}).get('enabled', False):
+            from verl.experimental.difficulty.controller import DifficultyExperiment
+            from verl.experimental.difficulty.configuration import provenance
+            from verl.experimental.difficulty.sampling import pool_rows
+            rows = pool_rows(self.train_dataset.dataframe)
+            self.train_dataset.dataframe['question_id'] = [row['question_id'] for row in rows]
+            settings = OmegaConf.to_container(self.config.difficulty, resolve=True)
+            self.difficulty = DifficultyExperiment(rows, settings, self.config.data.train_batch_size,
+                                                   total_training_steps, settings['seed'], settings['output_dir'],
+                                                   provenance(self.config))
+            # [data-difficulty] 隔离迭代器 base_seed；续训创建新迭代器不改变全局训练随机流。
+            self.train_dataloader = DataLoader(self.train_dataset, batch_sampler=self.difficulty.sampler,
+                                               collate_fn=collate_fn, num_workers=0,
+                                               generator=torch.Generator().manual_seed(settings['seed']))
+            self.difficulty.record({'event': 'configuration',
+                                    'config': OmegaConf.to_container(self.config, resolve=True)})
 
         OmegaConf.set_struct(self.config, True)
         with open_dict(self.config):
@@ -452,6 +492,8 @@ class RayPPOTrainer(object):
             no_think_rl=self.config.algorithm.no_think_rl,
             search_url = self.config.retriever.url,
             topk = self.config.retriever.topk,
+            # [data-difficulty] 训练、评分与评价使用相同检索超时策略。
+            search_timeout = self.config.retriever.get('timeout', 120.0),
         )
 
         # Agent config preparation
@@ -532,6 +574,9 @@ class RayPPOTrainer(object):
         reward_tensor = torch.cat([rw.sum(-1) for rw in reward_tensor_lst], dim=0).cpu()  # (batch_size,)
         # reward_tensor = torch.cat(reward_tensor_lst, dim=0).sum(-1).cpu()  # (batch_size,)
         data_sources = np.concatenate(data_source_lst, axis=0)
+        # [data-difficulty] 用行数检查发现漏批或补齐行未移除；此检查不替代题目 ID 去重。
+        if reward_tensor.shape[0] != len(self.val_dataset):
+            raise RuntimeError('Validation row count does not match dataset size')
         # evaluate test_score based on data source
         data_source_reward = {}
         for i in range(reward_tensor.shape[0]):
@@ -540,7 +585,8 @@ class RayPPOTrainer(object):
                 data_source_reward[data_source] = []
             data_source_reward[data_source].append(reward_tensor[i].item())
 
-        metric_dict = {}
+        # [data-difficulty] 记录实际评价数量，便于比较不同难度策略时核对评价范围。
+        metric_dict = {'val/num_samples': reward_tensor.shape[0]}
         for data_source, rewards in data_source_reward.items():
             metric_dict[f'val/test_score/{data_source}'] = np.mean(rewards)
 
@@ -651,6 +697,32 @@ class RayPPOTrainer(object):
                                                     prefix=logging_prefix)
         metrics.update(global_balance_stats)
 
+    # [data-difficulty] 评分隔离 driver/worker 随机流，训练不会消费评分轨迹或受其 RNG 影响。
+    def _score_difficulty(self, manager, output, version):
+        from verl.experimental.difficulty.generation import score_batch
+        from verl.experimental.difficulty.state import capture_rng, restore_rng
+        driver_rng = capture_rng()
+        worker_rng = self.actor_rollout_wg.difficulty_runtime()
+        try:
+            return self.difficulty.score(
+                lambda indices, seeds: score_batch(self.train_dataset, indices, seeds, manager,
+                                                    self.reward_fn, self.config.data.max_start_length),
+                output, step=self.difficulty.completed_step, version=version)
+        finally:
+            self.actor_rollout_wg.difficulty_restore_runtime(worker_rng)
+            restore_rng(driver_rng)
+
+    def _save_difficulty(self):
+        # 完整状态和刷新后的标签一起提交，COMPLETE 发布前的目录不可恢复。
+        from pathlib import Path
+        from verl.experimental.difficulty.checkpoint import save_checkpoint
+        path = Path(self.config.difficulty.output_dir) / 'checkpoints' / f'step_{self.global_steps}'
+        save_checkpoint(path, self.difficulty.state_dict(),
+                        {'step': self.global_steps, 'initial_model_id': self.difficulty.initial_model_id,
+                         'provenance': self.difficulty.provenance},
+                        self.actor_rollout_wg.save_training_checkpoint)
+        self.difficulty.record({'event': 'checkpoint', 'step': self.global_steps, 'path': str(path)})
+
     def fit(self):
         """
         The training loop of PPO.
@@ -660,9 +732,19 @@ class RayPPOTrainer(object):
 
         logger = self.logger
         self.global_steps = 0
+        # [data-difficulty] 从同一父状态恢复；branch 只允许显式标签/配比变化。
+        if self.difficulty and self.config.difficulty.resume:
+            from pathlib import Path
+            from verl.experimental.difficulty.checkpoint import load_driver
+            state = load_driver(self.config.difficulty.resume)
+            self.difficulty.load_state_dict(state, branch=self.config.difficulty.resume_mode == 'branch',
+                                            scoring=self.config.difficulty.mode == 'score')
+            self.actor_rollout_wg.load_training_checkpoint(str(Path(self.config.difficulty.resume) / 'actor'))
+            self.global_steps = self.difficulty.completed_step
         # perform validation before training
         # currently, we only support validation using the reward_function.
-        if self.val_reward_fn is not None and self.config.trainer.get('val_before_train', True):
+        if (self.val_reward_fn is not None and self.config.trainer.get('val_before_train', True)
+                and not (self.difficulty and (self.config.difficulty.mode == 'score' or self.config.difficulty.resume))):
             val_metrics = self._validate()
             pprint(f'Initial validation metrics: {val_metrics}')
             logger.log(data=val_metrics, step=self.global_steps)
@@ -683,6 +765,8 @@ class RayPPOTrainer(object):
             no_think_rl=self.config.algorithm.no_think_rl,
             search_url = self.config.retriever.url,
             topk = self.config.retriever.topk,
+            # [data-difficulty] 训练、评分与评价使用相同检索超时策略。
+            search_timeout = self.config.retriever.get('timeout', 120.0),
         )
 
         generation_manager = LLMGenerationManager(
@@ -691,18 +775,36 @@ class RayPPOTrainer(object):
             config=gen_config,
         )
 
+        # [data-difficulty] 离线评分不做参数更新；训练由绝对步数驱动，不受 epoch 数提前截断。
+        if self.difficulty:
+            if self.config.difficulty.mode == 'score':
+                if not self.config.difficulty.score_output:
+                    raise ValueError('score mode requires difficulty.score_output')
+                self._score_difficulty(generation_manager, self.config.difficulty.score_output, 'initial')
+                return
+            if self.global_steps > self.total_training_steps:
+                return
         # start training loop
-        for epoch in range(self.config.trainer.total_epochs):
+        for epoch in range(1 if self.difficulty else self.config.trainer.total_epochs):
             for batch_dict in self.train_dataloader:
                 print(f'epoch {epoch}, step {self.global_steps}')
                 metrics = {}
                 timing_raw = {}
 
                 batch: DataProto = DataProto.from_single_dict(batch_dict)
-                batch = batch.repeat(repeat_times=self.config.actor_rollout_ref.rollout.n_agent, interleave=True)
+                # [data-difficulty] 检索轨迹由 n_agent 展开；n 再展开会破坏一题一组的对应关系。
+                if self.config.do_search:
+                    if self.config.actor_rollout_ref.rollout.n != 1:
+                        raise ValueError('Search rollout requires n=1; set n_agent for the group size')
+                    batch = repeat_search_batch(batch, self.config.actor_rollout_ref.rollout.n_agent)
+                else:
+                    batch = batch.repeat(repeat_times=self.config.actor_rollout_ref.rollout.n_agent, interleave=True)
 
                 # pop those keys for generation
                 gen_batch = batch.pop(batch_keys=['input_ids', 'attention_mask', 'position_ids'])
+                # [data-difficulty] 在轨迹展开后赋种子，并直接传到生成侧。
+                if self.difficulty:
+                    self.difficulty.attach_seeds(gen_batch, self.global_steps)
 
                 ####################
                 # original code here
@@ -739,9 +841,7 @@ class RayPPOTrainer(object):
                             output = self.actor_rollout_wg.compute_log_prob(final_gen_batch_output)
                             final_gen_batch_output = final_gen_batch_output.union(output)
 
-                        # batch.non_tensor_batch['uid'] = np.array([str(uuid.uuid4()) for _ in range(len(batch.batch))],
-                        #                                         dtype=object)
-                        batch.non_tensor_batch['uid'] = batch.non_tensor_batch['index'].copy()
+                        # [data-difficulty] 沿用展开前生成的 uid，不能再用可能重复的原题 index 覆盖。
                                             
                         # repeat to align with repeated responses in rollout
                         batch = batch.repeat(repeat_times=self.config.actor_rollout_ref.rollout.n, interleave=True)
@@ -798,11 +898,14 @@ class RayPPOTrainer(object):
                             batch.batch['token_level_rewards'] = batch.batch['token_level_scores']
 
                         # compute advantages, executed on the driver process
+                        # [data-difficulty] 检索组大小取 n_agent，普通生成取 n，按各自实际轨迹数检查。
                         batch = compute_advantage(batch,
                                                   adv_estimator=self.config.algorithm.adv_estimator,
                                                   gamma=self.config.algorithm.gamma,
                                                   lam=self.config.algorithm.lam,
-                                                  num_repeat=self.config.actor_rollout_ref.rollout.n)
+                                                  num_repeat=(self.config.actor_rollout_ref.rollout.n_agent
+                                                              if self.config.do_search
+                                                              else self.config.actor_rollout_ref.rollout.n))
 
                     # update critic
                     if self.use_critic:
@@ -828,7 +931,7 @@ class RayPPOTrainer(object):
                             val_metrics: dict = self._validate()
                         metrics.update(val_metrics)
 
-                    if self.config.trainer.save_freq > 0 and \
+                    if not self.difficulty and self.config.trainer.save_freq > 0 and \
                             self.global_steps % self.config.trainer.save_freq == 0:
                         with _timer('save_checkpoint', timing_raw):
                             self._save_checkpoint()
@@ -837,11 +940,24 @@ class RayPPOTrainer(object):
                 metrics.update(compute_data_metrics(batch=batch, use_critic=self.use_critic))
                 metrics.update(compute_timing_metrics(batch=batch, timing_raw=timing_raw))
 
+                # [data-difficulty] 先提交已完成步数和指标，再在步骤边界刷新标签及保存状态。
+                if self.difficulty:
+                    from pathlib import Path
+                    metrics.update(self.difficulty.metrics(batch))
+                    self.difficulty.after_step(self.global_steps, metrics, timing_raw['step'])
+                    if (self.global_steps < self.total_training_steps
+                            and self.difficulty.should_refresh(self.global_steps)):
+                        output = Path(self.config.difficulty.output_dir) / f'labels_step_{self.global_steps}.json'
+                        payload = self._score_difficulty(generation_manager, output, f'step_{self.global_steps}')
+                        self.difficulty.refresh(payload)
+                    if (self.global_steps == self.total_training_steps or
+                            (self.config.trainer.save_freq > 0 and self.global_steps % self.config.trainer.save_freq == 0)):
+                        self._save_difficulty()
+
                 # TODO: make a canonical logger that supports various backend
                 logger.log(data=metrics, step=self.global_steps)
 
-                self.global_steps += 1
-
+                # [data-difficulty] step N 的更新完成后结束，保证预算 N 恰好执行 N 步。
                 if self.global_steps >= self.total_training_steps:
 
                     # perform validation after training
@@ -849,7 +965,10 @@ class RayPPOTrainer(object):
                         val_metrics = self._validate()
                         pprint(f'Final validation metrics: {val_metrics}')
                         logger.log(data=val_metrics, step=self.global_steps)
+                        if self.difficulty:
+                            self.difficulty.record({'event': 'final_validation', 'step': self.global_steps, 'metrics': val_metrics})
                     return
+                self.global_steps += 1
     
     def _create_loss_mask(self, batch, metrics):
         """Create loss mask for state tokens."""

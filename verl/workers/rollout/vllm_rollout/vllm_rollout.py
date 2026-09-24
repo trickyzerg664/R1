@@ -132,11 +132,12 @@ class vLLMRollout(BaseRollout):
                     old_value = getattr(self.sampling_params, key)
                     old_sampling_params_args[key] = old_value
                     setattr(self.sampling_params, key, value)
-        yield
-        # roll back to previous sampling params
-        # if len(old_sampling_params_args):
-        for key, value in old_sampling_params_args.items():
-            setattr(self.sampling_params, key, value)
+        # [data-difficulty] 生成异常后也恢复采样参数，避免后续评分设置泄漏。
+        try:
+            yield
+        finally:
+            for key, value in old_sampling_params_args.items():
+                setattr(self.sampling_params, key, value)
 
     @torch.no_grad()
     def generate_sequences(self, prompts: DataProto, **kwargs) -> DataProto:
@@ -172,9 +173,13 @@ class vLLMRollout(BaseRollout):
 
         # users can customize different sampling_params at different run
         with self.update_sampling_params(**kwargs):
+            # [data-difficulty] 每条请求独立 SamplingParams，四条轨迹不能共用同一 seed。
+            from verl.experimental.difficulty.generation import request_sampling_params
+            sampling_params = request_sampling_params(self.sampling_params, prompts.non_tensor_batch.get('rollout_seed'),
+                                                       prompts.meta_info.get('sampling_round', 0), len(idx_list))
             output = self.inference_engine.generate(
                 prompts=None,  # because we have already convert it to prompt token id
-                sampling_params=self.sampling_params,
+                sampling_params=sampling_params,
                 prompt_token_ids=idx_list,
                 use_tqdm=False)
 

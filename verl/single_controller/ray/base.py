@@ -19,7 +19,8 @@ import ray
 from ray.util import list_named_actors
 from ray.util.placement_group import placement_group, PlacementGroup
 from ray.util.scheduling_strategies import PlacementGroupSchedulingStrategy, NodeAffinitySchedulingStrategy
-from ray.experimental.state.api import get_actor
+# 使用 Ray 的轻量 actor 表查询，避免 state API 导入 dashboard 时依赖当前事件循环。
+from ray._private.state import actors as get_actor
 
 from verl.single_controller.base import WorkerGroup, ResourcePool, ClassWithInitArgs, Worker
 
@@ -204,7 +205,8 @@ class RayWorkerGroup(WorkerGroup):
 
     def _is_worker_alive(self, worker: ray.actor.ActorHandle):
         worker_state_dict = get_actor(worker._actor_id.hex())
-        return worker_state_dict.get("state", "undefined") == "ALIVE" if worker_state_dict is not None else False
+        # 轻量 actor 表使用大写 State；只有查询到明确的 ALIVE 才接受该 worker。
+        return worker_state_dict.get("State", "undefined") == "ALIVE" if worker_state_dict is not None else False
 
     def _init_with_detached_workers(self, worker_names):
         workers = [ray.get_actor(name=name) for name in worker_names]

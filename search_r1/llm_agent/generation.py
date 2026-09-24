@@ -6,6 +6,8 @@ from typing import List, Dict, Any, Tuple
 from dataclasses import dataclass
 from .tensor_helper import TensorHelper, TensorConfig
 from verl import DataProto
+# [data-difficulty] 复用保留 DataProto 元数据的补齐工具，统一处理训练和评价尾批。
+from verl.protocol import pad_dataproto_to_divisor, unpad_dataproto
 from verl.utils.tracking import Tracking
 import shutil
 import requests
@@ -21,6 +23,8 @@ class GenerationConfig:
     no_think_rl: bool=False
     search_url: str = None
     topk: int = 3
+    # [data-difficulty] 超时不返回伪造空检索结果，调用方保留未完成评分批次。
+    search_timeout: float = 120.0
 
 class LLMGenerationManager:
     def __init__(
@@ -113,6 +117,8 @@ class LLMGenerationManager:
             'position_ids': new_position_ids[:, -max_len:],
             'attention_mask': new_attention_mask[:, -max_len:]
         })
+        # [data-difficulty] 种子随原轨迹保留，活动集合缩小时不能重新编号。
+        new_rollings.non_tensor_batch = rollings.non_tensor_batch.copy()
         new_rollings.meta_info.update(rollings.meta_info)
         
         return new_rollings
@@ -170,52 +176,17 @@ class LLMGenerationManager:
         """
             Wrapper for generation that handles multi-GPU padding requirements.
             if num_gpus <= 1, return self.actor_rollout_wg.generate_sequences(active_batch)
-            if active_batch size is not divisible by num_gpus, pad with first sequence
+            if active_batch size is not divisible by num_gpus, repeat existing rows
             then remove padding from output
         """
-        num_gpus = self.config.num_gpus
-        if num_gpus <= 1:
-            return self.actor_rollout_wg.generate_sequences(active_batch)
-            
-        batch_size = active_batch.batch['input_ids'].shape[0]
-        remainder = batch_size % num_gpus
-        
         for key in active_batch.batch.keys():
             active_batch.batch[key] = active_batch.batch[key].long()
-        if remainder == 0:
-            return self.actor_rollout_wg.generate_sequences(active_batch)
-        
-        # Add padding sequences
-        padding_size = num_gpus - remainder
-        padded_batch = {}
-        
-        for k, v in active_batch.batch.items():
-            # Use first sequence as padding template
-            pad_sequence = v[0:1].repeat(padding_size, *[1] * (len(v.shape) - 1))
-            padded_batch[k] = torch.cat([v, pad_sequence], dim=0)
-
-        padded_active_batch = DataProto.from_dict(padded_batch)
-        for key in padded_active_batch.batch.keys():
-            padded_active_batch.batch[key] = padded_active_batch.batch[key].long()
-
-        # Generate with padded batch
-        padded_output = self.actor_rollout_wg.generate_sequences(padded_active_batch)
-
-        # Remove padding from output
-        trimmed_batch = {k: v[:-padding_size] for k, v in padded_output.batch.items()}
-        
-        # Handle meta_info if present
-        if hasattr(padded_output, 'meta_info') and padded_output.meta_info:
-            trimmed_meta = {}
-            for k, v in padded_output.meta_info.items():
-                if isinstance(v, torch.Tensor):
-                    trimmed_meta[k] = v[:-padding_size]
-                else:
-                    trimmed_meta[k] = v
-            padded_output.meta_info = trimmed_meta
-            
-        padded_output.batch = trimmed_batch
-        return padded_output
+        # [data-difficulty] 活动轨迹可能少于 GPU 数；补齐时同时保留 do_sample 等生成设置。
+        padded_batch, padding_size = pad_dataproto_to_divisor(
+            active_batch, max(1, self.config.num_gpus))
+        output = self.actor_rollout_wg.generate_sequences(padded_batch)
+        # [data-difficulty] 移除复制行，避免把补齐轨迹计入奖励和评价结果。
+        return unpad_dataproto(output, padding_size)
 
     def run_llm_loop(self, gen_batch, initial_input_ids: torch.Tensor) -> Tuple[Dict, Dict]:
         """Run main LLM generation loop."""
@@ -240,9 +211,13 @@ class LLMGenerationManager:
             )
             
             # gen_output = self.actor_rollout_wg.generate_sequences(rollings)
+            # [data-difficulty] 每轮及最后一轮都复制生成设置，避免重建批次后丢失确定性评价参数。
             rollings_active = DataProto.from_dict({
                 k: v[active_mask] for k, v in rollings.batch.items()
-            })            
+            }, non_tensors={k: v[active_mask.cpu().numpy()] for k, v in rollings.non_tensor_batch.items()},
+                meta_info=rollings.meta_info.copy())
+            # [data-difficulty] 同一轨迹的各轮使用独立、可重现的生成种子。
+            rollings_active.meta_info['sampling_round'] = len(active_num_list) - 1
             gen_output = self._generate_with_gpu_padding(rollings_active)
 
             meta_info = gen_output.meta_info            
@@ -284,9 +259,13 @@ class LLMGenerationManager:
             )
 
             # gen_output = self.actor_rollout_wg.generate_sequences(rollings)
+            # [data-difficulty] 每轮及最后一轮都复制生成设置，避免重建批次后丢失确定性评价参数。
             rollings_active = DataProto.from_dict({
                 k: v[active_mask] for k, v in rollings.batch.items()
-            })            
+            }, non_tensors={k: v[active_mask.cpu().numpy()] for k, v in rollings.non_tensor_batch.items()},
+                meta_info=rollings.meta_info.copy())
+            # [data-difficulty] 同一轨迹的各轮使用独立、可重现的生成种子。
+            rollings_active.meta_info['sampling_round'] = len(active_num_list) - 1
             gen_output = self._generate_with_gpu_padding(rollings_active)
 
             meta_info = gen_output.meta_info            
@@ -456,7 +435,18 @@ If I want to give the final answer, I should put the answer between <answer> and
             "return_scores": True
         }
         
-        return requests.post(self.config.search_url, json=payload).json()
+        # [data-difficulty] HTTP/结构异常传播给上层，避免将服务故障污染为 H 桶标签。
+        response = requests.post(self.config.search_url, json=payload, timeout=self.config.search_timeout)
+        response.raise_for_status()
+        result = response.json()
+        if not isinstance(result, dict) or not isinstance(result.get('result'), list) or len(result['result']) != len(queries):
+            raise ValueError('Retriever returned an invalid result count')
+        for passages in result['result']:
+            if not isinstance(passages, list) or any(not isinstance(p, dict) or
+                    not isinstance(p.get('document'), dict) or
+                    not isinstance(p['document'].get('contents'), str) for p in passages):
+                raise ValueError('Retriever returned malformed passages')
+        return result
 
     def _passages2string(self, retrieval_result):
         format_reference = ''
