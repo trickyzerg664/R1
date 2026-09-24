@@ -2,21 +2,22 @@
 
 更新：2026-09-24。实验代码分支为 `data-difficulty`；目标机运行时通过 `git rev-parse HEAD` 记录实际提交。正式 P/D/T 尚未冻结，本机烟测评分为 0 题、训练为 0 step。目标机先接续短流程验收，不能把本机失败运行标为完成。运行历史见[本机烟测记录](runs/gpu-smoke-20260924-1022.md)。
 
-以下示例假设 Linux/x86_64、目标设备可访问同版本 CUDA 依赖。把 `user@host`、`/work/R1`、`/data/search-r1` 换成真实地址；目标机的数据卷路径尽量短。不同机器的 GPU 型号、显存、卡数、驱动和可用磁盘须重新实测。
+以下示例假设 Linux/x86_64、目标设备可访问同版本 CUDA 依赖。把示例共同根目录 `/mnt/experiment` 换成容量充足的目标卷路径；后续代码、资产和运行目录按相同相对结构放置。不同机器的 GPU 型号、显存、卡数、驱动和可用磁盘须重新实测。
 
 ## 1. 在目标设备一键准备
 
 目标设备只需通过 HTTPS 访问 GitHub 和上游资产源，**无需连接本机 SSH**。脚本参数、重试行为和日志位置见[使用 README](../../scripts/difficulty/README.md)。目标机需要 Linux/x86_64、NVIDIA 驱动、`git`、`curl`、`python3`（含 venv）、`tar`；下载可能较久，建议在 `tmux` 会话中运行。
 
 ```bash
-# 全部命令在目标设备执行；先取得轻量引导脚本。
+# 全部命令在目标设备执行；脚本所在目录作为默认下载根目录。
+mkdir -p /mnt/experiment
 curl -fL https://raw.githubusercontent.com/trickyzerg664/R1/data-difficulty/scripts/difficulty/migrate_target.sh \
-  -o /tmp/r1-migrate-target.sh
-bash /tmp/r1-migrate-target.sh \
-  --repo /work/R1 --data-root /data/search-r1 --dry-run
-bash /tmp/r1-migrate-target.sh \
-  --repo /work/R1 --data-root /data/search-r1
+  -o /mnt/experiment/migrate_target.sh
+bash /mnt/experiment/migrate_target.sh --dry-run
+bash /mnt/experiment/migrate_target.sh
 ```
+
+无参数运行后，代码在 `/mnt/experiment/myprojects/R1/R1`，资产在 `/mnt/experiment/data/search-r1`。它们与本机 `/root/myprojects/R1/R1`、`/root/data/search-r1` 相对共同根目录的结构一致。后续步骤以这两个默认位置为例；改变脚本位置或使用 `--repo`、`--data-root` 后应相应调整。
 
 脚本从 GitHub 的 `data-difficulty` 分支克隆代码，下载固定 revision 的 Qwen2.5-3B、e5-base-v2、原始问答 parquet、FAISS 索引与语料，重建两个环境，生成目标机自己的小规模烟测切片，并执行环境及 CPU 检查。当前分支的核心实验代码在 Git；若上述 `curl` 返回 404，应先确认迁移脚本所在提交已推送。需要锁定代码时传入 `--expected-commit` 指定完整 40 位提交 ID。运行日志保存于目标数据目录的 `runs/migration-<UTC时间>-<pid>/`；`events.tsv` 最后为 `COMPLETE` 才说明准备通过。脚本不启动检索或 GPU 实验。
 
@@ -31,7 +32,7 @@ bash /tmp/r1-migrate-target.sh \
 `.envs` 和 `.tools` 属于本机环境，不复制；在目标机从锁文件重建。`env/setup.sh` 需要 `uv`、`curl` 和网络；目标机若无法访问依赖源，先准备相同版本的 wheel/conda 包。该脚本为项目当前 CUDA 12.x、PyTorch 2.4、vLLM 0.6.3 和 FlashAttention 2.7.4 依赖组合；按目标 GPU 驱动、架构检查兼容性，不直接复制本机 Python 环境。
 
 ```bash
-cd /work/R1
+cd /mnt/experiment/myprojects/R1/R1
 bash env/setup.sh
 bash env/run.sh searchr1 python env/check.py searchr1
 bash env/run.sh retriever python env/check.py retriever
@@ -48,11 +49,11 @@ CUDA_VISIBLE_DEVICES='' OMP_NUM_THREADS=2 MKL_NUM_THREADS=2 \
 完整索引默认在 CPU，曾在本机占用约 62 GiB RSS；查询编码器仍占用 GPU。目标机需要为语料加载、Arrow 缓存及训练进程保留充足内存。若目标机显存充足且决定把索引放 GPU，才设置 `SEARCH_R1_FAISS_GPU=1`；此改变应记入运行记录并保持所有对照组一致。
 
 ```bash
-export SEARCH_R1_ASSET_ROOT=/data/search-r1
-export SEARCH_R1_CACHE_ROOT=/data/search-r1/cache/retriever
+export SEARCH_R1_ASSET_ROOT=/mnt/experiment/data/search-r1
+export SEARCH_R1_CACHE_ROOT=/mnt/experiment/data/search-r1/cache/retriever
 export SEARCH_R1_FAISS_GPU=0
 # 在 tmux/screen 的单独会话执行，等待索引和语料完全加载：
-bash retrieval_launch.sh 2>&1 | tee /data/search-r1/runs/retriever.log
+bash retrieval_launch.sh 2>&1 | tee /mnt/experiment/data/search-r1/runs/retriever.log
 ```
 
 另一个终端执行真实请求，确认得到文档，而非只确认端口开放：
@@ -70,10 +71,10 @@ curl -fsS -X POST http://127.0.0.1:8000/retrieve \
 先建新的 run_id 和输出目录，记录设备、代码快照、资产哈希、完整命令及日志。不要复用本机失败的 `score-run`；不同配置共用输出目录会被控制器拒绝。Ray 临时目录要位于空闲较多的数据卷且路径短，否则可能出现 UNIX socket 超长或对象溢写失败。
 
 ```bash
-cd /work/R1
+cd /mnt/experiment/myprojects/R1/R1
 export SEARCH_R1_N_GPUS=2                  # 按目标机及实验对照设计确认
-export RAY_TMPDIR=/data/r1ray              # 短路径，须在 env/run.sh 前设置
-DATA=/data/search-r1
+export RAY_TMPDIR=/mnt/experiment/data/r1ray              # 短路径，须在 env/run.sh 前设置
+DATA=/mnt/experiment/data/search-r1
 RUN_ID=smoke-target-001
 RUN="$DATA/runs/$RUN_ID"
 mkdir -p "$RUN" "$DATA/cache/train/hf" "$DATA/cache/train/tmp"

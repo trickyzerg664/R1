@@ -180,3 +180,9 @@ CPU 测试首次重跑时缺少 `SEARCH_R1_N_GPUS` 环境变量，一项配置�
 按用户要求取消源机 SSH/离线包方案，`scripts/difficulty/migrate_target.sh` 改为 HTTPS Git clone，支持分支、完整提交 ID 校验及干净工作树的快进更新；后续环境/资产检查不变。新增 `scripts/difficulty/prepare_smoke.py`，从目标机下载的原始 train split 确定性筛选 NQ/HotpotQA 训练 8、开发 4、评分 2 题，记录原始文件和产物哈希；已有完整小切片时不改写，部分产物时明确报错。所有新代码按职责划分并有中文注释。验证：本机实际生成并复用小切片，行数 8/4/2 正确；跨设备 Git clone、环境和资产下载待验证。
 
 验证补充：`https://github.com/trickyzerg664/R1.git` 的 `data-difficulty` 分支实际可通过 HTTPS 克隆（当时远端提交 `459b8b41588446ed1e25f08e15a01cba4255477e`）；新脚本的帮助、干运行及 shell 语法通过。`prepare_smoke.py` 用本地真实 parquet/tokenizer 生成 train=8、dev=4、score=2，再次运行保留原产物；迁移文档命令块语法和相对链接检查通过。环境安装、资产重新下载及目标机 GPU 验收均未在本轮运行。
+
+## 2026-09-24 12:22 UTC：迁移脚本无参数默认目录
+
+修改 `scripts/difficulty/migrate_target.sh`：以脚本实际所在目录为共同根目录，默认代码为 `myprojects/R1/R1`、资产为 `data/search-r1`，沿用本机相对 `/root` 的布局；`--repo`、`--data-root` 仍可分别覆盖。修改了 `scripts/difficulty/README.md` 与 `docs/experiments/data_difficulty_migration.md` 的下载、运行和后续烟测路径。新增逻辑的中文注释说明了目录来源与可覆盖边界；未触及训练、评分和下载算法。
+
+验证：`bash -n scripts/difficulty/migrate_target.sh`、`--help`、`git diff --check` 通过。把脚本复制到临时目录、切换到其他工作目录执行 `--dry-run`，输出为临时目录下的 `myprojects/R1/R1` 与 `data/search-r1`；单独指定 `--repo` 后数据目录仍为默认值，干运行没有创建目标目录。尚未在目标设备执行完整 Git 克隆、环境安装、资产下载或 GPU 验收；远端分支须包含此次修改，目标机通过 HTTPS 下载的脚本才会获得新默认值。

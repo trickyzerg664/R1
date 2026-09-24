@@ -5,23 +5,26 @@ set -Eeuo pipefail
 usage() {
   cat <<'USAGE'
 用法：
-  bash migrate_target.sh --repo /path/to/R1 --data-root /path/to/search-r1 \
+  bash migrate_target.sh [--repo /path/to/R1] [--data-root /path/to/search-r1] \
     [--repo-url https://github.com/trickyzerg664/R1.git] \
     [--branch data-difficulty] [--expected-commit 40位Git提交ID] \
     [--refresh-code] [--dry-run]
 
 目标机直接从 Git 仓库克隆代码；不访问本机，也不需要连接本机 SSH。
+无参数时，以脚本所在目录为根，使用 myprojects/R1/R1 和 data/search-r1。
 随后创建训练/检索环境，下载并校验固定版本资产，运行环境与 CPU 检查。
 不会自动启动检索服务、评分、训练或正式实验。
 USAGE
 }
 
-# 目录、仓库和版本由参数给出；GPU 型号及卡数留给目标设备的实验配置。
+# 以脚本实际所在目录为根，保持当前设备相对 /root 的代码与资产目录结构。
+# 允许分别覆盖代码和数据目录；GPU 型号及卡数留给目标设备的实验配置。
+script_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)"
 repo_url='https://github.com/trickyzerg664/R1.git'
 branch='data-difficulty'
 expected_commit=''
-repo=''
-data_root=''
+repo="$script_dir/myprojects/R1/R1"
+data_root="$script_dir/data/search-r1"
 dry_run=0
 refresh_code=0
 while (($#)); do
@@ -42,7 +45,6 @@ while (($#)); do
     *) echo "未知参数：$1" >&2; usage >&2; exit 2 ;;
   esac
 done
-[[ -n "$repo" && -n "$data_root" ]] || { usage >&2; exit 2; }
 for path in "$repo" "$data_root"; do
   [[ "$path" = /* && "$path" =~ ^[A-Za-z0-9_./-]+$ ]] || {
     echo "路径必须是无空格的绝对路径：$path" >&2; exit 2;

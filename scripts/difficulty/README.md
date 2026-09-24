@@ -11,23 +11,22 @@
 ## 在目标设备运行
 
 ```bash
-# 首次只下载引导脚本；后续代码由脚本从 Git 仓库克隆。
+# 将引导脚本放在容量充足的数据卷；此目录是代码和数据的共同根目录。
+mkdir -p /mnt/experiment
 curl -fL https://raw.githubusercontent.com/trickyzerg664/R1/data-difficulty/scripts/difficulty/migrate_target.sh \
-  -o /tmp/r1-migrate-target.sh
+  -o /mnt/experiment/migrate_target.sh
 
-# 核对路径和步骤，不连接网络或写入目录。
-bash /tmp/r1-migrate-target.sh \
-  --repo /work/R1 --data-root /data/search-r1 --dry-run
-
-# 正式执行。首次 /work/R1 应不存在或为空。
-bash /tmp/r1-migrate-target.sh \
-  --repo /work/R1 --data-root /data/search-r1
+# 可先预览；正式运行无需参数。
+bash /mnt/experiment/migrate_target.sh --dry-run
+bash /mnt/experiment/migrate_target.sh
 ```
+
+默认使用脚本所在目录作为共同根目录。以上示例会克隆代码到 `/mnt/experiment/myprojects/R1/R1`，下载模型、问答数据和检索资产到 `/mnt/experiment/data/search-r1`，与当前设备相对 `/root` 的目录结构一致。首次运行时目标代码目录须不存在或为空；脚本和全部目录应位于容量充足的卷上。若保留其他目录布局，可用下面的路径参数覆盖默认值。
 
 | 参数 | 必填 | 含义 |
 | --- | --- | --- |
-| `--repo /path/to/R1` | 是 | 目标机代码目录，首次须为空 |
-| `--data-root /path/to/search-r1` | 是 | 模型、数据、索引、缓存和运行日志所在数据卷目录 |
+| `--repo /path/to/R1` | 否 | 覆盖默认代码目录；首次须为空 |
+| `--data-root /path/to/search-r1` | 否 | 覆盖默认资产目录，含模型、数据、索引、缓存和运行日志 |
 | `--repo-url HTTPS_URL` | 否 | Git 仓库地址；默认 `https://github.com/trickyzerg664/R1.git` |
 | `--branch NAME` | 否 | Git 分支；默认 `data-difficulty` |
 | `--expected-commit 40位SHA` | 否 | 要求克隆或更新后的 HEAD 与指定提交完全一致，防止分支移动后运行不同代码 |
