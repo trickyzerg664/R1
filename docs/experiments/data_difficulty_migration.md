@@ -1,53 +1,30 @@
 # data-difficulty：迁移到其他设备的执行清单
 
-更新：2026-09-24。当前代码分支为 `data-difficulty`，HEAD `71e072a`，还有未提交及未跟踪的实验源码。正式 P/D/T 尚未冻结，本机烟测评分为 0 题、训练为 0 step。目标机先接续短流程验收，不能直接把本机失败运行标为完成。运行历史见 [本机烟测记录](runs/gpu-smoke-20260924-1022.md)。
+更新：2026-09-24。实验代码分支为 `data-difficulty`；目标机运行时通过 `git rev-parse HEAD` 记录实际提交。正式 P/D/T 尚未冻结，本机烟测评分为 0 题、训练为 0 step。目标机先接续短流程验收，不能把本机失败运行标为完成。运行历史见[本机烟测记录](runs/gpu-smoke-20260924-1022.md)。
 
 以下示例假设 Linux/x86_64、目标设备可访问同版本 CUDA 依赖。把 `user@host`、`/work/R1`、`/data/search-r1` 换成真实地址；目标机的数据卷路径尽量短。不同机器的 GPU 型号、显存、卡数、驱动和可用磁盘须重新实测。
 
-## 1. 迁移当前源码
+## 1. 在目标设备一键准备
 
-本机工作区尚未提交，单独克隆 `data-difficulty` 分支会遗漏核心实验模块与修复。先完整同步当前工作树及 `.git`，跳过机器相关环境和缓存；同步后对比 `git status --short`。若后续改用 Git 提交传输，须先把当前所有相关新增源码和文档纳入提交。
-
-```bash
-rsync -a --info=progress2 \
-  --exclude='/.envs/' --exclude='/.cache/' --exclude='/.tools/' \
-  /root/myprojects/R1/R1/ user@host:/work/R1/
-ssh user@host 'cd /work/R1 && git branch --show-current && git status --short'
-```
-
-本机 2026-09-24 烟测产物里另有 `tracked-final.patch`、`untracked-final.tar.gz` 与 `code-sha256-final.txt`，可作为迁移后的审计快照。它们位于 `/root/data/search-r1/runs/gpu-smoke-20260924-1022/`，不能只传 patch 而忽略未跟踪源码。新机器正式运行前再保存一次当地代码快照与哈希。
-
-## 2. 迁移必要资产及可选烟测切片
-
-必要资产是生成模型、检索编码器、原始问答 parquet、完整 FAISS 索引和已解包的 JSONL 语料。只传可直接运行的最终索引和 JSONL 即可；`part_aa`、`part_ab`、`wiki-18.jsonl.gz` 属于下载原件，除非需要重新校验或重建，不必复制。最终文件约为：Qwen2.5-3B 5.8 GiB、e5-base-v2 419 MiB、索引 61 GiB、JSONL 14 GiB、问答数据 407 MiB。另预留模型/Ray 缓存、checkpoint 和运行日志空间。
+目标设备只需通过 HTTPS 访问 GitHub 和上游资产源，**无需连接本机 SSH**。脚本参数、重试行为和日志位置见[使用 README](../../scripts/difficulty/README.md)。目标机需要 Linux/x86_64、NVIDIA 驱动、`git`、`curl`、`python3`（含 venv）、`tar`；下载可能较久，建议在 `tmux` 会话中运行。
 
 ```bash
-ssh user@host 'mkdir -p /data/search-r1/models /data/search-r1/datasets/nq_hotpotqa_train /data/search-r1/retrieval/wiki18 /data/search-r1/runs/smoke-input /data/search-r1/cache'
-rsync -a --info=progress2 /root/data/search-r1/models/ user@host:/data/search-r1/models/
-rsync -a --info=progress2 /root/data/search-r1/datasets/nq_hotpotqa_train/ user@host:/data/search-r1/datasets/nq_hotpotqa_train/
-rsync -a --info=progress2 \
-  /root/data/search-r1/retrieval/wiki18/e5_Flat.index \
-  /root/data/search-r1/retrieval/wiki18/wiki-18.jsonl \
-  user@host:/data/search-r1/retrieval/wiki18/
-rsync -a /root/data/search-r1/asset-manifest.json /root/data/search-r1/asset-validation.json \
-  user@host:/data/search-r1/
+# 全部命令在目标设备执行；先取得轻量引导脚本。
+curl -fL https://raw.githubusercontent.com/trickyzerg664/R1/data-difficulty/scripts/difficulty/migrate_target.sh \
+  -o /tmp/r1-migrate-target.sh
+bash /tmp/r1-migrate-target.sh \
+  --repo /work/R1 --data-root /data/search-r1 --dry-run
+bash /tmp/r1-migrate-target.sh \
+  --repo /work/R1 --data-root /data/search-r1
 ```
 
-若要在目标机重复本机的两题烟测，额外复制下列输入；这些只用于链路验收，不能作为正式 P/D/T。传输后至少比较本机和目标机最终索引、JSONL、两个模型目录及 parquet 的文件大小和 SHA-256；`asset-manifest.json` 记录上游固定 revision，但不替代对最终拼接索引及解包语料的传输校验。
+脚本从 GitHub 的 `data-difficulty` 分支克隆代码，下载固定 revision 的 Qwen2.5-3B、e5-base-v2、原始问答 parquet、FAISS 索引与语料，重建两个环境，生成目标机自己的小规模烟测切片，并执行环境及 CPU 检查。当前分支的核心实验代码在 Git；若上述 `curl` 返回 404，应先确认迁移脚本所在提交已推送。需要锁定代码时传入 `--expected-commit` 指定完整 40 位提交 ID。运行日志保存于目标数据目录的 `runs/migration-<UTC时间>-<pid>/`；`events.tsv` 最后为 `COMPLETE` 才说明准备通过。脚本不启动检索或 GPU 实验。
 
-```bash
-rsync -a /root/data/search-r1/runs/gpu-smoke-20260924-1022/{score,train,dev}.parquet \
-  /root/data/search-r1/runs/gpu-smoke-20260924-1022/sample-manifest.json \
-  user@host:/data/search-r1/runs/smoke-input/
-```
+## 2. 资产与烟测输入
 
-```bash
-# 两台机器对相同的最终文件分别运行，并比较输出；大文件哈希扫描需要时间。
-sha256sum /data/search-r1/retrieval/wiki18/e5_Flat.index \
-  /data/search-r1/retrieval/wiki18/wiki-18.jsonl
-```
+下载器以仓库内固定 revision 获取官方模型、数据、索引分片和压缩语料，验证后拼接索引、提取 JSONL。最终可直接运行的资产约为：Qwen2.5-3B 5.8 GiB、e5-base-v2 419 MiB、索引 61 GiB、JSONL 14 GiB、问答数据 407 MiB；下载原件及缓存还需额外空间。只有 `runs/asset-download/status.json` 的 `phase=complete` 才算资产完成。
 
-如果目标机无法直接传输资产，可按 [资产说明](data_difficulty_assets.md)运行固定 revision 下载脚本，再确认 `runs/asset-download/status.json` 的 `phase=complete`。正式 checkpoint 若已在其他设备产生，必须传完整 `checkpoints/step_N/`，包含 actor、rank 状态、`driver.pt`、`metadata.json` 和 `COMPLETE.json`；只有权重目录不足以续训。当前本机没有可迁移的完整实验 checkpoint。
+脚本在下载后执行 [`prepare_smoke.py`](../../scripts/difficulty/prepare_smoke.py)，从原始 train split 生成 `runs/smoke-input/score.parquet`（2 题）、`train.parquet`（8 题）、`dev.parquet`（4 题）及记录来源哈希的清单。它们只用于链路验收，不是已冻结的正式 P/D/T。本机没有需经设备迁移的正式实验 checkpoint；将来跨设备续训须传完整 `checkpoints/step_N/`（含 actor、rank 状态、`driver.pt`、`metadata.json`、`COMPLETE.json`），并保持同样 GPU 拓扑及环境版本。
 
 ## 3. 重建并检查目标机环境
 
@@ -101,7 +78,7 @@ RUN_ID=smoke-target-001
 RUN="$DATA/runs/$RUN_ID"
 mkdir -p "$RUN" "$DATA/cache/train/hf" "$DATA/cache/train/tmp"
 MODEL="$DATA/models/Qwen2.5-3B"
-SCORE="$DATA/runs/smoke-input/score.parquet"  # 上一步复制的两题输入
+SCORE="$DATA/runs/smoke-input/score.parquet"  # 脚本在目标机生成的两题输入
 DEV="$DATA/runs/smoke-input/dev.parquet"
 
 bash env/run.sh searchr1 env \

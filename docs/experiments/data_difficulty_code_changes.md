@@ -162,3 +162,21 @@ Ray/uvloop 导入复验：`bash env/run.sh searchr1 python -c` 设置 uvloop pol
 CPU 测试首次重跑时缺少 `SEARCH_R1_N_GPUS` 环境变量，一项配置血缘测试报错（17 项通过、1 项错误）。`tests/test_difficulty_core.py` 现在显式覆盖虚拟 world size=2，以验证协议而不依赖执行设备的 GPU 配置；修改处有中文注释。待复验。
 
 轻量 Ray actor 实例复验通过：uvloop policy 下，`RayWorkerGroup._is_worker_alive` 对实际 `ALIVE` actor 返回真。随后完整 18 项难度模块 CPU 测试通过，日志 `/root/data/search-r1/runs/gpu-smoke-20260924-1022/cpu-tests.log`；`git diff --check` 通过。GPU 评分、训练和恢复仍未验收。
+
+## 2026-09-24：目标设备迁移引导脚本
+
+新增 `scripts/difficulty/migrate_target.sh`，职责仅为目标机准备：解析源机/目标目录、经 rsync 拉取含 dirty 修改的工作树、按锁文件重建环境、调用既有固定版本资产下载器、检查完整状态、运行两个环境检查和 18 项 CPU 测试；可选复制临时烟测输入。脚本不实现训练/评分算法，也不自动启动检索或 GPU 实验。每个步骤有中文注释，失败保留日志与最后阶段，重复运行可接续资产下载。验证：`bash -n`、`--help` 和 `--dry-run` 已通过；真实跨机器 SSH、环境安装与下载尚未执行。
+
+迁移脚本补充幂等边界：首次要求空目标代码目录，代码复制中断可接续；已完成迁移的重复运行默认不覆盖目标机后续修改，需显式 `--refresh-code` 才重新拉取。缺少系统 uv 时复用已有引导环境。尚未进行真实跨机安装。
+
+环境预检发现当前源机没有 rsync 可执行文件，且 22 端口未监听；目标迁移脚本改用 SSH/tar 流式复制源码与可选烟测切片，避免依赖源机 rsync。真实跨机执行仍需先具备可达的源机 SSH 服务或入口；未擅自开启服务。
+
+迁移脚本进一步增加源端 SSH/目录/tar 预检；迁移说明的手工示例同步改成 SSH/tar，避免依赖当前源机不存在的 rsync。验证：待重跑语法、帮助、干运行和文档代码块检查；跨机网络未验证。
+
+本轮脚本验证完成：`bash -n scripts/difficulty/migrate_target.sh`、`--help`、`--dry-run`、错误参数拒绝、迁移文档 9 个 bash 代码块语法检查及 `git diff --check` 均通过。还用当前无 SSH 监听的 localhost 做了失败路径实测，脚本退出非零并在独立日志中记录 `FAILED stage=拉取代码 exit=255`，没有开始下载/训练。真实跨设备传输、环境构建与资产下载仍未验证。
+
+## 2026-09-24：目标机独立 Git 迁移
+
+按用户要求取消源机 SSH/离线包方案，`scripts/difficulty/migrate_target.sh` 改为 HTTPS Git clone，支持分支、完整提交 ID 校验及干净工作树的快进更新；后续环境/资产检查不变。新增 `scripts/difficulty/prepare_smoke.py`，从目标机下载的原始 train split 确定性筛选 NQ/HotpotQA 训练 8、开发 4、评分 2 题，记录原始文件和产物哈希；已有完整小切片时不改写，部分产物时明确报错。所有新代码按职责划分并有中文注释。验证：本机实际生成并复用小切片，行数 8/4/2 正确；跨设备 Git clone、环境和资产下载待验证。
+
+验证补充：`https://github.com/trickyzerg664/R1.git` 的 `data-difficulty` 分支实际可通过 HTTPS 克隆（当时远端提交 `459b8b41588446ed1e25f08e15a01cba4255477e`）；新脚本的帮助、干运行及 shell 语法通过。`prepare_smoke.py` 用本地真实 parquet/tokenizer 生成 train=8、dev=4、score=2，再次运行保留原产物；迁移文档命令块语法和相对链接检查通过。环境安装、资产重新下载及目标机 GPU 验收均未在本轮运行。
