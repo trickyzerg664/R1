@@ -1,10 +1,10 @@
 # data-difficulty：进度台账与交接入口
 
-最后更新：2026-09-26 14:40 UTC。更新者：Codex 当前会话。
+最后更新：2026-09-26 14:50 UTC。更新者：Codex 当前会话。
 
 ## 当前结论
 
-处于**目标机 GPU 短流程部分通过**。新烟测 `train-smoke-20260926-135420` 有 5 次 actor 更新和结束验证日志；step 5 checkpoint 已开始保存，但完整标记、退出码及恢复未核实。初始与结束验证均为 0，训练奖励也全为 0；正式 A/B 未开始。
+处于**目标机 GPU 短流程部分通过**。新烟测 `train-smoke-20260926-135420` 有 5 次 actor 更新和结束验证日志；step 5 checkpoint 完成标记已存在且进程退出码为 0；逐文件哈希及恢复未核实。初始与结束验证均为 0，训练奖励也全为 0；正式 A/B 未开始。
 
 分支：`data-difficulty`。目标机以实际 `git rev-parse HEAD` 作为源码身份；启动实验前保存运行时提交、工作区状态和必要的差异快照，不能只依据旧运行记录推断代码版本。
 
@@ -26,7 +26,7 @@
 | 完整 checkpoint、固定 reference、随机种子贯通 | 已实现，CPU 恢复验证通过 | 单节点、同拓扑和环境；真实 FSDP/vLLM 尚未验证 | GPU 连续与中断恢复对照、FP16 scaler 检查 |
 | 实验入口及结果汇总 | 专用 Hydra 配置、CSV 汇总及迁移计算已实现 | 见核心运行说明；CLI/config 检查通过 | 完整绘图统计、自动矩阵调度尚未实现 |
 | 固定 P/D/T 及清单 | 未执行，暂缓运行准备 | 下载数据不等于已生成实验切分 | 去重、长度检查、稳定 ID 和清单哈希 |
-| 目标设备短流程检查 | 目标机 5 step 已有日志证据 | `train-smoke-20260926-135420` 5 次更新和结束验证；完整 checkpoint 与退出码未核实 | 校验完整保存并做恢复烟测；排查零奖励 |
+| 目标设备短流程检查 | 目标机 5 step 完成，退出码 0 | `train-smoke-20260926-135420` 5 次更新和结束验证；`COMPLETE.json` 存在，文件哈希未核实 | 校验文件哈希并做恢复烟测；排查零奖励 |
 | 初始标签及正式实验 | 未开始 | 无 labels_v0、共享父 checkpoint 或实验指标登记 | 前置条件通过后按方案执行 |
 
 本机资产根目录：`/root/data/search-r1/`。初始模型：`models/Qwen2.5-3B`；检索编码器：`models/e5-base-v2`；问答数据：`datasets/nq_hotpotqa_train/`（train 169615、test 51713 行）；检索文件：`retrieval/wiki18/e5_Flat.index` 和 `wiki-18.jsonl`。这是原始数据行数，尚未得到最终实验题池规模。
@@ -128,3 +128,5 @@
 - 2026-09-26 11:58 UTC（Codex，据用户粘贴目标机日志）：[新烟测](runs/train-smoke-20260926-114502.md) 已越过旧策略概率计算，但 step 1 actor 更新缺少 `temperature` 而失败；完成更新 0 step，checkpoint 未核实。源端 FSDP worker 入口已补齐温度，18 项 CPU 回归与语法检查通过；目标机待同步和新 run_id 复验，GPU 更新和 checkpoint 未验证；验证结果见[代码修改记录](data_difficulty_code_changes.md)。
 
 - 2026-09-26 14:40 UTC（Codex，据用户粘贴新日志）：[目标机短训练](runs/train-smoke-20260926-135420.md) 已完成 5 次 actor 更新和结束验证；上次 `temperature` 异常未复现。step 5 开始写 actor checkpoint，但 `COMPLETE.json`、退出码、哈希和恢复未核实，故可恢复步数仍未确认。验证和训练奖励均为 0，正式实验前须检查有效学习信号。下一步目标机校验保存和恢复，验收条件见运行记录。
+
+- 2026-09-26 14:50 UTC（Codex，据用户终端截图）：[目标机短训练](runs/train-smoke-20260926-135420.md) 的 `exit_code=0`，`step_5/COMPLETE.json` 已存在（1634 字节）。5 step 运行及保存提交标记完成；逐文件哈希、真实恢复与有效学习信号仍待验。下一步执行 `read_checkpoint` 完整性校验和恢复烟测。
