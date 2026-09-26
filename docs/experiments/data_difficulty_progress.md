@@ -1,10 +1,10 @@
 # data-difficulty：进度台账与交接入口
 
-最后更新：2026-09-26 15:24 UTC。更新者：Codex 当前会话。
+最后更新：2026-09-26 15:29 UTC。更新者：Codex 当前会话。
 
 ## 当前结论
 
-处于**目标机 GPU 短流程与追加恢复已跑通**。`train-smoke-20260926-135420` 的 5 步及 step 5 checkpoint 哈希已验证；`resume-smoke-20260926-150124` 从父 checkpoint 完成 step 6 更新、最终验证并以退出码 0 结束。step 6 checkpoint 文件和哈希待直接核验；父运行验证和训练奖励均为 0，正式 A/B 未开始。
+处于**目标机 GPU 短流程与追加恢复已跑通**。`train-smoke-20260926-135420` 的 5 步及 step 5 checkpoint 哈希已验证；`resume-smoke-20260926-150124` 从父 checkpoint 完成 step 6 更新、最终验证并以退出码 0 结束。step 6 checkpoint 已通过 `read_checkpoint` 文件哈希校验；父运行验证和训练奖励均为 0，正式难度打分与 A/B 尚未开始。
 
 分支：`data-difficulty`。目标机以实际 `git rev-parse HEAD` 作为源码身份；启动实验前保存运行时提交、工作区状态和必要的差异快照，不能只依据旧运行记录推断代码版本。
 
@@ -26,7 +26,7 @@
 | 完整 checkpoint、固定 reference、随机种子贯通 | 已实现，CPU 恢复验证通过 | 单节点、同拓扑和环境；真实 FSDP/vLLM 尚未验证 | GPU 连续与中断恢复对照、FP16 scaler 检查 |
 | 实验入口及结果汇总 | 专用 Hydra 配置、CSV 汇总及迁移计算已实现 | 见核心运行说明；CLI/config 检查通过 | 完整绘图统计、自动矩阵调度尚未实现 |
 | 固定 P/D/T 及清单 | 未执行，暂缓运行准备 | 下载数据不等于已生成实验切分 | 去重、长度检查、稳定 ID 和清单哈希 |
-| 目标设备短流程检查 | 目标机 5+1 step 完成，恢复路径通过 | 父运行 5 步完整哈希通过；`resume-smoke-20260926-150124` 从 step 5 完成 step 6 并退出 0 | 校验 step 6 完整性；排查零奖励 |
+| 目标设备短流程检查 | 目标机 5+1 step 完成，恢复路径通过 | 父运行 5 步完整哈希通过；`resume-smoke-20260926-150124` 从 step 5 完成 step 6 并退出 0；step 6 文件哈希通过 | 排查零奖励，再做固定题池难度打分 |
 | 初始标签及正式实验 | 未开始 | 无 labels_v0、共享父 checkpoint 或实验指标登记 | 前置条件通过后按方案执行 |
 
 本机资产根目录：`/root/data/search-r1/`。初始模型：`models/Qwen2.5-3B`；检索编码器：`models/e5-base-v2`；问答数据：`datasets/nq_hotpotqa_train/`（train 169615、test 51713 行）；检索文件：`retrieval/wiki18/e5_Flat.index` 和 `wiki-18.jsonl`。这是原始数据行数，尚未得到最终实验题池规模。
@@ -134,3 +134,5 @@
 - 2026-09-26 14:55 UTC（Codex，据用户粘贴目标机命令输出）：[目标机短训练](runs/train-smoke-20260926-135420.md) 的 `read_checkpoint` 成功，完成标记与逐文件哈希校验通过；元数据 `step=5`、`world_size=2`、检索 ID=`wiki18-e5-pinned`，初始模型与 reference ID 一致。真实 FSDP/optimizer 恢复及追加训练未验证。下一步以同拓扑、新目录从 step 5 追加 1 步，验收 step 6 更新和完整保存。
 
 - 2026-09-26 15:24 UTC（Codex，据用户终端截图）：[目标机恢复烟测](runs/resume-smoke-20260926-150124.md) 从已校验的 step 5 checkpoint 追加训练至 step 6，截图显示更新、保存开始、最终验证和退出码 0。由于训练器保存同步完成后才执行最终验证，可推断保存流程结束；step 6 的 `COMPLETE.json`、逐文件哈希和指标尚未直接核实。正式实验前继续检查有效学习信号和答案格式。
+
+- 2026-09-26 15:29 UTC（Codex，据用户粘贴目标机命令输出）：[恢复烟测](runs/resume-smoke-20260926-150124.md) 的 step 6 checkpoint 已通过 `read_checkpoint` 完成标记与逐文件哈希校验；元数据 `step=6`，初始模型/reference、检索 ID、seed、训练指纹及两卡拓扑与 step 5 一致。恢复、追加更新与完整保存已通过目标机联调。正式问题难度打分仍为 0 题；下一步先核查 step 6 奖励与答案格式，再冻结题池评分。
