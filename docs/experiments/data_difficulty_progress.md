@@ -122,3 +122,5 @@
 - 2026-09-24：HTTPS 克隆远端 `data-difficulty` 实测通过；新增目标机烟测切片生成器实测产出 8/4/2 题且重跑不改写。迁移脚本及文档待提交推送后，目标机才能通过仓库地址获得新入口；目标机未执行。
 
 - 2026-09-24 12:22 UTC（Codex）：目标机迁移脚本改为无参数运行，脚本同级作为共同根目录，默认生成 `myprojects/R1/R1` 和 `data/search-r1`；README 与迁移执行清单同步。语法、帮助、临时目录干运行、单项覆盖和 `git diff --check` 已通过，证据见[代码实现记录](data_difficulty_code_changes.md)。目标机完整迁移及 GPU 短流程仍未执行；下一步将修改发布到远端，再按迁移清单在目标机预览并运行，以日志 `COMPLETE` 和后续真实短流程作为验收。
+
+- 2026-09-26（Codex，依据用户粘贴的目标机日志，非目标机直接检查）：目标机 8×RTX A6000 中使用 GPU 1、2；两卡最小 NCCL `ALLREDUCE` 原路径和仅关闭 cuMem 均超时，`NCCL_P2P_DISABLE=1` 时两 rank 均 PASS。检索服务改用 8008 并可返回真实文档。`train-smoke-20260926-112131` 进入 step 1，但搜索生成后因缺少 `micro_batch_size` 元数据失败；已完成更新 0 step，完整 checkpoint 未见证据。源端修复 `verl/workers/fsdp_workers.py` 并通过 18 项 CPU 回归，目标机尚未同步或复验。详情见 [目标机烟测失败记录](runs/train-smoke-20260926-112131.md) 与 [代码修改记录](data_difficulty_code_changes.md)。下一步同步修复至目标机，在新目录复跑并核实 GPU 更新、保存及恢复。

@@ -186,3 +186,11 @@ CPU 测试首次重跑时缺少 `SEARCH_R1_N_GPUS` 环境变量，一项配置�
 修改 `scripts/difficulty/migrate_target.sh`：以脚本实际所在目录为共同根目录，默认代码为 `myprojects/R1/R1`、资产为 `data/search-r1`，沿用本机相对 `/root` 的布局；`--repo`、`--data-root` 仍可分别覆盖。修改了 `scripts/difficulty/README.md` 与 `docs/experiments/data_difficulty_migration.md` 的下载、运行和后续烟测路径。新增逻辑的中文注释说明了目录来源与可覆盖边界；未触及训练、评分和下载算法。
 
 验证：`bash -n scripts/difficulty/migrate_target.sh`、`--help`、`git diff --check` 通过。把脚本复制到临时目录、切换到其他工作目录执行 `--dry-run`，输出为临时目录下的 `myprojects/R1/R1` 与 `data/search-r1`；单独指定 `--repo` 后数据目录仍为默认值，干运行没有创建目标目录。尚未在目标设备执行完整 Git 克隆、环境安装、资产下载或 GPU 验收；远端分支须包含此次修改，目标机通过 HTTPS 下载的脚本才会获得新默认值。
+
+## 2026-09-26：目标机搜索训练旧策略 log probability 元数据修复
+
+目标机 `train-smoke-20260926-112131` 通过 `NCCL_P2P_DISABLE=1` 完成两卡初始化、真实检索和 step 0 验证，但在 step 1 生成后调用 `ActorRolloutRefWorker.compute_log_prob` 时出现 `KeyError: micro_batch_size`。搜索路径直接调用该 worker 入口，绕过普通 `generate_sequences` 内的重算元数据设置；`dp_actor.compute_log_prob` 同时要求 `micro_batch_size`、`temperature` 和 `use_dynamic_bsz`，动态批量还要求 `max_token_len`。
+
+修改 `verl/workers/fsdp_workers.py`：在 `compute_log_prob` 入口用 worker 已按数据并行卡数归一化的 rollout 配置补齐四个重算字段，并保留 tokenizer 字段。该入口同时服务普通调用，不改采样、评分、奖励及训练主循环。修改仅在源端仓库完成；目标机独立副本尚未同步，真实 GPU 重试未验证。
+
+验证：`python3 -m py_compile verl/workers/fsdp_workers.py`、`git diff --check` 通过；`CUDA_VISIBLE_DEVICES='' OMP_NUM_THREADS=2 MKL_NUM_THREADS=2 HF_HUB_OFFLINE=1 TRANSFORMERS_OFFLINE=1 bash env/run.sh searchr1 python -m unittest discover -s tests -p '*difficulty*.py' -q`，18 项通过。CPU 测试不覆盖真实 FSDP/vLLM worker 入口；下一步在目标机同步修复，用新 run_id 重试 5 步并检查完整 checkpoint。

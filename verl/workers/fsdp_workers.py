@@ -420,7 +420,14 @@ class ActorRolloutRefWorker(Worker):
                                      load_grad=self._is_offload_grad)
 
         data.batch = data.batch.cuda()
-        meta_info = {'eos_token_id': self.tokenizer.eos_token_id, 'pad_token_id': self.tokenizer.pad_token_id}
+        # [data-difficulty] 搜索生成直接调用本入口；补齐与普通 rollout 相同的重算参数，
+        # 并使用 worker 按数据并行卡数归一化后的 micro batch 大小。
+        meta_info = {'eos_token_id': self.tokenizer.eos_token_id,
+                     'pad_token_id': self.tokenizer.pad_token_id,
+                     'micro_batch_size': self.config.rollout.log_prob_micro_batch_size,
+                     'max_token_len': self.config.rollout.log_prob_max_token_len_per_gpu,
+                     'use_dynamic_bsz': self.config.rollout.log_prob_use_dynamic_bsz,
+                     'temperature': self.config.rollout.temperature}
         data.meta_info.update(meta_info)
 
         with self.ulysses_sharding_manager:
