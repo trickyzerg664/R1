@@ -368,6 +368,8 @@ class ActorRolloutRefWorker(Worker):
         data = data.to('cuda')
 
         assert self._is_actor
+        # [data-difficulty] 搜索生成返回的训练批次没有温度元数据；更新策略时使用本 worker 的采样温度。
+        data.meta_info['temperature'] = self.config.rollout.temperature
         if self._is_offload_param:
             load_fsdp_param_and_grad(module=self.actor_module_fsdp,
                                      device_id=torch.cuda.current_device(),

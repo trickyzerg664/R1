@@ -194,3 +194,9 @@ CPU 测试首次重跑时缺少 `SEARCH_R1_N_GPUS` 环境变量，一项配置�
 修改 `verl/workers/fsdp_workers.py`：在 `compute_log_prob` 入口用 worker 已按数据并行卡数归一化的 rollout 配置补齐四个重算字段，并保留 tokenizer 字段。该入口同时服务普通调用，不改采样、评分、奖励及训练主循环。修改仅在源端仓库完成；目标机独立副本尚未同步，真实 GPU 重试未验证。
 
 验证：`python3 -m py_compile verl/workers/fsdp_workers.py`、`git diff --check` 通过；`CUDA_VISIBLE_DEVICES='' OMP_NUM_THREADS=2 MKL_NUM_THREADS=2 HF_HUB_OFFLINE=1 TRANSFORMERS_OFFLINE=1 bash env/run.sh searchr1 python -m unittest discover -s tests -p '*difficulty*.py' -q`，18 项通过。CPU 测试不覆盖真实 FSDP/vLLM worker 入口；下一步在目标机同步修复，用新 run_id 重试 5 步并检查完整 checkpoint。
+
+## 2026-09-26：目标机搜索训练 actor 更新温度元数据修复
+
+目标机 `train-smoke-20260926-114502` 已越过旧策略概率计算、奖励和优势计算，在 step 1 参数更新时，`dp_actor.update_policy` 因缺少 `temperature` 报错。上一修复仅在 `compute_log_prob` 的 worker 本地补齐元数据；它返回概率张量，训练 driver 的原始批次没有获得温度。
+
+修改 `verl/workers/fsdp_workers.py` 的 FSDP `update_actor` 入口，从该 worker 的 rollout 配置设置训练批次温度，与正常生成路径读取的配置一致。保留 `dp_actor` 对温度存在性的检查；不改搜索、奖励或训练主循环。验证：`python3 -m py_compile verl/workers/fsdp_workers.py`、`git diff --check` 均通过；离线环境下运行 `CUDA_VISIBLE_DEVICES='' OMP_NUM_THREADS=2 MKL_NUM_THREADS=2 HF_HUB_OFFLINE=1 TRANSFORMERS_OFFLINE=1 bash env/run.sh searchr1 python -m unittest discover -s tests -p '*difficulty*.py' -q`，18 项 CPU 测试通过。该测试集未覆盖真实 FSDP worker 的 GPU 更新入口；目标机 5 step、checkpoint 与恢复仍待验证，详见[运行记录](runs/train-smoke-20260926-114502.md)。

@@ -1,10 +1,10 @@
 # data-difficulty：进度台账与交接入口
 
-最后更新：2026-09-24（UTC）。更新者：Codex 当前会话。
+最后更新：2026-09-26 11:58 UTC。更新者：Codex 当前会话。
 
 ## 当前结论
 
-处于**核心代码已接入、CPU 验证通过，GPU 短流程仅部分通过**。本机完整检索与双卡 3B/FSDP/vLLM 初始化通过，首批 rollout 显存不足；评分 0 题、训练 0 step、checkpoint 0、正式 A/B 未开始。目标机按[迁移执行清单](data_difficulty_migration.md)重新验收，不能把环境检查当作完整 GPU 通过。其他会话或设备是否有任务运行需接手者核实。
+处于**目标机 GPU 短流程调试中**。目标机两卡训练已通过模型初始化、真实检索、旧策略概率和奖励，step 1 在 actor 更新时因缺少 `temperature` 失败；已完成更新 0 step、完整 checkpoint 未见证据、正式 A/B 未开始。源端已修复该入口，仍须目标机复跑验收；目标机当前进程及产物状态未直接核实。
 
 分支：`data-difficulty`。目标机以实际 `git rev-parse HEAD` 作为源码身份；启动实验前保存运行时提交、工作区状态和必要的差异快照，不能只依据旧运行记录推断代码版本。
 
@@ -26,7 +26,7 @@
 | 完整 checkpoint、固定 reference、随机种子贯通 | 已实现，CPU 恢复验证通过 | 单节点、同拓扑和环境；真实 FSDP/vLLM 尚未验证 | GPU 连续与中断恢复对照、FP16 scaler 检查 |
 | 实验入口及结果汇总 | 专用 Hydra 配置、CSV 汇总及迁移计算已实现 | 见核心运行说明；CLI/config 检查通过 | 完整绘图统计、自动矩阵调度尚未实现 |
 | 固定 P/D/T 及清单 | 未执行，暂缓运行准备 | 下载数据不等于已生成实验切分 | 去重、长度检查、稳定 ID 和清单哈希 |
-| 目标设备短流程检查 | 本机部分通过，目标机待运行 | 完整检索及双卡模型初始化通过；首批 rollout CUDA OOM，见烟测记录 | 目标机检索→四次生成→奖励→更新→保存恢复通过 |
+| 目标设备短流程检查 | 目标机部分通过 | `train-smoke-20260926-114502` 到达 step 1 更新，缺少 `temperature`；见运行记录 | 同步修复后完成更新→保存→恢复 |
 | 初始标签及正式实验 | 未开始 | 无 labels_v0、共享父 checkpoint 或实验指标登记 | 前置条件通过后按方案执行 |
 
 本机资产根目录：`/root/data/search-r1/`。初始模型：`models/Qwen2.5-3B`；检索编码器：`models/e5-base-v2`；问答数据：`datasets/nq_hotpotqa_train/`（train 169615、test 51713 行）；检索文件：`retrieval/wiki18/e5_Flat.index` 和 `wiki-18.jsonl`。这是原始数据行数，尚未得到最终实验题池规模。
@@ -124,3 +124,5 @@
 - 2026-09-24 12:22 UTC（Codex）：目标机迁移脚本改为无参数运行，脚本同级作为共同根目录，默认生成 `myprojects/R1/R1` 和 `data/search-r1`；README 与迁移执行清单同步。语法、帮助、临时目录干运行、单项覆盖和 `git diff --check` 已通过，证据见[代码实现记录](data_difficulty_code_changes.md)。目标机完整迁移及 GPU 短流程仍未执行；下一步将修改发布到远端，再按迁移清单在目标机预览并运行，以日志 `COMPLETE` 和后续真实短流程作为验收。
 
 - 2026-09-26（Codex，依据用户粘贴的目标机日志，非目标机直接检查）：目标机 8×RTX A6000 中使用 GPU 1、2；两卡最小 NCCL `ALLREDUCE` 原路径和仅关闭 cuMem 均超时，`NCCL_P2P_DISABLE=1` 时两 rank 均 PASS。检索服务改用 8008 并可返回真实文档。`train-smoke-20260926-112131` 进入 step 1，但搜索生成后因缺少 `micro_batch_size` 元数据失败；已完成更新 0 step，完整 checkpoint 未见证据。源端修复 `verl/workers/fsdp_workers.py` 并通过 18 项 CPU 回归，目标机尚未同步或复验。详情见 [目标机烟测失败记录](runs/train-smoke-20260926-112131.md) 与 [代码修改记录](data_difficulty_code_changes.md)。下一步同步修复至目标机，在新目录复跑并核实 GPU 更新、保存及恢复。
+
+- 2026-09-26 11:58 UTC（Codex，据用户粘贴目标机日志）：[新烟测](runs/train-smoke-20260926-114502.md) 已越过旧策略概率计算，但 step 1 actor 更新缺少 `temperature` 而失败；完成更新 0 step，checkpoint 未核实。源端 FSDP worker 入口已补齐温度，18 项 CPU 回归与语法检查通过；目标机待同步和新 run_id 复验，GPU 更新和 checkpoint 未验证；验证结果见[代码修改记录](data_difficulty_code_changes.md)。
