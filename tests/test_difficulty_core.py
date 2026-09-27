@@ -210,6 +210,27 @@ class DifficultyCoreTests(unittest.TestCase):
         self.assertFalse(missing['has_answer_tag'])
         self.assertIsNone(missing['last_answer'])
 
+    def test_reward_ignores_environment_answer_tags(self):
+        # 环境反馈含伪答案时不能获得奖励；真正由模型生成的答案仍须得分。
+        from verl import DataProto
+        from verl.trainer.main_ppo import RewardManager
+        class Tokenizer:
+            def decode(self, ids, **_):
+                parts = {1: '<answer>example</answer>', 2: '<search>query</search>',
+                         3: '<answer>and</answer>', 4: '<answer>seven</answer>'}
+                return ''.join(parts[int(token)] for token in ids)
+        batch = DataProto.from_dict(
+            {'prompts': torch.tensor([[1], [1]]),
+             'responses': torch.tensor([[2, 3, 0], [2, 3, 4]]),
+             'attention_mask': torch.tensor([[1, 1, 1, 0], [1, 1, 1, 1]]),
+             'info_mask': torch.tensor([[1, 1, 0, 0], [1, 1, 0, 1]])},
+            non_tensors={'reward_model': np.array([
+                {'ground_truth': {'target': ['and']}},
+                {'ground_truth': {'target': ['seven']}}], dtype=object),
+                'data_source': np.array(['nq', 'nq'], dtype=object)})
+        scores = RewardManager(Tokenizer(), num_examine=0)(batch)
+        self.assertEqual(scores.sum(-1).tolist(), [0.0, 1.0])
+
     def test_disabled_configuration_and_invalid_experiment(self):
         # 旧入口的配置在关闭实验时完全不修改；开启后禁止不受支持的组合。
         config = OmegaConf.load('verl/trainer/config/ppo_trainer.yaml')

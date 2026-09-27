@@ -216,3 +216,11 @@ CPU 测试首次重跑时缺少 `SEARCH_R1_N_GPUS` 环境变量，一项配置�
 修改 `verl/experimental/difficulty/generation.py`：为 `score_batch` 加可选 `trace_chars`，沿用奖励器的有效响应 mask 解码每条已有轨迹，在记录中保存闭合答案标签状态、最后一个答案、标准答案和响应末尾。`verl/trainer/ppo/ray_trainer.py` 只传入诊断长度；`verl/experimental/difficulty/controller.py` 把非零诊断长度写入评分上下文，避免混用断点；`configuration.py` 将长度限制在 0–2000，`ppo_trainer.yaml` 默认 0，常规评分结果与 checkpoint 策略不变。新增 CPU 测试检查正常/未闭合标签、多标签最后答案和末尾截取。新诊断仍须在目标机跑真实 GPU 评分才能判定零奖励原因，不据此将正式实验标记为可开始。
 
 验证：`python3 -m py_compile`、`git diff --check` 均通过；离线 `python -m unittest discover -s tests -p '*difficulty*.py' -q` 21 项通过。未在源机运行新 GPU 评分。
+
+## 2026-09-27：避免检索反馈被当作模型答案
+
+目标机轨迹诊断 `score-trace-20260927-051309` 把多条轨迹的答案提取为 `and`。代码核对表明无效动作反馈内含字面 `<answer> and </answer>`，而 `RewardManager` 原先把模型响应和环境观察一起交给严格 EM 提取器；诊断输出也沿用了混合文本。该伪答案本次仍得 0，但可能在标准答案恰为 `and` 时造成误奖，且不能用来判断模型是否有合法答案。
+
+修改 `verl/trainer/main_ppo.py`：检索轨迹若有 `info_mask`，奖励器从有效响应中只保留模型生成 token，剔除检索观察后再与原 prompt 一起交给原 `qa_em`，保持原二值 EM 奖励规则、答案样例约束及奖励写回位置。没有 `info_mask` 的旧路径保持原行为。修改 `verl/experimental/difficulty/generation.py`：可选诊断沿用同一 `info_mask`，使摘要只显示模型文本。根据用户要求保留官方系统提示词及无效动作反馈原文；新增一项 CPU 回归，同时检查环境伪标签不得计奖、真正生成答案仍得奖。未改检索索引、模型权重或题池。
+
+验证：`python3 -m py_compile`、`git diff --check` 通过；离线难度模块 CPU 测试 22 项通过。真实目标机评分、训练奖励和其它数据来源尚未在新代码上验证；此前全部零奖励运行不作为正式比较基线。此修复改变了评分输入文本，正式实验所有组必须在同一修复版本下重跑。

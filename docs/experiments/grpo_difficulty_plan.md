@@ -25,7 +25,7 @@
 
 - 入口：`train_grpo.sh`，默认模型 Qwen/Qwen2.5-3B；默认 n_agent=5，改为 4。
 - 检索路径：`do_search=true`；保持 `actor_rollout_ref.rollout.n=1`，由 n_agent 产生每题四条完整轨迹。不要同时把两个 n 都改成 4。
-- 正确性奖励：`verl/trainer/main_ppo.py` 调用 `qa_em.compute_score_em`，RewardManager 默认 format_score=0。运行时确认最终奖励只包含 0、1。
+- 正确性奖励：`verl/trainer/main_ppo.py` 调用 `qa_em.compute_score_em`，RewardManager 默认 format_score=0。运行时确认最终奖励只包含 0、1。 检索观察与无效动作反馈通过 `info_mask` 排除，答案提取只读取原 prompt 与模型生成 token；正式各组统一使用修复后的规则。
 - GRPO：`verl/trainer/ppo/core_algos.py` 按组归一化奖励。保持 `use_kl_loss=true`，KL 独立计算；若将 KL 混入奖励，全错/全对组也可能产生非零优势，会改变解释。
 - 当前检索训练路径直接以数据 index 作为 uid。混合数据集的 index 必须全局唯一；有放回采样时，给每次抽取创建独立 group_uid，然后复制为四条轨迹。永久 question_id 用于追踪同一道题，group_uid 仅用于这次 GRPO 分组。
 - 在 batch 重排之后检查：每个 group_uid 恰好对应四条轨迹，轨迹对应同一道题，优势计算未跨组串联。

@@ -64,9 +64,14 @@ class RewardManager():
             response_ids = data_item.batch['responses']
             valid_response_length = data_item.batch['attention_mask'][prompt_length:].sum()
             valid_response_ids = response_ids[:valid_response_length]
+            # [data-difficulty] 检索观察和无效动作提示属于环境文本，不是模型答案；评分只读取生成 token。
+            scoring_response_ids = valid_response_ids
+            if 'info_mask' in data_item.batch:
+                model_mask = data_item.batch['info_mask'][prompt_length:prompt_length + valid_response_length].bool()
+                scoring_response_ids = valid_response_ids[model_mask]
 
             # decode
-            sequences = torch.cat((valid_prompt_ids, valid_response_ids))
+            sequences = torch.cat((valid_prompt_ids, scoring_response_ids))
             sequences_str = self.tokenizer.decode(sequences)
 
             ground_truth = data_item.non_tensor_batch['reward_model']['ground_truth']

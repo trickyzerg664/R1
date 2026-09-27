@@ -63,7 +63,10 @@ def score_batch(dataset, indices, seeds, manager, reward_fn, max_start_length, t
             item = batch[i]
             prompt_length = item.batch['prompts'].shape[-1]
             response_length = int(item.batch['attention_mask'][prompt_length:].sum().item())
-            response = manager.tokenizer.decode(item.batch['responses'][:response_length], skip_special_tokens=True)
+            # 诊断与奖励器都排除检索观察，避免把反馈里的示例标签误认为模型作答。
+            model_mask = item.batch['info_mask'][prompt_length:prompt_length + response_length].bool()
+            response_ids = item.batch['responses'][:response_length][model_mask]
+            response = manager.tokenizer.decode(response_ids, skip_special_tokens=True)
             traces.append(response_trace(response, item.non_tensor_batch['reward_model']['ground_truth'], trace_chars))
         for record, start in zip(records, range(0, len(traces), 4)):
             record['traces'] = traces[start:start + 4]
