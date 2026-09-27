@@ -109,7 +109,7 @@ bash env/run.sh searchr1 env \
 
 ## 6. 进入正式实验
 
-先从原始 train/test 冻结独立 P/D/T 和稳定 ID/哈希；本机只有临时小切片，不能替代。按 [执行步骤](data_difficulty_steps.md)先做 C0 对 P 的四次评分生成 v0，再做 A0–A4；第一阶段选定共同父完整 checkpoint 后，对同一 P 重新评分生成 v1，再做 B0–B3。所有组统一 10 轮上限、同一检索身份、模型起点和硬件配置。只有短流程评分、训练更新、完整保存与恢复都通过，才启动 200 step 正式对照。
+先从原始 train/test 冻结独立 P/D/T 和稳定 ID/哈希；新入口为 `scripts/difficulty/freeze_pool.py`，须在最终模型/tokenizer 与 prompt 长度确定后运行，随后用 `--verify` 校验；烟测小切片和源端 P=20/D=10/T=10 工具验证均不能替代正式题池。按 [执行步骤](data_difficulty_steps.md)先做 C0 对 P 的四次评分生成 v0，再做 A0–A4；第一阶段选定共同父完整 checkpoint 后，对同一 P 重新评分生成 v1，再做 B0–B3。所有组统一 10 轮上限、同一检索身份、模型起点和硬件配置。只有短流程评分、训练更新、完整保存与恢复都通过，才启动 200 step 正式对照。
 
 ## 目标机 2026-09-26 烟测补充
 

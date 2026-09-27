@@ -69,6 +69,8 @@ nvidia-smi
 
 输出 pool_manifest、dev_manifest、test_manifest；包含 question_id、source、原始定位、文本哈希。记录分来源题数、去重/长度剔除题数及清单哈希。
 
+正式切分入口已实现：在最终模型/tokenizer 和 `max_prompt_length` 确定后执行 `scripts/difficulty/freeze_pool.py --data-root "$DATA" --output-dir "$DATA/runs/formal-pdt-v1" --model "$DATA/models/Qwen2.5-3B" --max-prompt-length 256`；用相同参数加 `--verify` 校验文件哈希、题数和互斥。默认 P=10000、D=1000、T=2000，seed=42，可显式覆盖。输出目录已有文件不会被覆盖；模型或长度改变时使用新目录。当前零奖励未解决，尚不可把烟测输入或小规模工具验证输出当作正式 P/D/T。
+
 ## 4. 先完成短流程检查
 
 使用小题集和小 batch 验证完整链路，暂不作为实验结果：

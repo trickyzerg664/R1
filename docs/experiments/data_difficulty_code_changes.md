@@ -200,3 +200,11 @@ CPU 测试首次重跑时缺少 `SEARCH_R1_N_GPUS` 环境变量，一项配置�
 目标机 `train-smoke-20260926-114502` 已越过旧策略概率计算、奖励和优势计算，在 step 1 参数更新时，`dp_actor.update_policy` 因缺少 `temperature` 报错。上一修复仅在 `compute_log_prob` 的 worker 本地补齐元数据；它返回概率张量，训练 driver 的原始批次没有获得温度。
 
 修改 `verl/workers/fsdp_workers.py` 的 FSDP `update_actor` 入口，从该 worker 的 rollout 配置设置训练批次温度，与正常生成路径读取的配置一致。保留 `dp_actor` 对温度存在性的检查；不改搜索、奖励或训练主循环。验证：`python3 -m py_compile verl/workers/fsdp_workers.py`、`git diff --check` 均通过；离线环境下运行 `CUDA_VISIBLE_DEVICES='' OMP_NUM_THREADS=2 MKL_NUM_THREADS=2 HF_HUB_OFFLINE=1 TRANSFORMERS_OFFLINE=1 bash env/run.sh searchr1 python -m unittest discover -s tests -p '*difficulty*.py' -q`，18 项 CPU 测试通过。该测试集未覆盖真实 FSDP worker 的 GPU 更新入口；目标机 5 step、checkpoint 与恢复仍待验证，详见[运行记录](runs/train-smoke-20260926-114502.md)。
+
+## 2026-09-27：正式 P/D/T 冻结与校验入口
+
+新增 `verl/experimental/difficulty/pool_preparation.py`：从原始 train/test DataFrame 确定性构建互斥 P/D/T；NQ/HotpotQA 按训练来源比例分配目标数量，整个官方 test 的规范化问题均从 P/D 排除，题目经 tokenizer 实际渲染长度筛选后生成稳定 `question_id`。去重规则为 Unicode NFKC、casefold、去标点及空白合并；T 来自官方 test，D/P 来自 train。纯模块不依赖 Ray/GPU/路径。
+
+新增 `scripts/difficulty/freeze_pool.py`：命令层读取原始 parquet 和固定 tokenizer，默认 P=10000、D=1000、T=2000，写 `P.parquet`、`D.parquet`、`T.parquet` 和最后发布的 `manifest.json`；记录原始/输出/tokenizer 文件 SHA-256、每题来源/原始 ID/问题哈希/token 长度。输出目录已有文件时拒绝覆盖；`--verify` 复查哈希、行序、来源和题目互斥。新增 `tests/test_difficulty_pool_preparation.py` 的两项 CPU 语义测试，检查跨 split 防泄漏、来源配额、超长过滤、输入行重排后的稳定性，以及不足容量/重叠拒绝。
+
+验证：`python3 -m py_compile`、`git diff --check`、CLI `--help` 通过；离线环境下难度模块 CPU 测试 20 项通过。真实原始数据、固定 tokenizer 的小规模 CLI 端到端输出 P=20/D=10/T=10，随后独立 `--verify` 通过，产物位于 `/root/data/search-r1/runs/pdt-tool-validation-20260927-0200`，仅作工具验证，不是正式 P/D/T。默认大规模 P/D/T 尚未运行；目标机运行结果、最终模型/长度和零奖励修复均未验证。正式冻结必须等模型/tokenizer/长度确定，使用独立新目录。

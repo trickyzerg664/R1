@@ -41,3 +41,7 @@ GPU 型号、卡数和显存占用参数不写入迁移脚本。后续实验通�
 每次运行都会在 `<data-root>/runs/migration-<UTC时间>-<pid>/` 保存 `bootstrap.log`、`events.tsv`、实际 `git-head.txt` 和 `git-status.txt`。只有 `events.tsv` 最后一条为 `COMPLETE`，才表示代码、环境、资产与静态检查都完成。失败时查看 `FAILED stage=... exit=...`，修复后用同样参数重跑；完整资产会跳过重复下载。重复运行默认保留目标机现有提交，只有加 `--refresh-code` 才从仓库快进。
 
 脚本会从下载的原始训练 split 生成 `runs/smoke-input/{score,train,dev}.parquet` 和 `sample-manifest.json`，供目标机完成两题评分及少量训练验证。这些切片**不是正式 P/D/T**；正式实验前仍需独立冻结题池。准备完成后的检索启动、四轨迹评分、更新、完整 checkpoint 和恢复步骤见[迁移与烟测计划](../../docs/experiments/data_difficulty_migration.md)，结果按[进度台账](../../docs/experiments/data_difficulty_progress.md)登记。
+
+## 正式 P/D/T 题池
+
+零奖励排查完成、最终模型/tokenizer 与 prompt 长度锁定后，运行 `freeze_pool.py` 从原始 train/test 冻结 P/D/T。默认数量为 10000/1000/2000；T 只从官方 test 的 NQ/HotpotQA 抽取，P/D 从 train 抽取并排除整个官方 test 中重复的问题。使用 `--verify` 复查原始资产、tokenizer、输出文件哈希及题目互斥；修改模型或长度须换新目录。命令示例见[实验步骤](../../docs/experiments/data_difficulty_steps.md)。迁移脚本生成的 `smoke-input` 不具备正式题池身份。
