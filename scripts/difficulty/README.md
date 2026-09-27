@@ -45,3 +45,16 @@ GPU 型号、卡数和显存占用参数不写入迁移脚本。后续实验通�
 ## 正式 P/D/T 题池
 
 零奖励排查完成、最终模型/tokenizer 与 prompt 长度锁定后，运行 `freeze_pool.py` 从原始 train/test 冻结 P/D/T。默认数量为 10000/1000/2000；T 只从官方 test 的 NQ/HotpotQA 抽取，P/D 从 train 抽取并排除整个官方 test 中重复的问题。使用 `--verify` 复查原始资产、tokenizer、输出文件哈希及题目互斥；修改模型或长度须换新目录。命令示例见[实验步骤](../../docs/experiments/data_difficulty_steps.md)。迁移脚本生成的 `smoke-input` 不具备正式题池身份。
+
+## 一小时内的小池奖励检查
+
+两题烟测不能判断正式候选池是否有足够的 K1–K4 题。`score_budget_probe.sh` 从原始 NQ/HotpotQA 确定性抽取临时 P=20、D=10、T=10（初始 prompt 不超过 256 token），沿用已测试的长上下文评分配置与严格 EM；每题四轨迹、逐题落盘。它不修改系统提示词、奖励或正式题池，也不启动训练。必须显式传入 `--run` 才会启动 GPU。目标机检索服务须已在 8008 端口运行。
+
+```bash
+cd "$HOME/projects/lzy/myprojects/R1/R1"
+git pull --ff-only origin data-difficulty
+CUDA_VISIBLE_DEVICES=1,2 NCCL_P2P_DISABLE=1 \
+  bash scripts/difficulty/score_budget_probe.sh --run
+```
+
+默认先给题池准备最多 8 分钟，再给评分最多 40 分钟；到时保留 `labels.json.partial` 中已完成的题，终端打印题数、K0–K4 和有效答案格式数，完整路径及退出码写在唯一 `runs/score-budget-*` 目录。124/137 是限时停止，不能当作评分完成。20 题只作早期筛查，不估计正式桶比例；正式模型、长度及 P/D/T 仍需按实验步骤锁定。`--minutes` 可在 1–45 分钟间调整，`--data-root`、`--model`、`--output-dir`、`--retriever-url` 可改路径和服务地址。无 `--run` 可先预览，不占用 GPU。

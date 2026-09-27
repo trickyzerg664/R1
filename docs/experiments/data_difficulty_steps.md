@@ -72,6 +72,8 @@ nvidia-smi
 
 正式切分入口已实现：在最终模型/tokenizer 和 `max_prompt_length` 确定后执行 `scripts/difficulty/freeze_pool.py --data-root "$DATA" --output-dir "$DATA/runs/formal-pdt-v1" --model "$DATA/models/Qwen2.5-3B" --max-prompt-length 256`；用相同参数加 `--verify` 校验文件哈希、题数和互斥。默认 P=10000、D=1000、T=2000，seed=42，可显式覆盖。输出目录已有文件不会被覆盖；模型或长度改变时使用新目录。当前零奖励未解决，尚不可把烟测输入或小规模工具验证输出当作正式 P/D/T。
 
+当前严格 EM 的两题长上下文评分仍全零；若只有约一小时，可先运行 `scripts/difficulty/score_budget_probe.sh --run`，筛查临时 P20 中已完成题目的 K0–K4 与答案格式。该命令最多用 8 分钟准备临时题池，再限时 40 分钟评分，产物为独立 `runs/score-budget-*`；部分评分不能当正式标签。20 题结果只决定是否继续核验当前模型/配置，不能估计正式桶容量。详细用法见[脚本说明](../../scripts/difficulty/README.md)。
+
 ## 4. 先完成短流程检查
 
 使用小题集和小 batch 验证完整链路，暂不作为实验结果：
