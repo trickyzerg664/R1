@@ -87,6 +87,8 @@ class LLMGenerationManager:
             return_tensors='pt',
             add_special_tokens=False,  # Prevents adding special tokens
         )['input_ids']
+        # 所有轨迹都结束时，空观察会被 tokenizer 建成 float 空张量；拼接前固定为 token ID 整数类型。
+        next_obs_ids = next_obs_ids.long()
 
         if next_obs_ids.shape[1] > self.config.max_obs_length:
             print(f"[WARNING] OBSERVATION TOO LONG, CONSIDER CHANGING YOUR CONFIG, {next_obs_ids.shape[1]} & {self.config.max_obs_length}")            

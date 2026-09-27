@@ -210,6 +210,27 @@ class DifficultyCoreTests(unittest.TestCase):
         self.assertFalse(missing['has_answer_tag'])
         self.assertIsNone(missing['last_answer'])
 
+    def test_empty_observations_keep_token_ids_integer(self):
+        # 所有轨迹同轮结束时，真实 tokenizer 会返回 float32 的零宽张量；拼接后仍须保持整数 token ID。
+        from search_r1.llm_agent.generation import GenerationConfig, LLMGenerationManager
+
+        class EmptyTokenizer:
+            pad_token_id = 0
+
+            def __call__(self, values, **_):
+                return {'input_ids': torch.empty((len(values), 0), dtype=torch.float32)}
+
+        manager = LLMGenerationManager(
+            EmptyTokenizer(), None,
+            GenerationConfig(max_turns=10, max_start_length=256,
+                             max_prompt_length=4096, max_response_length=128,
+                             max_obs_length=512, num_gpus=4))
+        observations = manager._process_next_obs(['', '', '', ''])
+        self.assertEqual(observations.shape, (4, 0))
+        self.assertEqual(observations.dtype, torch.long)
+        combined = torch.cat((torch.tensor([[1], [2], [3], [4]], dtype=torch.long), observations), dim=1)
+        self.assertEqual(combined.dtype, torch.long)
+
     def test_reward_ignores_environment_answer_tags(self):
         # 环境反馈含伪答案时不能获得奖励；真正由模型生成的答案仍须得分。
         from verl import DataProto

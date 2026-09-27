@@ -230,3 +230,11 @@ CPU 测试首次重跑时缺少 `SEARCH_R1_N_GPUS` 环境变量，一项配置�
 新增 `scripts/difficulty/score_budget_probe.sh`，只封装既有冻结题池与评分命令：默认从同源原始数据确定性生成临时 P20/D10/T10，初始 prompt 限 256 token，评分使用 `max_prompt_length=4096`、每轮生成 128、检索观察 256、四条轨迹、严格 EM、固定检索 ID。必须显式 `--run`，GPU 选择由 `CUDA_VISIBLE_DEVICES` 指定，数据根、模型、输出目录和检索地址可覆盖。准备最多 8 分钟、评分默认最多 40 分钟；每题 batch=1，限时停止后汇总 `labels.json.partial` 已持久化的前缀，并显示 K0–K4 与有效答案标签数。记录 Git 提交/工作区状态、完整日志与原始退出码。该小池不是正式 P/D/T，部分标签不能进入正式训练。
 
 验证：`bash -n`、`--help`、无 `--run` 预览、非法时间参数和未指定 GPU 的拒绝路径通过；尚未在目标机运行 GPU/限时中断路径。脚本未改评分、采样、系统提示词或模型实现。
+
+## 2026-09-27：四卡 7B 评分的空观察 dtype 修复
+
+四卡 Qwen2.5-7B Base 已越过两卡的 FSDP→vLLM 权重同步 OOM，并完成首题多轮生成，但在 RewardManager 解码时收到 float token ID。源机用同族 Qwen tokenizer 复现：全部观察文本为空时返回形状 (4,0)、dtype float32 的张量；与整数 token ID 拼接会把整段响应上转为 float。
+
+修改 search_r1/llm_agent/generation.py::_process_next_obs：将 tokenizer 的 input_ids 明确转为 long，保持空观察与非空观察的 token 类型一致。未改官方系统提示词、奖励判定、检索内容或实验开关；这是共用生成路径的类型修复。tests/test_difficulty_core.py 增加全部四条轨迹同轮结束的零宽空观察回归，验证拼接后仍为 long。
+
+验证：源机 bash env/run.sh searchr1 python -m unittest discover -s tests -p test_difficulty_core.py，14 项通过；共享生成回归 tests/test_grpo_difficulty.py 7 项通过；git diff --check 和 py_compile 通过。目标机尚未同步和 GPU 复验；四卡评分的单次记录见 runs/score-7b-4gpu-20260927-091511-2460617.md。关键路径注释审查覆盖空观察类型约束、失败触发和下游拼接；无新增跨模块依赖或重复评分逻辑。
