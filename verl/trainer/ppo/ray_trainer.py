@@ -706,7 +706,8 @@ class RayPPOTrainer(object):
         try:
             return self.difficulty.score(
                 lambda indices, seeds: score_batch(self.train_dataset, indices, seeds, manager,
-                                                    self.reward_fn, self.config.data.max_start_length),
+                                                    self.reward_fn, self.config.data.max_start_length,
+                                                    self.config.difficulty.score_trace_chars),
                 output, step=self.difficulty.completed_step, version=version)
         finally:
             self.actor_rollout_wg.difficulty_restore_runtime(worker_rng)

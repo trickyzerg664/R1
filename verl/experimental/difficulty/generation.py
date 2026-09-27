@@ -1,5 +1,6 @@
 """[data-difficulty] 生成边界适配：复用现有多轮检索和奖励，不依赖训练器。"""
 import copy
+import re
 import numpy as np
 from .state import trajectory_seed
 
@@ -21,7 +22,19 @@ def request_sampling_params(base, seeds, round_index, count):
     return result
 
 
-def score_batch(dataset, indices, seeds, manager, reward_fn, max_start_length):
+def response_trace(response, ground_truth, limit):
+    # 诊断评分轨迹时记录闭合答案标签、标准答案和回答末尾，不改变奖励计算。
+    matches = re.findall(r'<answer>(.*?)</answer>', response, re.DOTALL)
+    target = ground_truth['target']
+    if isinstance(target, np.ndarray):
+        target = target.tolist()
+    if not isinstance(target, (list, tuple)):
+        target = [target]
+    return {'has_answer_tag': bool(matches), 'last_answer': matches[-1].strip() if matches else None,
+            'target': [str(answer) for answer in target], 'response_tail': response[-limit:]}
+
+
+def score_batch(dataset, indices, seeds, manager, reward_fn, max_start_length, trace_chars=0):
     # 评分与训练共享 dataset、LLMGenerationManager 和 RewardManager，只禁用参数更新。
     """将题目展开为四条完整检索轨迹，调用训练共用的生成和奖励组件。
     返回每题四个奖励、生成 token 数和检索次数，不计算梯度或复用旧训练回答。
@@ -41,5 +54,17 @@ def score_batch(dataset, indices, seeds, manager, reward_fn, max_start_length):
     width = batch.batch['responses'].shape[-1]
     tokens = batch.batch['info_mask'][:, -width:].sum(-1).reshape(-1, 4).tolist()
     searches = np.asarray(batch.meta_info['valid_search_stats']).reshape(-1, 4).tolist()
-    return [{'rewards': rs, 'generated_tokens': ts, 'search_queries': qs}
-            for rs, ts, qs in zip(rewards, tokens, searches)]
+    records = [{'rewards': rs, 'generated_tokens': ts, 'search_queries': qs}
+               for rs, ts, qs in zip(rewards, tokens, searches)]
+    if trace_chars:
+        # 沿用 RewardManager 的有效响应长度，避免将 padding 当作模型输出。
+        traces = []
+        for i in range(len(batch)):
+            item = batch[i]
+            prompt_length = item.batch['prompts'].shape[-1]
+            response_length = int(item.batch['attention_mask'][prompt_length:].sum().item())
+            response = manager.tokenizer.decode(item.batch['responses'][:response_length], skip_special_tokens=True)
+            traces.append(response_trace(response, item.non_tensor_batch['reward_model']['ground_truth'], trace_chars))
+        for record, start in zip(records, range(0, len(traces), 4)):
+            record['traces'] = traces[start:start + 4]
+    return records

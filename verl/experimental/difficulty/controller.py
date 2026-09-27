@@ -51,6 +51,9 @@ class DifficultyExperiment:
                    # 标签内容标识区分训练历史；不绑定本机目录，便于迁移评分断点。
                    'strategy': self.strategy,
                    'labels_id': fingerprint(self.label_payload) if self.label_payload else None}
+        # 诊断长度绑定评分文件身份，避免断点续跑混用不同详细程度。
+        if self.settings.get('score_trace_chars', 0):
+            context['score_trace_chars'] = self.settings['score_trace_chars']
         payload = score_pool(self.rows, generate_and_score, output, context,
                              self.settings.get('score_batch_size', 32), self.settings.get('score_seed', 1729))
         self.score_seconds += payload['seconds']

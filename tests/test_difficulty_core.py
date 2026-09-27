@@ -12,7 +12,7 @@ from omegaconf import OmegaConf
 from verl.experimental.difficulty.sampling import DifficultyBatchSampler, bucket, pool_hash, validate_labels
 from verl.experimental.difficulty.scoring import score_pool
 from verl.experimental.difficulty.controller import DifficultyExperiment
-from verl.experimental.difficulty.generation import request_sampling_params
+from verl.experimental.difficulty.generation import request_sampling_params, response_trace
 from verl.experimental.difficulty.checkpoint import (save_checkpoint, read_checkpoint, load_driver,
     save_rank_state, load_rank_state, runtime_state, restore_runtime)
 from verl.experimental.difficulty.reporting import migration
@@ -198,6 +198,17 @@ class DifficultyCoreTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             altered.load_state_dict(state)
         altered.load_state_dict(state, branch=True)
+
+    def test_response_trace_shows_answer_and_truncation(self):
+        # 评分诊断只截取响应，核对闭合标签、末尾长度及多答案时最后一条。
+        trace = response_trace('search <answer>old</answer> end <answer>final</answer>',
+                               {'target': np.array(['final'])}, 18)
+        self.assertEqual(trace['last_answer'], 'final')
+        self.assertEqual(trace['target'], ['final'])
+        self.assertEqual(trace['response_tail'], ' <answer>final</answer>'[-18:])
+        missing = response_trace('search <answer>unfinished', {'target': 'final'}, 40)
+        self.assertFalse(missing['has_answer_tag'])
+        self.assertIsNone(missing['last_answer'])
 
     def test_disabled_configuration_and_invalid_experiment(self):
         # 旧入口的配置在关闭实验时完全不修改；开启后禁止不受支持的组合。

@@ -208,3 +208,11 @@ CPU 测试首次重跑时缺少 `SEARCH_R1_N_GPUS` 环境变量，一项配置�
 新增 `scripts/difficulty/freeze_pool.py`：命令层读取原始 parquet 和固定 tokenizer，默认 P=10000、D=1000、T=2000，写 `P.parquet`、`D.parquet`、`T.parquet` 和最后发布的 `manifest.json`；记录原始/输出/tokenizer 文件 SHA-256、每题来源/原始 ID/问题哈希/token 长度。输出目录已有文件时拒绝覆盖；`--verify` 复查哈希、行序、来源和题目互斥。新增 `tests/test_difficulty_pool_preparation.py` 的两项 CPU 语义测试，检查跨 split 防泄漏、来源配额、超长过滤、输入行重排后的稳定性，以及不足容量/重叠拒绝。
 
 验证：`python3 -m py_compile`、`git diff --check`、CLI `--help` 通过；离线环境下难度模块 CPU 测试 20 项通过。真实原始数据、固定 tokenizer 的小规模 CLI 端到端输出 P=20/D=10/T=10，随后独立 `--verify` 通过，产物位于 `/root/data/search-r1/runs/pdt-tool-validation-20260927-0200`，仅作工具验证，不是正式 P/D/T。默认大规模 P/D/T 尚未运行；目标机运行结果、最终模型/长度和零奖励修复均未验证。正式冻结必须等模型/tokenizer/长度确定，使用独立新目录。
+
+## 2026-09-27：零奖励评分轨迹诊断
+
+目标机复核仍显示两题八条轨迹全为 0；11 次检索观察超长警告，生成 token 分别为 `[82,114,150,150]` 和 `[150,104,114,113]`。`qa_em` 的 `Extracted answer` 日志随机以约 1/64 概率打印，因此日志中没有该行不能证明答案标签不存在。当前标签缺少原始响应，无法判断是没有闭合 `<answer>`、输出截断，还是答案与标准答案不符。
+
+修改 `verl/experimental/difficulty/generation.py`：为 `score_batch` 加可选 `trace_chars`，沿用奖励器的有效响应 mask 解码每条已有轨迹，在记录中保存闭合答案标签状态、最后一个答案、标准答案和响应末尾。`verl/trainer/ppo/ray_trainer.py` 只传入诊断长度；`verl/experimental/difficulty/controller.py` 把非零诊断长度写入评分上下文，避免混用断点；`configuration.py` 将长度限制在 0–2000，`ppo_trainer.yaml` 默认 0，常规评分结果与 checkpoint 策略不变。新增 CPU 测试检查正常/未闭合标签、多标签最后答案和末尾截取。新诊断仍须在目标机跑真实 GPU 评分才能判定零奖励原因，不据此将正式实验标记为可开始。
+
+验证：`python3 -m py_compile`、`git diff --check` 均通过；离线 `python -m unittest discover -s tests -p '*difficulty*.py' -q` 21 项通过。未在源机运行新 GPU 评分。

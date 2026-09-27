@@ -29,6 +29,9 @@ def prepare_config(config):
         raise ValueError('Pin difficulty.retrieval_id to encoder/corpus/index versions')
     if d.refresh_every < 0 or any(s <= 0 for s in d.refresh_steps):
         raise ValueError('Refresh intervals/steps must be positive')
+    # 限制单条回答长度，避免诊断参数意外放大正式标签文件。
+    if not 0 <= d.score_trace_chars <= 2000:
+        raise ValueError('score_trace_chars must be within 0..2000')
     if config.data.train_data_num is not None or config.data.val_data_num is not None:
         raise ValueError('Use frozen train/dev files, not implicit data_num subsampling')
     if ar.rollout.temperature <= 0 or not ar.rollout.do_sample:
