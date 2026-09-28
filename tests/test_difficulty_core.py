@@ -262,6 +262,15 @@ class DifficultyCoreTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             prepare_config(config)
 
+    def test_four_gpu_micro_batch_rejected_before_loading_model(self):
+        # [data-difficulty] 全局微批 1 在四卡上会被 worker 整数除为 0；入口需提前报清晰错误。
+        from hydra import compose, initialize_config_dir
+        with initialize_config_dir(config_dir=str(Path('verl/trainer/config').resolve()), version_base=None):
+            config = compose(config_name='difficulty_grpo', overrides=[
+                'trainer.n_gpus_per_node=4', 'actor_rollout_ref.actor.ppo_micro_batch_size=1'])
+        with self.assertRaisesRegex(ValueError, 'mini/micro batch'):
+            prepare_config(config)
+
     def test_retrieval_errors_do_not_become_zero_reward(self):
         # HTTP 失败及响应数量错误直接抛出，避免污染难度标签。
         from search_r1.llm_agent.generation import LLMGenerationManager

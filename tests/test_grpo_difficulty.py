@@ -16,6 +16,7 @@ from verl import DataProto
 from verl.protocol import pad_dataproto_to_divisor, unpad_dataproto
 from verl.trainer.ppo.ray_trainer import RayPPOTrainer, compute_advantage, repeat_search_batch
 from verl.utils.model import get_attention_implementation
+from verl.workers.actor.dp_actor import forward_response_logits
 from search_r1.llm_agent.generation import GenerationConfig, LLMGenerationManager
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -182,6 +183,33 @@ class DifficultyTests(unittest.TestCase):
                 get_attention_implementation({'attn_implementation': name, 'use_remove_padding': True})
         with self.assertRaisesRegex(ValueError, 'Unsupported'):
             get_attention_implementation({'attn_implementation': 'unknown'})
+
+    # [data-difficulty] 只算回答段 logits 应保持数值与梯度，同时确实缩短 Qwen LM head 输入。
+    def test_qwen_response_logits_only_preserves_values_and_gradients(self):
+        torch.manual_seed(17)
+        config = Qwen2Config(vocab_size=64, hidden_size=24, intermediate_size=48,
+                            num_hidden_layers=1, num_attention_heads=4, num_key_value_heads=2,
+                            max_position_embeddings=32, attention_dropout=0.)
+        model = AutoModelForCausalLM.from_config(config, attn_implementation='eager')
+        model.eval()
+        ids = torch.tensor([[2, 3, 4, 5, 6, 7, 8]])
+        inputs = dict(input_ids=ids, attention_mask=torch.ones_like(ids),
+                      position_ids=torch.arange(ids.shape[-1]).unsqueeze(0), use_cache=False)
+        head_lengths = []
+        hook = model.lm_head.register_forward_pre_hook(
+            lambda _module, args: head_lengths.append(args[0].shape[-2]))
+        try:
+            full = forward_response_logits(model, 3, False, **inputs)
+            limited = forward_response_logits(model, 3, True, **inputs)
+        finally:
+            hook.remove()
+        self.assertEqual(head_lengths, [7, 4])
+        torch.testing.assert_close(full, limited, atol=0, rtol=0)
+        full.square().sum().backward()
+        full_grad = model.lm_head.weight.grad.detach().clone()
+        model.zero_grad(set_to_none=True)
+        limited.square().sum().backward()
+        torch.testing.assert_close(model.lm_head.weight.grad, full_grad, atol=1e-6, rtol=1e-5)
 
     # [data-difficulty] 从同一份小模型权重出发比较后端；只比较有效 token，并检查有限梯度。
     def test_qwen_eager_and_sdpa_cpu_forward_backward(self):

@@ -38,6 +38,13 @@ from flash_attn.bert_padding import pad_input, unpad_input, rearrange, index_fir
 __all__ = ['DataParallelPPOActor']
 
 
+def forward_response_logits(model, response_length, response_logits_only=False, **model_inputs):
+    # [data-difficulty] Qwen2 可只计算回答段所需的 LM head logits，避免长检索上下文产生整段词表张量。
+    if response_logits_only:
+        model_inputs['num_logits_to_keep'] = response_length + 1
+    return model(**model_inputs).logits[:, -response_length - 1:-1]
+
+
 class DataParallelPPOActor(BasePPOActor):
 
     def __init__(
@@ -138,13 +145,13 @@ class DataParallelPPOActor(BasePPOActor):
                 log_probs = full_log_probs.squeeze(-1)[:, -response_length - 1:-1]  # (bsz, response_length)
 
             else:  # not using rmpad and no ulysses sp
-                output = self.actor_module(input_ids=input_ids,
-                                           attention_mask=attention_mask,
-                                           position_ids=position_ids,
-                                           use_cache=False)  # prevent model thinks we are generating
-                logits = output.logits.float()
+                # [data-difficulty] 切分回答段后再转 FP32；可选 Qwen2 末段 logits 路径进一步节省训练峰值显存。
+                logits = forward_response_logits(
+                    self.actor_module, response_length,
+                    self.config.get('response_logits_only', False),
+                    input_ids=input_ids, attention_mask=attention_mask,
+                    position_ids=position_ids, use_cache=False).float()
                 logits.div_(temperature)
-                logits = logits[:, -response_length - 1:-1]  # (bsz, response_length)
                 log_probs = logprobs_from_logits(logits, micro_batch['responses'])
                 entropy = verl_F.entropy_from_logits(logits)  # (bsz, response_length)
 

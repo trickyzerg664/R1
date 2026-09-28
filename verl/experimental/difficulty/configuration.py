@@ -21,6 +21,19 @@ def prepare_config(config):
         raise ValueError('Difficulty requires search GRPO with n_agent=4 and n=1')
     if ar.actor.strategy != 'fsdp' or ar.rollout.name != 'vllm' or config.reward_model.enable or not ar.actor.use_kl_loss:
         raise ValueError('Difficulty supports FSDP/vLLM, binary rule rewards and separate KL loss')
+    # [data-difficulty] worker 按数据并行卡数整除 batch；训练前拒绝零微批或静默截断。
+    if d.mode == 'train':
+        sp_size = ar.actor.ulysses_sequence_parallel_size
+        gpu_count = config.trainer.n_gpus_per_node
+        if sp_size < 1 or gpu_count < 1 or gpu_count % sp_size:
+            raise ValueError('GPU count must be divisible by actor sequence-parallel size')
+        dp_size = gpu_count // sp_size
+        mini, micro = ar.actor.ppo_mini_batch_size, ar.actor.ppo_micro_batch_size
+        if (mini < dp_size or micro < dp_size or mini % dp_size or micro % dp_size
+                or mini % micro):
+            raise ValueError('Actor mini/micro batch must be positive multiples of data-parallel GPU count')
+    if ar.actor.get('response_logits_only', False) and ar.model.use_remove_padding:
+        raise ValueError('response_logits_only requires use_remove_padding=false')
     if config.trainer.nnodes != 1 or config.trainer.default_hdfs_dir is not None:
         raise ValueError('Core checkpoint implementation requires one node and local storage (default_hdfs_dir=null)')
     if config.trainer.critic_warmup != 0 or ar.actor.optim.warmup_steps is None:

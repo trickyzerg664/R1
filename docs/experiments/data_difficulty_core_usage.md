@@ -118,3 +118,9 @@ bash env/run.sh searchr1 python -m unittest discover -s tests -p '*difficulty*.p
 18 个测试通过，包含真实 `fit` 的模拟 worker 接入：精确三步更新、步骤一刷新、完整 driver 保存、从第一步恢复到第三步、评分模式不新增更新。CPU AdamW 验证恢复后的下一次参数更新与连续更新完全相同；不据此承诺分布式 FP16 或 vLLM 位级一致。
 
 仍须在目标 GPU 检查真实 FSDP optimizer 分片恢复、FP16 scaler 溢出路径、vLLM 逐请求种子及 TP 收集、模型显存、检索服务。正式实验尚未启动。
+
+## 2026-09-28：7B 四卡显存诊断用选项
+
+目标机四卡 Qwen2.5-7B 的 actor 反向传播曾在每卡约 46 GiB 时 OOM。当前 FSDP worker 会将全局 PPO 微批按数据并行卡数整除；四卡下 `actor_rollout_ref.actor.ppo_micro_batch_size=4` 已是每卡 1 条，设置为 1 会得到 0 并失败。新代码会在模型加载前拒绝这种配置。
+
+新代码提供训练专用的 Qwen2 优化：在原有训练命令中保持全局 `ppo_mini_batch_size=8` 和 `ppo_micro_batch_size=4`，加入 `+actor_rollout_ref.actor.response_logits_only=true`，且保持 `actor_rollout_ref.model.use_remove_padding=false`。该选项让 LM head 仅生成回答段需要的词表 logits；CPU 小模型验证数值与梯度相同，真实 GPU 节省量待测。可另将 `data.train_batch_size=4` 调成 `2`，每步仍展开为 8 条轨迹，降低同时处理题目数；此项不能继续降低每卡微批 1 的峰值。每次改变训练配置须新建运行目录，正式所有 A/B 组统一参数。原四卡评分续跑保持原配置与 `labels.json.partial` 路径，不能把该训练开关加入评分命令。
