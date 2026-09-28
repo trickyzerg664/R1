@@ -39,7 +39,8 @@ __all__ = ['DataParallelPPOActor']
 
 
 def forward_response_logits(model, response_length, response_logits_only=False, **model_inputs):
-    # [data-difficulty] Qwen2 可只计算回答段所需的 LM head logits，避免长检索上下文产生整段词表张量。
+    """返回回答 token 的 logits；Qwen2 开关只裁 LM head 输入，不裁因果上下文。"""
+    # [data-difficulty] 多保留一个位置，用于预测回答的首个 token。
     if response_logits_only:
         model_inputs['num_logits_to_keep'] = response_length + 1
     return model(**model_inputs).logits[:, -response_length - 1:-1]
@@ -145,13 +146,21 @@ class DataParallelPPOActor(BasePPOActor):
                 log_probs = full_log_probs.squeeze(-1)[:, -response_length - 1:-1]  # (bsz, response_length)
 
             else:  # not using rmpad and no ulysses sp
-                # [data-difficulty] 切分回答段后再转 FP32；可选 Qwen2 末段 logits 路径进一步节省训练峰值显存。
-                logits = forward_response_logits(
-                    self.actor_module, response_length,
-                    self.config.get('response_logits_only', False),
-                    input_ids=input_ids, attention_mask=attention_mask,
-                    position_ids=position_ids, use_cache=False).float()
-                logits.div_(temperature)
+                # [data-difficulty] 省显存路径必须显式开启；默认保留原有全段 logits 顺序以兼容旧评分前缀。
+                if self.config.get('response_logits_only', False):
+                    logits = forward_response_logits(
+                        self.actor_module, response_length, True,
+                        input_ids=input_ids, attention_mask=attention_mask,
+                        position_ids=position_ids, use_cache=False).float()
+                    logits.div_(temperature)
+                else:
+                    output = self.actor_module(input_ids=input_ids,
+                                               attention_mask=attention_mask,
+                                               position_ids=position_ids,
+                                               use_cache=False)
+                    logits = output.logits.float()
+                    logits.div_(temperature)
+                    logits = logits[:, -response_length - 1:-1]
                 log_probs = logprobs_from_logits(logits, micro_batch['responses'])
                 entropy = verl_F.entropy_from_logits(logits)  # (bsz, response_length)
 

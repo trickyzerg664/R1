@@ -192,9 +192,11 @@ class DifficultyTests(unittest.TestCase):
                             max_position_embeddings=32, attention_dropout=0.)
         model = AutoModelForCausalLM.from_config(config, attn_implementation='eager')
         model.eval()
-        ids = torch.tensor([[2, 3, 4, 5, 6, 7, 8]])
-        inputs = dict(input_ids=ids, attention_mask=torch.ones_like(ids),
-                      position_ids=torch.arange(ids.shape[-1]).unsqueeze(0), use_cache=False)
+        ids = torch.tensor([[0, 0, 2, 3, 4, 5, 6], [2, 3, 4, 5, 6, 7, 8]])
+        mask = (ids != 0).long()
+        positions = (mask.cumsum(-1) - 1).clamp(min=0)
+        inputs = dict(input_ids=ids, attention_mask=mask,
+                      position_ids=positions, use_cache=False)
         head_lengths = []
         hook = model.lm_head.register_forward_pre_hook(
             lambda _module, args: head_lengths.append(args[0].shape[-2]))
@@ -206,10 +208,17 @@ class DifficultyTests(unittest.TestCase):
         self.assertEqual(head_lengths, [7, 4])
         torch.testing.assert_close(full, limited, atol=0, rtol=0)
         full.square().sum().backward()
-        full_grad = model.lm_head.weight.grad.detach().clone()
+        full_grads = {name: p.grad.detach().clone() for name, p in model.named_parameters() if p.grad is not None}
         model.zero_grad(set_to_none=True)
         limited.square().sum().backward()
-        torch.testing.assert_close(model.lm_head.weight.grad, full_grad, atol=1e-6, rtol=1e-5)
+        for name, p in model.named_parameters():
+            if name in full_grads:
+                torch.testing.assert_close(p.grad, full_grads[name], atol=1e-6, rtol=1e-5)
+        # [data-difficulty] 目标 GPU 使用混合精度；CPU BF16 检查截取顺序不改变低精度输出。
+        with torch.autocast('cpu', dtype=torch.bfloat16):
+            full_mixed = forward_response_logits(model, 3, False, **inputs).float()
+            limited_mixed = forward_response_logits(model, 3, True, **inputs).float()
+        torch.testing.assert_close(full_mixed, limited_mixed, atol=0, rtol=0)
 
     # [data-difficulty] 从同一份小模型权重出发比较后端；只比较有效 token，并检查有限梯度。
     def test_qwen_eager_and_sdpa_cpu_forward_backward(self):

@@ -176,3 +176,5 @@
 - 2026-09-28（Codex，据用户第三次目标机 `train.log`）：[7B 四卡 micro1 短训练](runs/train-7b-5step-micro1-20260928-143934-4025892.md) 在首步生成后、actor 更新入口因 `ppo_mini_batch_size % ppo_micro_batch_size` 除零失败，已完成训练更新 0/5、checkpoint 0，串行评分续跑未启动。Codex 上次建议全局 actor micro 4→1 有误：FSDP worker 将全局值按四卡整数除，1→0；原全局 4 已对应每卡 1 条，是当前实现可用下限。已向用户纠错；后续须恢复全局 micro=4，另用缩短序列、增加可用卡或改计算实现来解决此前 actor backward OOM。原临时 P20 评分仍为已知 9/20 题，正式 A0–A4 尚未开始。
 
 - 2026-09-28（Codex，源机代码修改）：针对四卡 7B actor backward 的显存峰值，在 `dp_actor.py` 新增仅训练可显式开启的 Qwen2 回答段 logits 路径，减少整段检索上下文的词表张量；默认关闭，原评分配置不变。`configuration.py` 在模型加载前拒绝四卡全局 micro=1 等会归零/截断的训练微批，并拒绝新选项与去 padding 同开。23 项相关 CPU 测试通过，包括小 Qwen2 的输出/梯度等价和无效微批提前拒绝；真实 GPU 显存节约与 5 步训练未验证。目标机需同步新代码后在新目录以全局 mini/micro 8/4、可选题目 batch 2、`+actor_rollout_ref.actor.response_logits_only=true` 重试，检查有限 `grad_norm`、checkpoint 和退出码；已有 9/20 题四卡评分前缀保持原配置。见[代码修改记录](data_difficulty_code_changes.md)。
+
+- 2026-09-28（Codex，已推送版本复审）：对 `response_logits_only` 做逐调用检查后，源端进一步将未开启开关时的 actor 分支恢复为原有计算顺序，确保原评分 partial 续跑仍走同一实现；新开关仅用于 Qwen2 actor。CPU 测试扩至 24 项，检查左侧 padding、整模型梯度、BF16 输出及与去 padding 冲突的提前拒绝。源端真实 GPU 未测；须同步复审后的新提交，再在新目录试四卡 7B 训练，检查 OOM、有限梯度范数和 checkpoint。

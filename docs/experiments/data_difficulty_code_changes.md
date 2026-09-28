@@ -243,10 +243,12 @@ CPU 测试首次重跑时缺少 `SEARCH_R1_N_GPUS` 环境变量，一项配置�
 
 目标机四卡 7B 短训练在 step 2 actor backward 申请 2.32 GiB 时 OOM：该 worker 自身约占 46.22 GiB。先前建议将全局 actor PPO micro batch 4→1 是错误的；FSDP worker 按四卡整除后变成 0，造成下一次短训练在首步 actor 更新入口除零。原全局 micro 4 已对应每卡 1 条，不能再靠降低它节省每卡反向传播峰值。
 
-修改 `verl/workers/actor/dp_actor.py`：在未启用去 padding 的 actor 前向中，先切回答段再转 FP32；可选 `response_logits_only` 路径向 Transformers 4.47.1 的 Qwen2 模型传 `num_logits_to_keep=response_length+1`，使 LM head 只计算回答及前一个预测位置的词表 logits。默认不传此参数，原入口仍适用于其他模型；评分阶段不启用该选项，已有四卡评分前缀的配置不变。选项只用于 Qwen2 且要求 `use_remove_padding=false`；它不改变注意力主干计算或奖励规则，真实 GPU 显存节约幅度尚未验证。
+修改 `verl/workers/actor/dp_actor.py`：显式开启 `response_logits_only` 时，向 Transformers 4.47.1 的 Qwen2 模型传 `num_logits_to_keep=response_length+1`，让 LM head 只计算回答及前一个预测位置的词表 logits，并在截取后转 FP32。未开启时保留原有全段 logits、转 FP32、温度缩放和截取顺序；评分阶段不启用该选项，已有四卡评分前缀的配置与执行路径均不变。选项只用于 Qwen2 且要求 `use_remove_padding=false`；它不改变注意力主干计算或奖励规则，真实 GPU 显存节约幅度尚未验证。
 
 修改 `verl/experimental/difficulty/configuration.py`：难度训练入口按数据并行卡数检查 actor 全局 mini/micro batch 的正值及整除性，在 7B 权重加载前拒绝微批归零和静默截断；可选回答段 logits 与去 padding 同开时直接报错。其他非难度实验入口不受本次校验影响。`tests/test_grpo_difficulty.py` 以微型 Qwen2 CPU 模型确认启用选项后 LM head 输入由 7 token 缩至 4 token，回答 logits 与 LM head 梯度仍与全段计算一致；`tests/test_difficulty_core.py` 确认四卡全局 micro=1 提前报清晰错误。
 
 短流程重试建议四张空闲 A6000，训练部分全局 `actor_rollout_ref.actor.ppo_micro_batch_size=4`、`actor_rollout_ref.actor.ppo_mini_batch_size=8`，可将题目 batch 4→2，并用 `+actor_rollout_ref.actor.response_logits_only=true` 启用 Qwen2 末段 logits。batch 2 每步展开为 8 条轨迹，仍为完整的每题四轨迹；全局 mini 8、micro 4 在四卡上分别是每卡 2/1。降低题目 batch 未必能解决单条长轨迹的峰值，本次代码优化才直接针对全词表 logits。评分续跑须沿原四卡配置和原输出目录，不追加本训练专用选项。若用于正式 A0–A4，所有对照组须统一冻结这个新训练配置和新 checkpoint 指纹；不得接续旧配置训练 checkpoint。
 
 验证：离线 CPU `python -m unittest tests.test_grpo_difficulty tests.test_difficulty_core -q`，23 项通过；`py_compile` 与 `git diff --check` 通过。目标机尚未同步此代码，真实四卡 7B 反向传播、有限梯度范数、step 5 checkpoint 和评分续跑均未在新路径验证。下一步同步代码，仅用新运行目录执行短训练并量测 GPU 峰值；若仍 OOM，再考虑缩短上下文或增加卡数，改变评分生成长度时应另开评分目录并重新打分。
+
+审查补充（2026-09-28）：保持默认 actor/评分分支与提交前同一操作顺序，仅显式开关走末段 logits。CPU 测试扩为 24 项：双样本含左侧 padding 的回答 logits、整个 Qwen 模型梯度和 CPU BF16 结果与全段路径一致；去 padding 与新开关同时启用会在加载模型前拒绝。`num_logits_to_keep=response_length+1` 的多一个位置用于预测回答首 token。测试不能替代真实四卡 FP16/FSDP 显存和梯度检查；目标机尚未运行审查后版本。
