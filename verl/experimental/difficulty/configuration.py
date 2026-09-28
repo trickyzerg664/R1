@@ -34,6 +34,9 @@ def prepare_config(config):
             raise ValueError('Actor mini/micro batch must be positive multiples of data-parallel GPU count')
     if ar.actor.get('response_logits_only', False) and ar.model.use_remove_padding:
         raise ValueError('response_logits_only requires use_remove_padding=false')
+    # [data-difficulty] token 重算目前接在非去 padding 的 actor 分支，提前拒绝无效组合。
+    if ar.actor.get('checkpoint_token_statistics', False) and ar.model.use_remove_padding:
+        raise ValueError('checkpoint_token_statistics requires use_remove_padding=false')
     if config.trainer.nnodes != 1 or config.trainer.default_hdfs_dir is not None:
         raise ValueError('Core checkpoint implementation requires one node and local storage (default_hdfs_dir=null)')
     if config.trainer.critic_warmup != 0 or ar.actor.optim.warmup_steps is None:

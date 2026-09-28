@@ -282,6 +282,17 @@ class DifficultyCoreTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, 'requires use_remove_padding=false'):
             prepare_config(config)
 
+    def test_checkpoint_statistics_rejects_remove_padding(self):
+        # [data-difficulty] 仅接入非去 padding 分支，防止开关静默失效。
+        from hydra import compose, initialize_config_dir
+        with initialize_config_dir(config_dir=str(Path('verl/trainer/config').resolve()), version_base=None):
+            config = compose(config_name='difficulty_grpo', overrides=[
+                'trainer.n_gpus_per_node=4',
+                'actor_rollout_ref.model.use_remove_padding=true',
+                '+actor_rollout_ref.actor.checkpoint_token_statistics=true'])
+        with self.assertRaisesRegex(ValueError, 'checkpoint_token_statistics requires use_remove_padding=false'):
+            prepare_config(config)
+
     def test_retrieval_errors_do_not_become_zero_reward(self):
         # HTTP 失败及响应数量错误直接抛出，避免污染难度标签。
         from search_r1.llm_agent.generation import LLMGenerationManager

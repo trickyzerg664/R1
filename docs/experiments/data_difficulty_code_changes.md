@@ -252,3 +252,12 @@ CPU 测试首次重跑时缺少 `SEARCH_R1_N_GPUS` 环境变量，一项配置�
 验证：离线 CPU `python -m unittest tests.test_grpo_difficulty tests.test_difficulty_core -q`，23 项通过；`py_compile` 与 `git diff --check` 通过。目标机尚未同步此代码，真实四卡 7B 反向传播、有限梯度范数、step 5 checkpoint 和评分续跑均未在新路径验证。下一步同步代码，仅用新运行目录执行短训练并量测 GPU 峰值；若仍 OOM，再考虑缩短上下文或增加卡数，改变评分生成长度时应另开评分目录并重新打分。
 
 审查补充（2026-09-28）：保持默认 actor/评分分支与提交前同一操作顺序，仅显式开关走末段 logits。CPU 测试扩为 24 项：双样本含左侧 padding 的回答 logits、整个 Qwen 模型梯度和 CPU BF16 结果与全段路径一致；去 padding 与新开关同时启用会在加载模型前拒绝。`num_logits_to_keep=response_length+1` 的多一个位置用于预测回答首 token。测试不能替代真实四卡 FP16/FSDP 显存和梯度检查；目标机尚未运行审查后版本。
+
+
+## 2026-09-28：7B actor token 统计量反传重算（源端优化）
+
+检查发现生成轮结束时 `vllm_rollout.py` 已调用 `free_cache_engine()`，FSDP/vLLM sharding manager 已卸载推理权重；无需重复添加清理逻辑。先前 `response_logits_only` 只减少 LM head 的词表投影范围，完整检索轨迹仍进入 Transformer，且回答段熵计算会在反传前保存较大的 softmax 中间量。
+
+修改 `verl/workers/actor/dp_actor.py`：新增显式开关 `actor_rollout_ref.actor.checkpoint_token_statistics=true`。仅在非去 padding、具有梯度的 actor 前向中，对回答 token 的原有 log probability 和 entropy 公式使用 PyTorch 非重入 checkpoint；反传时重算统计量，减少前向保留的词表张量，不截断上下文、不改变损失公式或标签。默认关闭；评分和 `torch.no_grad()` 的旧路径仍直接计算。该选项可与 `response_logits_only=true` 一起用于新训练运行。`configuration.py` 在难度实验入口拒绝该开关与 `use_remove_padding=true` 同时启用，避免静默无效。未修改官方提示词、检索和奖励。
+
+`tests/test_grpo_difficulty.py` 比较原路径与重算路径的损失、logits 梯度和微型 Qwen2 全模型梯度，并确认前向保存字节数下降；`tests/test_difficulty_core.py` 验证不兼容配置会提前报错。离线 CPU 命令 `CUDA_VISIBLE_DEVICES='' OMP_NUM_THREADS=2 MKL_NUM_THREADS=2 HF_HUB_OFFLINE=1 TRANSFORMERS_OFFLINE=1 bash env/run.sh searchr1 python -m unittest tests.test_grpo_difficulty tests.test_difficulty_core -q`：27 项通过。CPU 测试使用项目已有 naive log probability 实现绕开 FlashAttention 的 GPU 限制；目标机 FlashAttention、FP16/FSDP 的显存峰值、有限梯度范数、5 步 checkpoint 尚未验证。完整 Transformer 轨迹仍参与反传，若单条轨迹过长仍可能 OOM。下一步目标机拉取新提交，在独立训练目录同时启用两个训练开关并复测；已有 9/20 题评分前缀保持原评分配置。

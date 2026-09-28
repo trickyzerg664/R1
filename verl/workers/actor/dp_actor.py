@@ -20,6 +20,7 @@ from typing import Iterable, Tuple
 
 import torch
 from torch import nn
+from torch.utils.checkpoint import checkpoint
 from torch.distributed.fsdp import FullyShardedDataParallel as FSDP
 from torch.distributed.fsdp.sharded_grad_scaler import ShardedGradScaler
 
@@ -44,6 +45,18 @@ def forward_response_logits(model, response_length, response_logits_only=False, 
     if response_logits_only:
         model_inputs['num_logits_to_keep'] = response_length + 1
     return model(**model_inputs).logits[:, -response_length - 1:-1]
+
+
+def token_statistics(logits, responses, recompute=False):
+    """计算回答 token 的对数概率和熵；训练时可重算以减少反传保留的词表张量。"""
+    def calculate(logits, responses):
+        return logprobs_from_logits(logits, responses), verl_F.entropy_from_logits(logits)
+
+    # [data-difficulty] checkpoint 前向只保留 logits，反传时重算 softmax 等中间量；
+    # 仅在有梯度的训练前向启用，旧评分/参考模型路径保持原计算顺序。
+    if recompute and torch.is_grad_enabled():
+        return checkpoint(calculate, logits, responses, use_reentrant=False)
+    return calculate(logits, responses)
 
 
 class DataParallelPPOActor(BasePPOActor):
@@ -161,8 +174,9 @@ class DataParallelPPOActor(BasePPOActor):
                     logits = output.logits.float()
                     logits.div_(temperature)
                     logits = logits[:, -response_length - 1:-1]
-                log_probs = logprobs_from_logits(logits, micro_batch['responses'])
-                entropy = verl_F.entropy_from_logits(logits)  # (bsz, response_length)
+                log_probs, entropy = token_statistics(
+                    logits, micro_batch['responses'],
+                    recompute=self.config.get('checkpoint_token_statistics', False))
 
             return entropy, log_probs
 

@@ -178,3 +178,5 @@
 - 2026-09-28（Codex，源机代码修改）：针对四卡 7B actor backward 的显存峰值，在 `dp_actor.py` 新增仅训练可显式开启的 Qwen2 回答段 logits 路径，减少整段检索上下文的词表张量；默认关闭，原评分配置不变。`configuration.py` 在模型加载前拒绝四卡全局 micro=1 等会归零/截断的训练微批，并拒绝新选项与去 padding 同开。23 项相关 CPU 测试通过，包括小 Qwen2 的输出/梯度等价和无效微批提前拒绝；真实 GPU 显存节约与 5 步训练未验证。目标机需同步新代码后在新目录以全局 mini/micro 8/4、可选题目 batch 2、`+actor_rollout_ref.actor.response_logits_only=true` 重试，检查有限 `grad_norm`、checkpoint 和退出码；已有 9/20 题四卡评分前缀保持原配置。见[代码修改记录](data_difficulty_code_changes.md)。
 
 - 2026-09-28（Codex，已推送版本复审）：对 `response_logits_only` 做逐调用检查后，源端进一步将未开启开关时的 actor 分支恢复为原有计算顺序，确保原评分 partial 续跑仍走同一实现；新开关仅用于 Qwen2 actor。CPU 测试扩至 24 项，检查左侧 padding、整模型梯度、BF16 输出及与去 padding 冲突的提前拒绝。源端真实 GPU 未测；须同步复审后的新提交，再在新目录试四卡 7B 训练，检查 OOM、有限梯度范数和 checkpoint。
+
+- 2026-09-28（Codex，源端代码优化，目标机尚未运行）：检查确认 vLLM 生成后已清 KV cache 并卸载推理权重；新增可选 `checkpoint_token_statistics`，在 actor 反传时重算回答段 log probability/entropy 统计量，降低前向保留的词表中间量。`response_logits_only` 继续限制 LM head 投影范围，完整轨迹仍参与 Transformer 计算。27 项 CPU 回归通过（含微型 Qwen 梯度和前向保存量），目标机 GPU OOM、`grad_norm` 及 checkpoint 仍待验证。下一步同步提交，独立目录运行四卡短训练；原 9/20 题评分续跑不加训练开关。详见[代码修改记录](data_difficulty_code_changes.md)。

@@ -16,7 +16,7 @@ from verl import DataProto
 from verl.protocol import pad_dataproto_to_divisor, unpad_dataproto
 from verl.trainer.ppo.ray_trainer import RayPPOTrainer, compute_advantage, repeat_search_batch
 from verl.utils.model import get_attention_implementation
-from verl.workers.actor.dp_actor import forward_response_logits
+from verl.workers.actor.dp_actor import forward_response_logits, token_statistics
 from search_r1.llm_agent.generation import GenerationConfig, LLMGenerationManager
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -219,6 +219,55 @@ class DifficultyTests(unittest.TestCase):
             full_mixed = forward_response_logits(model, 3, False, **inputs).float()
             limited_mixed = forward_response_logits(model, 3, True, **inputs).float()
         torch.testing.assert_close(full_mixed, limited_mixed, atol=0, rtol=0)
+
+    # [data-difficulty] 重算熵与对数概率必须保留整段损失和梯度，同时减少前向保存量。
+    def test_checkpoint_token_statistics_preserves_loss_and_gradients(self):
+        torch.manual_seed(29)
+        logits = torch.randn(2, 11, 64, dtype=torch.float32)
+        labels = torch.randint(0, 64, (2, 11))
+        mask = torch.randint(0, 2, (2, 11), dtype=torch.float32)
+        results = []
+        for recompute in (False, True):
+            current = logits.detach().clone().requires_grad_()
+            saved_bytes = []
+            def pack(tensor):
+                saved_bytes.append(tensor.numel() * tensor.element_size())
+                return tensor
+            # [data-difficulty] 本机装有 CUDA 版 FlashAttention；CPU 回归走已有 naive 分支。
+            from verl.utils.torch_functional import logprobs_from_logits_naive
+            with patch('verl.workers.actor.dp_actor.logprobs_from_logits', logprobs_from_logits_naive):
+                with torch.autograd.graph.saved_tensors_hooks(pack, lambda tensor: tensor):
+                    log_probs, entropy = token_statistics(current, labels, recompute=recompute)
+                    loss = ((log_probs + 0.001 * entropy) * mask).sum()
+                loss.backward()
+            results.append((loss.detach(), current.grad.detach().clone(), sum(saved_bytes)))
+        torch.testing.assert_close(results[0][0], results[1][0], atol=0, rtol=0)
+        torch.testing.assert_close(results[0][1], results[1][1], atol=1e-6, rtol=1e-5)
+        self.assertLess(results[1][2], results[0][2])
+
+    # [data-difficulty] 覆盖真实 LM head 到 Transformer 的反传链，避免只比较叶子 logits。
+    def test_checkpoint_token_statistics_preserves_qwen_gradients(self):
+        from verl.utils.torch_functional import logprobs_from_logits_naive
+        torch.manual_seed(31)
+        config = Qwen2Config(vocab_size=48, hidden_size=16, intermediate_size=32,
+                            num_hidden_layers=1, num_attention_heads=2, num_key_value_heads=2,
+                            max_position_embeddings=32, attention_dropout=0.)
+        model = AutoModelForCausalLM.from_config(config, attn_implementation='eager')
+        model.eval()
+        ids = torch.tensor([[2, 3, 4, 5, 6]])
+        snapshots = []
+        for recompute in (False, True):
+            model.zero_grad(set_to_none=True)
+            logits = forward_response_logits(model, 3, True, input_ids=ids, use_cache=False).float()
+            with patch('verl.workers.actor.dp_actor.logprobs_from_logits', logprobs_from_logits_naive):
+                log_probs, entropy = token_statistics(logits, ids[:, -3:], recompute=recompute)
+                loss = -(log_probs + 0.001 * entropy).mean()
+                loss.backward()
+            snapshots.append({name: p.grad.detach().clone() for name, p in model.named_parameters()
+                              if p.grad is not None})
+        self.assertEqual(snapshots[0].keys(), snapshots[1].keys())
+        for name in snapshots[0]:
+            torch.testing.assert_close(snapshots[0][name], snapshots[1][name], atol=1e-6, rtol=1e-5)
 
     # [data-difficulty] 从同一份小模型权重出发比较后端；只比较有效 token，并检查有限梯度。
     def test_qwen_eager_and_sdpa_cpu_forward_backward(self):
