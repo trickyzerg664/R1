@@ -111,6 +111,16 @@ class DifficultyExperiment:
         metrics['difficulty/generated_tokens'] = int(mask.sum().item())
         metrics['difficulty/context_tokens'] = int(batch.batch['attention_mask'].sum().item())
         metrics['difficulty/search_queries'] = sum(batch.meta_info.get('valid_search_stats', []))
+        # 新协议诊断只汇总已有计数，不额外解码或请求模型；未启用时原指标兼容。
+        diagnostics = batch.meta_info.get('generation_diagnostics')
+        if diagnostics is not None:
+            for key in ('observation_truncations', 'generation_limit_hits', 'generation_calls', 'forced_final'):
+                metrics['generation/'+key] = sum(item[key] for item in diagnostics)
+            calls = metrics['generation/generation_calls']
+            metrics['generation/limit_hit_fraction'] = metrics['generation/generation_limit_hits']/calls if calls else 0.
+        if 'active_mask' in batch.meta_info:
+            active = batch.meta_info['active_mask']
+            metrics['generation/answer_stop_fraction'] = 1.-sum(active)/len(active) if active else 0.
         return metrics
 
     def record(self, record):

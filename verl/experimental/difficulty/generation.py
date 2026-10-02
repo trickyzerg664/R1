@@ -56,6 +56,13 @@ def score_batch(dataset, indices, seeds, manager, reward_fn, max_start_length, t
     searches = np.asarray(batch.meta_info['valid_search_stats']).reshape(-1, 4).tolist()
     records = [{'rewards': rs, 'generated_tokens': ts, 'search_queries': qs}
                for rs, ts, qs in zip(rewards, tokens, searches)]
+    if 'generation_diagnostics' in batch.meta_info:
+        # 每题仍对应四条完整轨迹；诊断字段不参与奖励和难度标签计算。
+        details = batch.meta_info['generation_diagnostics']
+        if len(details) != len(batch):
+            raise ValueError('Generation diagnostics and trajectories differ')
+        for record, start in zip(records, range(0, len(details), 4)):
+            record['diagnostics'] = details[start:start+4]
     if trace_chars:
         # 沿用 RewardManager 的有效响应长度，避免将 padding 当作模型输出。
         traces = []

@@ -494,6 +494,10 @@ class RayPPOTrainer(object):
             topk = self.config.retriever.topk,
             # [data-difficulty] 训练、评分与评价使用相同检索超时策略。
             search_timeout = self.config.retriever.get('timeout', 120.0),
+            # 评分、训练和评价共用协议；未配置新字段时默认旧行为。
+            observation_truncation=self.config.data.get('observation_truncation', 'legacy'),
+            context_policy=self.config.data.get('context_policy', 'legacy'),
+            record_diagnostics=self.config.data.get('record_generation_diagnostics', False),
         )
 
         # Agent config preparation
@@ -768,6 +772,10 @@ class RayPPOTrainer(object):
             topk = self.config.retriever.topk,
             # [data-difficulty] 训练、评分与评价使用相同检索超时策略。
             search_timeout = self.config.retriever.get('timeout', 120.0),
+            # 评分、训练和评价共用协议；未配置新字段时默认旧行为。
+            observation_truncation=self.config.data.get('observation_truncation', 'legacy'),
+            context_policy=self.config.data.get('context_policy', 'legacy'),
+            record_diagnostics=self.config.data.get('record_generation_diagnostics', False),
         )
 
         generation_manager = LLMGenerationManager(

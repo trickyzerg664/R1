@@ -5,6 +5,8 @@ import os
 from typing import List, Dict, Any, Tuple
 from dataclasses import dataclass
 from .tensor_helper import TensorHelper, TensorConfig
+# 新协议仅依赖独立的裁剪和预算模块，默认配置继续走旧路径。
+from .context_budget import observation_ids, pad_token_rows, ContextBudget
 from verl import DataProto
 # [data-difficulty] 复用保留 DataProto 元数据的补齐工具，统一处理训练和评价尾批。
 from verl.protocol import pad_dataproto_to_divisor, unpad_dataproto
@@ -25,6 +27,10 @@ class GenerationConfig:
     topk: int = 3
     # [data-difficulty] 超时不返回伪造空检索结果，调用方保留未完成评分批次。
     search_timeout: float = 120.0
+    # 新协议显式启用；默认值保证已有训练与评分行为兼容。
+    observation_truncation: str = 'legacy'
+    context_policy: str = 'legacy'
+    record_diagnostics: bool = False
 
 class LLMGenerationManager:
     def __init__(
@@ -38,6 +44,11 @@ class LLMGenerationManager:
         self.actor_rollout_wg = actor_rollout_wg
         self.config = config
         self.is_validation = is_validation
+        # 入口集中拒绝未知协议，避免运行到中途才发现配置拼写错误。
+        if config.observation_truncation not in ('legacy', 'structured') or config.context_policy not in ('legacy', 'bounded'):
+            raise ValueError('Unknown observation/context protocol')
+        if config.context_policy == 'bounded' and config.observation_truncation != 'structured':
+            raise ValueError('Bounded context requires structured observation truncation')
 
         self.tensor_fn = TensorHelper(TensorConfig(
             pad_token_id=tokenizer.pad_token_id,
@@ -78,22 +89,30 @@ class LLMGenerationManager:
         responses = self._batch_tokenize(responses_str)
         return responses, responses_str
 
-    def _process_next_obs(self, next_obs: List[str]) -> torch.Tensor:
-        """Process next observations from environment."""
-        
-        next_obs_ids = self.tokenizer(
-            next_obs, 
-            padding='longest',
-            return_tensors='pt',
-            add_special_tokens=False,  # Prevents adding special tokens
-        )['input_ids']
-        # 所有轨迹都结束时，空观察会被 tokenizer 建成 float 空张量；拼接前固定为 token ID 整数类型。
-        next_obs_ids = next_obs_ids.long()
-
-        if next_obs_ids.shape[1] > self.config.max_obs_length:
-            print(f"[WARNING] OBSERVATION TOO LONG, CONSIDER CHANGING YOUR CONFIG, {next_obs_ids.shape[1]} & {self.config.max_obs_length}")            
-            next_obs_ids = next_obs_ids[:, :self.config.max_obs_length]
-
+    def _process_next_obs(self, next_obs: List[str], limits=None, diagnostics=None) -> torch.Tensor:
+        """检索裁剪在独立模块中完成，生成和评分共用同一可见输入。"""
+        if self.config.observation_truncation == 'structured':
+            rows, lengths, cuts = [], [], []
+            for i, text in enumerate(next_obs):
+                limit = self.config.max_obs_length if limits is None else min(self.config.max_obs_length, limits[i])
+                ids, cut = observation_ids(text, self.tokenizer, limit)
+                rows.append(ids)
+                lengths.append(len(self.tokenizer.encode(text, add_special_tokens=False)))
+                cuts.append(cut)
+            next_obs_ids = pad_token_rows(rows, self.tokenizer.pad_token_id, self.tokenizer.padding_side)
+        else:
+            # 关闭新协议时保留旧批次补齐和前缀截取，包括全空观察的long修复。
+            next_obs_ids = self.tokenizer(next_obs, padding='longest', return_tensors='pt', add_special_tokens=False)['input_ids'].long()
+            lengths = (next_obs_ids != self.tokenizer.pad_token_id).sum(-1).tolist()
+            cuts = [n > self.config.max_obs_length for n in lengths]
+            if next_obs_ids.shape[1] > self.config.max_obs_length:
+                print(f"[WARNING] OBSERVATION TOO LONG, CONSIDER CHANGING YOUR CONFIG, {next_obs_ids.shape[1]} & {self.config.max_obs_length}")
+                next_obs_ids = next_obs_ids[:, :self.config.max_obs_length]
+        if diagnostics is not None:
+            # 记录真实轨迹计数，不用批次警告次数代替截断比例。
+            for entry, length, cut in zip(diagnostics, lengths, cuts):
+                entry['observation_truncations'] += int(cut)
+                entry['max_raw_observation_tokens'] = max(entry['max_raw_observation_tokens'], length)
         return next_obs_ids
 
     def _update_rolling_state(self, rollings: DataProto, cur_responses: torch.Tensor, 
@@ -112,6 +131,9 @@ class LLMGenerationManager:
 
         # Cut to appropriate length
         effective_len = new_attention_mask.sum(dim=1).max()
+        # 新协议提前控制轨迹预算，原问题及完整历史不能在此处被静默删除。
+        if self.config.context_policy == 'bounded' and effective_len > self.config.max_prompt_length:
+            raise ValueError('Rolling context would discard question/history')
         max_len = min(self.config.max_prompt_length, effective_len)
 
         new_rollings = DataProto.from_dict({
@@ -170,9 +192,30 @@ class LLMGenerationManager:
                     pad_to_left=False
                 )
         effective_len = self.tensor_fn.create_attention_mask(responses).sum(dim=1).max()
+        # 奖励和训练使用完整生成轨迹；新协议超预算明确失败，不能丢掉最终答案。
+        if self.config.context_policy == 'bounded' and effective_len > self.config.max_prompt_length:
+            raise ValueError('Reward/training trajectory would lose generated tokens')
         max_len = min(self.config.max_prompt_length, effective_len)
-        
+
         return {'responses': responses[:, :max_len], 'responses_with_info_mask': responses_with_info_mask[:, :max_len]}
+
+    def _append_final_reminder(self, rollings, right_side, budget, mask):
+        """结束提示属于环境反馈并排除梯度，输入与评分历史同步追加。"""
+        rows = [budget.reminder if bool(value) else [] for value in mask]
+        reminder = pad_token_rows(rows, self.tokenizer.pad_token_id, self.tokenizer.padding_side)
+        empty = reminder[:, :0]
+        rollings = self._update_rolling_state(rollings, empty, reminder)
+        right_side = self._update_right_side(right_side, empty, reminder)
+        budget.validate(right_side['responses'])
+        return rollings, right_side
+
+    def _record_generation_limits(self, output, mask, diagnostics):
+        """达到长度上限只作为诊断信号，不能等同于模型未完成回答。"""
+        if diagnostics is not None:
+            counts = (output.batch['responses'] != self.tokenizer.pad_token_id).sum(-1).cpu().tolist()
+            for i, count in zip(mask.nonzero().flatten().tolist(), counts):
+                diagnostics[i]['generation_calls'] += 1
+                diagnostics[i]['generation_limit_hits'] += int(count >= self.config.max_response_length)
 
     def _generate_with_gpu_padding(self, active_batch: DataProto) -> DataProto:
         """
@@ -193,7 +236,14 @@ class LLMGenerationManager:
     def run_llm_loop(self, gen_batch, initial_input_ids: torch.Tensor) -> Tuple[Dict, Dict]:
         """Run main LLM generation loop."""
         
-        original_left_side = {'input_ids': initial_input_ids[:, -self.config.max_start_length:]}
+        # 新协议的奖励/训练前缀与实际生成输入完全一致，长问题不能只保留末尾256 token。
+        if self.config.context_policy == 'bounded':
+            # 只移除批次共同的左侧补齐，完整问题不变；避免训练多处理约4096个无效位置。
+            prefix_width = int(gen_batch.batch['attention_mask'].sum(-1).max().item())
+            prefix_ids = gen_batch.batch['input_ids'][:, -prefix_width:].clone().long()
+        else:
+            prefix_ids = initial_input_ids[:, -self.config.max_start_length:]
+        original_left_side = {'input_ids': prefix_ids}
         original_right_side = {'responses': initial_input_ids[:, []], 'responses_with_info_mask': initial_input_ids[:, []]}
         
         active_mask = torch.ones(gen_batch.batch['input_ids'].shape[0], dtype=torch.bool)
@@ -202,6 +252,14 @@ class LLMGenerationManager:
         valid_search_stats = torch.zeros(gen_batch.batch['input_ids'].shape[0], dtype=torch.int)
         active_num_list = [active_mask.sum().item()]
         rollings = gen_batch
+        # 预算对象只存在于本次生成调用；不向训练器暴露内部状态，也不跨评分共享。
+        budget = (ContextBudget(gen_batch.batch['input_ids'], self.tokenizer.pad_token_id,
+                                self.config.max_prompt_length, self.config.max_response_length, self.tokenizer)
+                  if self.config.context_policy == 'bounded' else None)
+        diagnostics = ([dict(observation_truncations=0, max_raw_observation_tokens=0,
+                             generation_calls=0, generation_limit_hits=0, forced_final=0)
+                        for _ in range(len(gen_batch))] if self.config.record_diagnostics else None)
+        answered = torch.zeros(len(gen_batch), dtype=torch.bool)
 
         # Main generation loop
         for step in range(self.config.max_turns):
@@ -212,6 +270,13 @@ class LLMGenerationManager:
                 keys=['input_ids', 'attention_mask', 'position_ids']
             )
             
+            # 预算不足的轨迹单独结束；其他轨迹继续检索，不缩短共同最大轮数。
+            final_mask = budget.final_mask(original_right_side['responses']) & active_mask if budget else None
+            if final_mask is not None and bool(final_mask.any()):
+                rollings, original_right_side = self._append_final_reminder(rollings, original_right_side, budget, final_mask)
+                if diagnostics is not None:
+                    for i in final_mask.nonzero().flatten().tolist(): diagnostics[i]['forced_final'] += 1
+
             # gen_output = self.actor_rollout_wg.generate_sequences(rollings)
             # [data-difficulty] 每轮及最后一轮都复制生成设置，避免重建批次后丢失确定性评价参数。
             rollings_active = DataProto.from_dict({
@@ -221,6 +286,7 @@ class LLMGenerationManager:
             # [data-difficulty] 同一轨迹的各轮使用独立、可重现的生成种子。
             rollings_active.meta_info['sampling_round'] = len(active_num_list) - 1
             gen_output = self._generate_with_gpu_padding(rollings_active)
+            self._record_generation_limits(gen_output, active_mask, diagnostics)
 
             meta_info = gen_output.meta_info            
             responses_ids, responses_str = self._postprocess_responses(gen_output.batch['responses'])
@@ -228,8 +294,12 @@ class LLMGenerationManager:
 
             # Execute in environment and process observations
             next_obs, dones, valid_action, is_search = self.execute_predictions(
-                responses_str, self.tokenizer.pad_token, active_mask
+                responses_str, self.tokenizer.pad_token, active_mask, final_mask=final_mask
             )
+            if budget is not None:
+                # 物理终止与合法回答分别统计，预算用尽不能误报为答题成功。
+                actions, _ = self.postprocess_predictions(responses_str)
+                answered |= active_mask & torch.tensor([action == 'answer' for action in actions])
             
             curr_active_mask = torch.tensor([not done for done in dones], dtype=torch.bool)
             active_mask = active_mask * curr_active_mask
@@ -238,7 +308,8 @@ class LLMGenerationManager:
             valid_action_stats += torch.tensor(valid_action, dtype=torch.int)
             valid_search_stats += torch.tensor(is_search, dtype=torch.int)
 
-            next_obs_ids = self._process_next_obs(next_obs)
+            limits = budget.observation_limits(original_right_side['responses'], responses_ids, active_mask) if budget else None
+            next_obs_ids = self._process_next_obs(next_obs, limits, diagnostics)
             
             # Update states
             rollings = self._update_rolling_state(
@@ -251,10 +322,16 @@ class LLMGenerationManager:
                 responses_ids,
                 next_obs_ids
             )
-            
+            if budget is not None: budget.validate(original_right_side['responses'])
+
         # final LLM rollout
         # 思考轮数达到上限，最后组织结果生成，禁止搜索
         if active_mask.sum():
+            # 最后允许的回答显式禁止继续搜索；提示和最终答案都有预留空间。
+            if budget is not None:
+                rollings, original_right_side = self._append_final_reminder(rollings, original_right_side, budget, active_mask)
+                if diagnostics is not None:
+                    for i in active_mask.nonzero().flatten().tolist(): diagnostics[i]['forced_final'] += 1
             rollings.batch = self.tensor_fn.cut_to_effective_len(
                 rollings.batch,
                 keys=['input_ids', 'attention_mask', 'position_ids']
@@ -269,6 +346,7 @@ class LLMGenerationManager:
             # [data-difficulty] 同一轨迹的各轮使用独立、可重现的生成种子。
             rollings_active.meta_info['sampling_round'] = len(active_num_list) - 1
             gen_output = self._generate_with_gpu_padding(rollings_active)
+            self._record_generation_limits(gen_output, active_mask, diagnostics)
 
             meta_info = gen_output.meta_info            
             responses_ids, responses_str = self._postprocess_responses(gen_output.batch['responses'])
@@ -276,8 +354,12 @@ class LLMGenerationManager:
 
             # # Execute in environment and process observations
             _, dones, valid_action, is_search = self.execute_predictions(
-                responses_str, self.tokenizer.pad_token, active_mask, do_search=False
+                responses_str, self.tokenizer.pad_token, active_mask, do_search=False,
+                final_mask=active_mask if budget is not None else None
             )
+            if budget is not None:
+                actions, _ = self.postprocess_predictions(responses_str)
+                answered |= active_mask & torch.tensor([action == 'answer' for action in actions])
 
             curr_active_mask = torch.tensor([not done for done in dones], dtype=torch.bool)
             active_mask = active_mask * curr_active_mask
@@ -291,6 +373,12 @@ class LLMGenerationManager:
                 responses_ids,
             )
         
+        if budget is not None:
+            budget.validate(original_right_side['responses'])
+            # 回答成功统计沿用是否输出合法answer，而非仅看内部活动掩码。
+            active_mask = ~answered
+        if diagnostics is not None:
+            meta_info['generation_diagnostics'] = diagnostics
         meta_info['turns_stats'] = turns_stats.tolist()
         meta_info['active_mask'] = active_mask.tolist()
         meta_info['valid_action_stats'] = valid_action_stats.tolist()
@@ -332,7 +420,7 @@ class LLMGenerationManager:
         
         return final_output
 
-    def execute_predictions(self, predictions: List[str], pad_token: str, active_mask=None, do_search=True) -> List[str]:
+    def execute_predictions(self, predictions: List[str], pad_token: str, active_mask=None, do_search=True, final_mask=None) -> List[str]:
         """
         Execute predictions across multiple environments.
         NOTE: the function is the actual `step` function in the environment
@@ -349,12 +437,17 @@ class LLMGenerationManager:
         cur_actions, contents = self.postprocess_predictions(predictions)
         next_obs, dones, valid_action, is_search = [], [], [], []
         
-        search_queries = [content for action, content in zip(cur_actions, contents) if action == 'search']
+        # 显式结束的轨迹不发出真实检索请求；旧协议未传final_mask时保持原行为。
+        if final_mask is not None:
+            search_queries = [content for i, (action, content) in enumerate(zip(cur_actions, contents))
+                              if action == 'search' and bool(active_mask[i]) and not bool(final_mask[i])]
+        else:
+            search_queries = [content for action, content in zip(cur_actions, contents) if action == 'search']
         if do_search:
             search_results = self.batch_search(search_queries)
-            assert len(search_results) == sum([1 for action in cur_actions if action == 'search'])
+            assert len(search_results) == len(search_queries)
         else:
-            search_results = [''] * sum([1 for action in cur_actions if action == 'search'])
+            search_results = [''] * len(search_queries)
 
         for i, (action, active) in enumerate(zip(cur_actions, active_mask)):
             
@@ -362,6 +455,12 @@ class LLMGenerationManager:
                 next_obs.append('')
                 dones.append(1)
                 valid_action.append(0)
+                is_search.append(0)
+            elif final_mask is not None and bool(final_mask[i]):
+                # 预算/轮数到期后仅接受最终答案；未作答记失败，不继续工具调用。
+                next_obs.append('')
+                dones.append(1)
+                valid_action.append(int(action == 'answer'))
                 is_search.append(0)
             else:
                 if action == 'answer':
