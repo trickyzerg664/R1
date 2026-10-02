@@ -261,3 +261,207 @@ CPU 测试首次重跑时缺少 `SEARCH_R1_N_GPUS` 环境变量，一项配置�
 修改 `verl/workers/actor/dp_actor.py`：新增显式开关 `actor_rollout_ref.actor.checkpoint_token_statistics=true`。仅在非去 padding、具有梯度的 actor 前向中，对回答 token 的原有 log probability 和 entropy 公式使用 PyTorch 非重入 checkpoint；反传时重算统计量，减少前向保留的词表张量，不截断上下文、不改变损失公式或标签。默认关闭；评分和 `torch.no_grad()` 的旧路径仍直接计算。该选项可与 `response_logits_only=true` 一起用于新训练运行。`configuration.py` 在难度实验入口拒绝该开关与 `use_remove_padding=true` 同时启用，避免静默无效。未修改官方提示词、检索和奖励。
 
 `tests/test_grpo_difficulty.py` 比较原路径与重算路径的损失、logits 梯度和微型 Qwen2 全模型梯度，并确认前向保存字节数下降；`tests/test_difficulty_core.py` 验证不兼容配置会提前报错。离线 CPU 命令 `CUDA_VISIBLE_DEVICES='' OMP_NUM_THREADS=2 MKL_NUM_THREADS=2 HF_HUB_OFFLINE=1 TRANSFORMERS_OFFLINE=1 bash env/run.sh searchr1 python -m unittest tests.test_grpo_difficulty tests.test_difficulty_core -q`：27 项通过。CPU 测试使用项目已有 naive log probability 实现绕开 FlashAttention 的 GPU 限制；目标机 FlashAttention、FP16/FSDP 的显存峰值、有限梯度范数、5 步 checkpoint 尚未验证。完整 Transformer 轨迹仍参与反传，若单条轨迹过长仍可能 OOM。下一步目标机拉取新提交，在独立训练目录同时启用两个训练开关并复测；已有 9/20 题评分前缀保持原评分配置。
+
+## 2026-09-29 13:06 UTC：沐曦迁移分支的 Ray GPU 注册
+
+分支 `data-difficulty-muxi` 基于 `data-difficulty` 提交 `ab78b058692353190351206033d90f6c84978737`；独立检出目录为 `/mnt/public/code/lyk/lzy/R1-vllm-metax`。
+
+- 修改 `verl/trainer/main_ppo.py`：本地单节点以 `trainer.n_gpus_per_node` 显式注册 Ray GPU，并校验 PyTorch 可见设备和 Ray 集群资源；外部集群由各节点显式声明资源。未启动正式训练。
+- 编译检查与 `git diff --check` 通过。此前在主目录的同等 Ray 逻辑完成两卡（物理 4、5）及八卡 worker 实测；**本分支尚未重跑入口 GPU 测试**，不将旧结果记为本分支验证。
+- vLLM 0.11.0 与沐曦插件、mcoplib 的组合仍在独立试验环境测试。生成和权重同步尚未接入本分支；原有 data-difficulty 算法流程未改。
+
+## 2026-09-29 13:25 UTC：沐曦 vLLM 0.11 接口封装初稿
+
+新增 `verl/third_party/vllm/metax_v_0_11_0/`：`llm.py` 将生成输出转为旧 rollout 的张量格式，并以 level-2 休眠释放推理显存；`worker.py` 通过 vLLM 的 worker 扩展从本机 safetensors 文件读取完整权重，RPC 只传路径；`parallel_state.py` 对未支持的 TP>1 明确失败。输入限制为本地模型目录、完整 HF state_dict 和每 worker 单卡。
+
+验证：新增模块 `compileall` 通过；此前在隔离试验环境，Qwen2.5-3B 单卡生成、休眠/唤醒、独立 worker 扩展更新并恢复一项层归一化权重通过。**本分支模块尚未与旧 veRL 调用路径联调，也未验证完整 FSDP 权重或训练**。下一步接入版本选择、rollout 和 FSDP manager 后重跑。
+
+## 2026-09-29 13:26 UTC：沐曦适配接入旧 veRL 调用路径
+
+- 修改 `verl/third_party/vllm/__init__.py`：仅当 vLLM 主包为 0.11.0 且同版本沐曦插件存在时选用新封装；0.3.1–0.6.3 路径保留。
+- 修改 `verl/workers/rollout/vllm_rollout/vllm_rollout.py`：0.11.0 也以 token ID 作为输出，不额外解码；data-difficulty 的逐请求 seed 逻辑保留。
+- 新增 `verl/workers/sharding_manager/metax_vllm.py`，修改 `verl/workers/fsdp_workers.py`：仅沐曦路径使用完整 CPU FSDP state_dict 和单卡 manager，其余版本沿用旧 manager。TP>1 当前明确不支持。
+- Python 编译检查、`git diff --check` 通过。新增调用路径尚未完成实际旧 veRL/FSDP 联调，不能视为训练可用。
+
+## 2026-09-29 13:37 UTC：FSDP 完整权重导出配置调整
+
+沐曦实机小型 Qwen 测试在 `FullStateDictConfig(offload_to_cpu=True)` 的 `module.state_dict()` 阶段超过两分钟且未写出同步文件，已终止该测试；尚不能判定完整 FSDP 路径可用。将 `metax_vllm.py` 改为 `offload_to_cpu=False`，由同步层逐张量复制到 CPU，再重试。该调整可能提高短时 GPU 峰值，7B 多卡尚未验证。
+
+## 2026-09-29 13:51 UTC：沐曦 vLLM/FSDP 单卡联调与限制
+
+`verl/third_party/vllm/metax_v_0_11_0/llm.py` 修正 pad token ID 为 0 时错误回退到 eos 的情况。独立 Qwen2.5-3B 测试已验证新封装的完整权重加载和生成。两层小 Qwen2 与 FSDP、vLLM 同卡联调中，默认多进程引擎启动停滞；`VLLM_ENABLE_V1_MULTIPROCESSING=0` 时权重同步、生成、休眠成功，但 Python 退出时 MetaX torch allocator 抛 `Trying to free a pointer not allocated here`，退出码 134。显式清理 vLLM/FSDP 对象后仍复现。参见 [兼容性运行记录](runs/metax-vllm-compat-20260929-1330.md)。
+
+代码目前仅实现 TP=1、完整 HF 权重同步；未验证正式训练、7B 多卡、checkpoint 恢复。当前插件 wheel 针对 MACA 3.3，目标机为 MACA 3.7，需使用匹配版本重新构建或选取对应 wheel 并解决生命周期异常。此前编译与 `git diff --check` 通过；本次改动后的检查结果另记。
+
+适配器与 manager 的注释已改为通用 worker 说法；进程模式由 vLLM 运行配置决定。此文字修改后执行编译和差异检查，不代表运行故障已解决。
+## 2026-09-30：沐曦纯净 venv 与睡眠模式复测
+
+新建 `/mnt/public/code/lyk/lzy/envs/vllm-metax-clean33`，不继承系统包，统一安装 MACA 3.3 的 torch、Triton、FlashAttention、FlashInfer、vLLM 0.11、vllm-metax 和 mcoplib；`pip check` 通过，关键模块都从该 venv 加载。新增环境启动脚本 `/mnt/public/code/lyk/lzy/envs/maca-3.3.0.15/run-clean33.sh`，不复用其他 venv 的 PYTHONPATH；已运行 `vllm_metax_init` 和 `mcoplib_init`。后一初始化为 Qwen2 注册必需的 `silu_and_mul` 等算子。
+
+Qwen2.5-3B 普通推理输出 `1+1等于2。` 且退出码 0。tiny-Qwen2 仅启用睡眠模式、未调用 `sleep()` 时生成 4 token 后退出码 139；faulthandler 指向进程退出时垃圾回收。保留 allocator C 回调引用的最小试验仍为 139，已恢复原插件源码。训练、评分、FSDP 和恢复均未运行。详细日志与后续验收见 [单次记录](runs/metax-clean33-20260930.md)。此环境方案目前只通过普通推理，不代表完整训练可用。
+
+### 2026-09-30 02:56 UTC：MetaX 无休眠兼容路径
+
+- 修改 `verl/third_party/vllm/metax_v_0_11_0/llm.py`：默认关闭会在退出时段错误的 vLLM sleep allocator；`VERL_METAX_ENABLE_SLEEP_MODE` 仅接受 `0/1`，仅显式 `1` 才调用 sleep/wake。关闭时权重和 KV cache 常驻，FSDP 同步仍通过 safetensors/RPC 执行。
+- 修改 `verl/workers/sharding_manager/metax_vllm.py` 注释，明确常驻模式的显存生命周期。新 venv 安装 `tensordict==0.6.2`，因为仓库通用依赖的 `<0.6` 与 MetaX Torch 2.6 不能共同导入；当前通过 PYTHONPATH 使用项目，没有将旧 CUDA 环境的 requirements 直接安装到 MetaX venv。
+- 验证：`run-clean33.sh .../smoke_fsdp_cleanup.py` 与 `.../smoke_fsdp_train_no_sleep.py` 均退出码 0；后者完成一次优化器更新、二次权重同步和生成。日志见 [本次记录](runs/metax-clean33-20260930.md)。正式 3B/7B 训练、保存、恢复及多卡内存仍未验证，不能据此启动 A0–A4。
+
+### 2026-09-30 03:11 UTC：MetaX 可复现入口与 Ray 临时路径
+
+- 新增 `env/metax/run.sh` 和 `env/metax/README.md`：以仓库位置推导隔离 MACA 3.3 SDK、venv 和库路径；使用 `env -i` 排除系统 MACA 3.7 与其他 Python 包；保留明确指定的 GPU/检索变量。Ray 临时目录默认 `/tmp/r1ray33`，避免 UNIX socket 路径长度错误及共享卷 96% 使用率告警。
+- 验证：`bash -n env/metax/run.sh`、训练入口导入、Hydra `difficulty_grpo --cfg job`、Ray GPU worker 均退出码 0。真实 Qwen2.5-3B 的 FSDP→vLLM 权重同步和生成退出码 0；详情及残余风险见 [单次记录](runs/metax-clean33-20260930.md)。正式训练、checkpoint、恢复和多卡仍未验证。
+
+### 2026-09-30 06:45 UTC：迁移机本地训练数据入口
+
+- `scripts/data_process/qa_search_train_merge.py` 新增 `--raw_root`，从已下载 NQ/HotpotQA JSONL 读取共同字段并沿用原 prompt/reward 映射；不填时保留原线上数据行为。创建指定输出目录。
+- `scripts/difficulty/prepare_smoke.py` 新增可选 `--model`，允许复用目标机已校验的 Qwen2.5-3B tokenizer；默认目录不变。
+- 已验证 Python 编译与 `git diff --check`；实际 parquet 生成、训练和恢复尚未运行，见 [本轮记录](runs/metax-training-readiness-20260930-1445.md)。
+
+### 2026-09-30 06:58 UTC：检索启动脚本适配独立环境
+
+- `retrieval_launch.sh` 新增 `SEARCH_R1_RETRIEVER_ENV` 分支，直接使用已校验的独立 Python 环境，并统一传递索引、语料、模型和缓存参数；不设置时仍走原项目环境。命令使用数组，避免空格及可选参数错位。
+- `bash -n` 与 `git diff --check` 通过；检索进程已启动但仍在装载，服务请求尚未验证。数据预处理 169615 行及烟测 8/4/2 题和哈希验证通过，见 [本轮记录](runs/metax-training-readiness-20260930-1445.md)。
+
+### 2026-09-30 07:15 UTC：检索接口普通请求返回值
+
+- `search_r1/search/retrieval_server.py` 根据 `return_scores` 分支接收底层结果；默认 `false` 只接文档列表，`true` 接文档和分数，修复默认请求 HTTP 500。
+- 修复后重启已校验检索环境，真实 POST 返回 3 个文档且退出码 0；两卡 MCCL all-reduce 和评分 Hydra 配置解析也通过。评分与训练尚未启动，见 [本轮记录](runs/metax-training-readiness-20260930-1445.md)。
+
+### 2026-09-30 07:34 UTC：Ray 本地 CPU 注册上限
+
+- `verl/trainer/main_ppo.py` 在本地单节点 Ray 初始化时读取可选 `SEARCH_R1_RAY_CPUS`，正整数才生效；未设置时保持原行为。`env/metax/run.sh` 将此变量穿过隔离环境；烟测脚本指定 8 核。目的是避免 144 核节点预启动过多 worker 导致 agent 30 秒内未就绪。
+- Python 编译、`bash -n` 与 `git diff --check` 通过；受影响训练重试尚未完成，不能把评分成功视为参数更新成功。首次失败日志和评分结果见 [本轮记录](runs/metax-training-readiness-20260930-1445.md)。
+
+### 2026-09-30 07:45 UTC：Ray GPU actor 冷启动等待
+
+- `verl/single_controller/ray/base.py` 将首个 GPU actor 注册的固定 120 秒等待改为可选 `SEARCH_R1_RAY_ACTOR_START_TIMEOUT`，默认仍 120 秒；检查变量为正整数。`env/metax/run.sh` 转发此变量，本次烟测设为 600 秒。
+- Python 编译、`bash -n`、`git diff --check` 通过。第三次训练尚未运行；第二次失败退出码 1、训练 0 step，详见 [本轮记录](runs/metax-training-readiness-20260930-1445.md)。
+
+### 2026-09-30 08:43 UTC：MetaX 修复后的实际训练验收
+
+- 本轮代码修复后的 Qwen2.5-3B 双卡评分（2 题 × 4 轨迹）、真实训练 step_1、从 step_1 继续到 step_2 均退出码 0。step_1/step_2 的 `COMPLETE.json` 与全部文件哈希经项目 `read_checkpoint` 检验通过。
+- `SEARCH_R1_RAY_CPUS=8` 和 `SEARCH_R1_RAY_ACTOR_START_TIMEOUT=600` 消除本机 144 worker 启动压力和 actor 120 秒冷启动超时；默认行为仍兼容未设置变量的旧环境。无休眠 vLLM 路径显存约 46 GiB/卡，GPU5/6 均在进程退出后释放。正式 P/D/T、7B 和长期稳定性仍未验证，详情见 [本轮记录](runs/metax-training-readiness-20260930-1445.md)。
+
+### 2026-09-30 09:17 UTC：7B 八卡正式题池的留出数据入口
+
+- `scripts/data_process/qa_search_train_merge.py` 增加可选 `--split test`；本地 FlashRAG 资产的 NQ test 与 HotpotQA 标注 dev 统一映射为留出 `test.parquet`，训练默认行为保持不变。两个来源仍只保留共同问答字段并沿用原 prompt/reward 生成。
+- `python3 -m py_compile` 与 `git diff --check` 通过；实际 test parquet、P/D/T 冻结、7B 八卡训练与恢复尚未验证，见[本轮记录](runs/metax-7b8-readiness-20260930-1717.md)。
+
+### 2026-09-30 10:12 UTC：MetaX 7B 八卡权重同步峰值显存
+
+- `verl/workers/sharding_manager/metax_vllm.py` 将 FSDP 全量权重导出改为 `offload_to_cpu=True, rank0_only=False`；八个 TP=1 rank 都保留各自完整 CPU state_dict，继续通过既有共享内存 safetensors 同步各自 vLLM。目的是避免 GPU 上额外克隆约 7B 全量权重。
+- 首次 0.25 vLLM 显存配额因 KV cache 预算 -3.74 GiB 失败；0.40 配额使八卡 KV cache 各约 5.81 GiB / 108k tokens，但第一次 `state_dict()` 在 GPU 50 GiB PyTorch + vLLM 常驻下 OOM，并伴随同步层 `mcMemcpyAsync` invalid argument，退出码 1。CPU 导出尚待真实评分重试验证；需同时检查是否重现旧环境小模型 CPU offload 停滞。静态编译与差异检查后再运行。
+
+### 2026-09-30 13:54 UTC：MetaX 多轮生成权重同步复用
+
+- `verl/workers/sharding_manager/metax_vllm.py` 在无休眠模式下只同步尚未同步的 actor 权重；公开 `invalidate_weights()`，同步成功才标记可复用。启用 sleep 后仍每次重新同步，避免读取已释放的权重。
+- `verl/workers/fsdp_workers.py` 在 actor 更新成功后调用可选失效接口，使下一训练 step 或评分使用新权重；非 MetaX manager 无该接口时保持旧行为。`tests/test_metax_sync_cache.py` 覆盖连续两次生成仅导出一次、参数更新后重导出、sleep/失败后重新导出。
+- Python 编译、`git diff --check`、隔离 MACA 3.3 环境的 2 个 CPU 单元测试均通过。当前进行中的 `train1` 进程在修改前已加载旧模块，不能作为该优化的 GPU 验证；下一次独立运行须核对权重版本、同步次数、训练更新和耗时。
+
+### 2026-09-30 14:01 UTC：mx 检索超时按实测覆盖
+
+- 代码中的检索默认读取超时仍是 120 秒；本次失败请求服务端耗时 148.53 秒后返回 200，故八卡 7B 重试脚本 `run-7b8-cache.sh` 单次覆盖 `retriever.timeout=600`。没有把异常请求伪装成空结果；超过 600 秒仍中断并保留日志。
+- `bash -n` 通过；真实训练重试正在运行，超时覆盖的有效性和正式吞吐尚未证实。具体退出码见[运行记录](runs/metax-7b8-readiness-20260930-1717.md)。
+
+### 2026-09-30 14:48 UTC：FP16 溢出不再伪报训练成功
+
+- `verl/workers/actor/dp_actor.py` 将 `ShardedGradScaler` 初始值开放为 `fsdp_config.grad_scaler_init_scale`（默认仍 65536，值须为正且有限）；每个 mini batch 对比 scaler 更新前后倍率，输出 `actor/optimizer_step`，以辨别数值溢出导致的 `optimizer.step()` 跳过。
+- `verl/workers/fsdp_workers.py` 在 actor 更新后检查实际优化器步数；若全部跳过，在学习率调度器和权重同步失效之前报错，避免生成误导性 checkpoint。`tests/test_actor_scaler_step.py` 覆盖正常步和降 scale 跳步；2 个 CPU 测试、编译与 `git diff --check` 通过。
+- 触发证据：`train-cache1` 的 `actor/grad_norm=inf`、optimizer state 条目为 0、scaler 65536→16384，而训练却退出码 0。独立 `train-scale1` 使用初始 scale 1024 验证实际八卡更新中；通过前不得进入正式实验。
+
+### 2026-09-30 16:16 UTC：Adam 状态延后至反传后装载
+
+- `verl/workers/fsdp_workers.py` 不再在 `update_actor` 前提前把 CPU optimizer state 装入 GPU；`verl/workers/actor/dp_actor.py` 在每个 mini batch 的 backward、GradScaler unscale 和梯度裁剪后，仅有限梯度才按需装载，执行 `optimizer.step` 后立即卸载。异常路径也卸载，避免下一 mini batch 再遇到状态与激活叠加；仅 `fsdp_config.optimizer_offload=true` 生效，默认 false 不变。
+- 触发证据：原 FP16 + ref offload + vLLM 0.32 的第 1 步真实更新并生成 Adam 状态；下一次从完整 checkpoint 恢复时，原 worker 在反传前先装入 Adam 状态，GPU0 于 2.32 GiB 申请处 OOM。`tests/test_actor_scaler_step.py` 增加状态装载/卸载时序测试；3 个 CPU 测试、Python 编译和 `git diff --check` 通过。新逻辑八卡验收中。
+
+### 2026-09-30 16:31 UTC：允许仅改变 optimizer 内存放置的恢复
+
+- `verl/experimental/difficulty/configuration.py` 的父 checkpoint provenance 不匹配时，仅额外以反转 `actor.fsdp_config.optimizer_offload` 的配置再计算一次指纹；它完全匹配父指纹才允许恢复，且立即恢复当前配置值。保存的新 checkpoint 仍记录本次真实配置指纹。这样可从旧 `false` 状态切换到 CPU offload，其他模型、数据、reference、随机种子、后端及学习率设置仍不得改变。
+- `tests/test_difficulty_core.py` 的恢复测试增加 optimizer 放置变化可用、原 seed 不同仍拒绝的断言。单测、编译与 `git diff --check` 通过；真实 7B 八卡续训结果待 `resume-opt-offload2` 验收。
+
+### 2026-09-30 16:49 UTC：恢复状态使用同一限定兼容判断
+
+- resume-opt-offload2 通过前置 prepare_config 校验后，controller 的 load_state_dict 仍按旧指纹拒绝。configuration.py 提取 provenance_matches，ray_trainer.py 在装载状态时验证它，然后只传入已验证父指纹；controller.py 默认保持严格比较。这样仅 optimizer_offload 内存放置可以变更，其他训练来源约束不变。
+- 两项定向恢复测试、Python 编译及 git diff --check 通过。resume-opt-offload3 八卡验收中；第 2 步有效更新和 checkpoint 未经完成验证前，不宣称 OOM 已解决。
+
+### 2026-10-01 00:27 UTC：Adam 延迟装载八卡连续验证
+
+- 代码未新增修改。当前可选 optimizer CPU offload 时序在第 2 步单步恢复及第 3、4 步连续恢复中通过；三步 grad_norm 均有限，actor/optimizer_step 均为 1，完整 checkpoint 均生成且进程退出码 0。此前第 2 步反向传播 OOM 已不再复现；本结论仅针对当前八卡参数。
+
+
+## 2026-10-01T01:45:11+00:00：检索长度诊断编排
+
+新增运行产物目录中的 workflow.py 与 base-score.sh 副本，用于512重复/1024/2048同题评分、原样转发检索返回并记录完整证据、按题比较奖励和难度桶。通用生成、检索服务、奖励、训练主循环未修改。职责集中于运行编排和诊断记录，复用 score_pool/load_labels 与现有评分入口。
+
+验证：py_compile通过；2048 Hydra配置解析通过；代理与后端真实响应JSON完全一致；tokenizer padding_side=right；同题比较和按题统计CPU检查通过。512评分已启动，GPU三组完整结果尚未验证；原20步训练保持暂停。证据见 runs/metax-obs-length-20261001-0938.md 和 /mnt/public/code/lyk/lzy/runs/metax-obs-length-20261001-0938/proxy-verification.json。
+
+
+## 2026-10-01T03:53:58+00:00：新生成协议接入
+
+新增context_budget.py、tests/test_generation_budget.py；修改generation.py、ray_trainer.py两处GenerationConfig参数、difficulty/generation.py诊断记录，修复test_difficulty_core.py模拟fit的临时资产/provenance夹具。structured保持未超限token原样，超限保留标签并分配文档内容；bounded把结束提示和最后答案纳入4096总预算，问题与完整历史始终保留，禁止静默丢弃生成token。模块不依赖Ray/GPU/本机路径，默认legacy兼容，训练器仅转交配置。
+
+本次8项生成CPU测试通过；核心17项首次1错误系旧测试缺路径，已补夹具复验中。尚未验证GPU/吞吐/训练显存。关键逻辑注释已覆盖公共接口、协议开关、预算边界、诊断与失败路径；注释覆盖按逻辑单元检查，不以行数计。详细运行记录 runs/metax-protocol-pilot-20261001-1155.md。
+
+
+## 2026-10-01T04:02:12+00:00：新生成协议验收与执行
+
+8项新增CPU测试及17项核心回归全部通过，编译和差异检查通过。新增运行编排protocol_pilot.py，复用既有评分、训练、来源指纹和checkpoint哈希校验；固定64题评估、按预先规则判断128/256、批量一致性测试、新256题和20step有限训练依次执行。默认旧协议保持兼容，旧标签不与新标签混用。GPU完整评分、吞吐、反传与20step尚未验证。详细标准与命令见[runs/metax-protocol-pilot-20261001-1155.md](runs/metax-protocol-pilot-20261001-1155.md)。
+
+
+## 2026-10-01T04:07:14+00:00：输出问题补齐检查
+
+发现数据集问题固定补齐4096位置，而actor当前use_remove_padding=false；新协议现仅删除所有样本共同的左侧补齐，保留每条完整原问题，减少训练无效位置。生成测试加入补至900窗口的输入和输出宽度断言，8项重跑中。此前17项核心回归已通过；本次GPU尚未启动。配置预检、已知奖励汇总和配对比较检查通过，见preflight-verification.json。
+
+
+2026-10-01T04:08:16+00:00：移除共同问题补齐后的8项生成测试再次全部通过（21.739秒）；编译、git diff --check通过。17项核心回归已通过，配置预检通过。GPU尚未验收，开始启动有限阶段控制器。
+
+
+2026-10-01T10:25:19+00:00：独立评分原外层3小时预算不足，在240/256题时退出124，18:14触发SIGTERM，GPU已释放，训练0step。保留240题及原失败历史，以metax-protocol-resume-20261001-1822原样续评剩16题；先备份并校验原前缀、数据、源码与配置，完整256题且旧240记录逐字段一致才独立训练20step。续评1小时、训练6小时上限，以覆盖实测成本，不更改模型生成参数或评分种子。新编排protocol_resume.py语法检查通过，实际恢复及训练未验证。
+
+
+2026-10-01T10:28:31+00:00：续跑1822在GPU启动前的配置比较失败，原因是父控制器环境没有SEARCH_R1_N_GPUS，而原bash入口才导出卡数。已将比较改为不提前计算环境插值的配置声明比较，同一bash入口和源码已核验；两个实际配置CPU比较通过，编译通过。1822的错误、日志及240题备份保留；新尝试metax-protocol-resume-20261001-1828，评分参数和原240题不变。
+
+
+2026-10-01T13:47:19.205906+00:00：静态分析与CPU最小复现完成，未加载模型、未启动GPU、未修改冻结数据及生产评分代码。确认奖励提取会读取提示示例，但D32无Beijing目标；确认D32印度总统题标准答案错误；确认嵌套答案标签提取异常。160次抽题159题，68个有对有错组，平均每步3.4题。学习率预热20周期覆盖全部训练，第1周期学习率0；此前20次真实参数更新表述更正为20周期优化器未跳过、19周期学习率非零。9题完整日志不足以定位净丢分4题，下降原因未最终确认。原D32复跑与D128扩大评价暂不执行，下一步优先奖励提取修复方案和CPU测试。详情 validation/static-decline-audit-20261001.md。
+
+
+2026-10-01T13:57:38.977575+00:00：正式准备代码已接入显式response_only_v1、逐题评价记录及恢复指纹。准备脚本末尾记录哈希时使用了错误根路径，首次退出1；代码修改和备份完整，已修正记录步骤，未重放修改。CPU测试待执行，GPU未启动。
+
+
+2026-10-01T13:59:39.410620+00:00：16项新奖励CPU测试通过；新增已有生成诊断计数汇总和独立评价编号，不新增模型计算。进一步回归和配置预检待完成。
+
+
+2026-10-01T14:13:23.342068+00:00：正式准备完成：新奖励response_only_v1、逐题完整评价记录、恢复来源版本隔离及已有生成诊断汇总已接入；默认legacy兼容。42项CPU测试通过，配置/数据隔离/来源/源码快照/编译/差异检查通过。控制台tqdm训练进度条和每分钟台账同步已准备，无GPU启动。首段100步、P10000池、800次抽题、4回答、预热10步、保存20步/评价50步；时间估算11至13小时、上限14小时，未遍历全池。详细依据validation/formal-preparation-20261001.md。
+
+
+2026-10-01T14:17:41.805798+00:00：用户授权启动正式首段100步；源码259文件及P/D32哈希通过，未发现已有训练。控制器PID1119753、子进程PID1119774存活，Ray main_task已输出实际配置。已完成训练0/100步、完整检查点0；处于初始化，初始开发评价和实际GPU更新尚未完成。控制台进度条0%，动态日志/mnt/public/code/lyk/lzy/runs/metax-formal-preparation-20261001/controller-console.log，纯训练日志/mnt/public/code/lyk/lzy/runs/metax-formal-stage1-20261001-v2/console.log。检索PID155243保留。本地临时目录为空，清理0个。
+
+
+2026-10-02T03:57:59.127473+00:00：静态GRPO原因分析a2完成、CPU退出0、GPU0。800组K0至K4=382/115/100/125/78，57.5%全同组正确性优势为0但KL/熵仍更新。原函数复现：low_var_kl在差值3/10时截10且梯度0；FP32差值100时损失10而梯度NaN；被屏蔽位置仍可污染梯度；全零优势PPO遇指数溢出也NaN。rank0缩放512/64/64/64/16与6次跳过吻合。实现风险已确认，缺真实逐token差值不能直接认定6次异常根因。增加8条可改善混合概率，但固定轨迹预算减少问题覆盖，当前难度模块固定4条需接口/标签版本变更。优先数值修复CPU测试再决定下一段，未改生产代码或启动实验。详细validation/grpo-static-causes-20261002.md。
+
+
+2026-10-02T04:18:54.984862+00:00：梯度异常静态原因核查完成，CPU退出0，GPU0，生产代码未改。第一次异常发生第12步，早于末段漂移；FP32损失经过FP16反传，在scale1024的CPU样例产生Inf，64/16有限，证明半精度反传放大路径可发生。此前原损失指数/屏蔽数值风险仍成立，但真实逐token差值未保存，6次根因未定位。新发现KL日志在微批循环内覆盖，只记录每卡末微批，因此此前KL均值仅为日志子集，不能视为整周期全部轨迹的KL均值。后续优先数值边界与完整异常记录CPU修复，再调整轨迹数量；不启动新实验。详细validation/gradient-causes-20261002.md。
+
+
+2026-10-02T04:40:16.867492+00:00：用户授权每题8轨迹+动态筛选。新增dynamic_filter.py与loss_safety.py；controller/configuration/训练器接入在线补抽，目标8有效问题、上限8候选批，不足停止；候选消费与训练步数分离恢复。safe_v1显式开启安全损失，KL指数段切线延续保留约束梯度，PPO极端概率比有限化，先选择有效token。KL日志改为保留全部微批，记录scaler。默认关闭兼容旧四轨迹；G8仅在线动态训练、拒绝旧标签刷新。编译通过，CPU集成验证进行中，GPU未启动。
+
+
+## 八轨迹动态筛选准备 2026-10-02T04:54:25.527797+00:00
+
+- 用户授权G8+动态筛选，P10000/D32保持冻结，T不使用。新训练从Qwen2.5-7B Base初始权重开始，reference固定初始权重；与旧四轨迹末轮不直接续接。
+- 100训练周期，每周期8道新的有效问题，每题8轨迹，保留64轨迹；总目标800不同有效问题、6400保留轨迹。候选每批8问题，最多8候选批，凑不齐停止，不以不足批次更新。全对/全错只丢弃本次生成组，不从原题池永久删除；动态筛选改变训练题目分布，不能据此声称总体正确率提高。
+- 实现分工：dynamic_filter负责补抽、整组筛选、跨批补齐、成本统计；controller负责种子、候选游标、跨周期题目去重、状态恢复；trainer仅适配批次；loss_safety负责显式safe_v1数值计算，dp_actor调用。关闭功能保持四轨迹兼容。旧四轨迹标签和刷新拒绝与G8在线训练混用。
+- 训练mini/micro=32/8，全局64轨迹仍为2次小批更新，微批保持每卡1条；lr=1e-6/warmup10，scaler初始16，FP16计算/FP32主权重，优化器CPU卸载，reference CPU卸载，vLLM预算0.32，8×C500。上下文4096、单轮生成256、观察2048、最多10轮，原检索服务保持。
+- safe_v1先选有效token再计算；PPO对数概率比截至±5；KL在差值2.5以上改切线延续，保持非零约束梯度，防止指数溢出。极端区域公式发生变化，已显式版本化。实际FP16反传仍待GPU验证；记录每周期scaler和全部微批KL。记录的微批差值最大值由现有日志汇总器求平均，不能当作全局最大值。
+- 58项CPU测试通过：difficulty_core17、generation_budget8、reward_boundary17、actor_scaler3、新增动态/安全损失13。新测试包含真实DataLoader/controller/展开接口、模拟生成和worker，验证补抽、分组、去重、长度补齐、状态恢复及损失正常区兼容/极端区有限性。GPU完整联调尚未通过。
+- 新控制器计划每分钟记录进度，实时进度条；所有历史周期中出现非有限梯度或optimizer_step不等于1立即停本训练进程组。保存每20步、D32评估每50步及初始/结束。D32已知一题标注错误保留，分析时同时报告剔除该题的31题结果。48小时是停止上限，耗时尚未实测；候选抽满停止或数值异常均保留记录，不自动重启。
+- 产物：/mnt/public/code/lyk/lzy/runs/metax-dynamic-preparation-20261002；运行目标：/mnt/public/code/lyk/lzy/runs/metax-dynamic-g8-20261002-v1。配置/快照/冻结数据哈希核对进行中；GPU尚未启动。恢复保存候选游标与已训练题目ID，CPU通过，GPU恢复未验证。
+- 注释检查范围：模块职责、混合组判断、补抽上限、跨批padding、成本统计、随机流、跨步去重、恢复边界、旧模式兼容、有效token筛选、指数边界、异常路径，关键逻辑均有中文说明。
+
+
+## 按功能整理提交 2026-10-02T05:14:49+00:00
+
+本次仅整理现有未提交改动，工作区代码哈希保持不变，未重启训练或启动GPU实验。
+提交分为MetaX运行环境及FP16稳定性、检索与本地数据准备、生成长度控制、奖励边界与逐题评价、八轨迹动态筛选及恢复状态五批。新增Markdown不提交，仅纳入原有文档更新。
+本次CPU复验60项通过：difficulty_core17、generation_budget8、reward_boundary17、actor_scaler_step3、dynamic_filter13、metax_sync_cache2；命令均为CUDA_VISIBLE_DEVICES= bash env/metax/run.sh -m unittest discover -s tests -p test_<名称>.py。Shell语法与git diff --check通过。各中间提交未分别重跑测试，GPU运行结果沿用既有记录，本次不新增GPU验证结论。
+首次直接调用env/metax/run.sh因缺少可执行权限失败，改用bash调用；首个连续测试SSH会话在输出25项通过后无后续结果，已停止该会话，后四组独立复验通过。

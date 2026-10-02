@@ -479,6 +479,8 @@ class RayPPOTrainer(object):
         Accumulates metrics across all batches before computing final statistics.
         """
         import torch
+        # 独立评价编号区分同一步的定期评价与训练结束评价。
+        self.validation_round = getattr(self, "validation_round", 0) + 1
         reward_tensor_lst = []
         data_source_lst = []
 
@@ -747,9 +749,14 @@ class RayPPOTrainer(object):
         if self.difficulty and self.config.difficulty.resume:
             from pathlib import Path
             from verl.experimental.difficulty.checkpoint import load_driver
+            from verl.experimental.difficulty.configuration import provenance_matches
             state = load_driver(self.config.difficulty.resume)
+            # 控制器的第二道校验复用入口规则：只放行 optimizer 状态内存放置变化。
+            if not provenance_matches(self.config, state['provenance']):
+                raise ValueError('Resume provenance differs (reference/model/training/retrieval settings)')
             self.difficulty.load_state_dict(state, branch=self.config.difficulty.resume_mode == 'branch',
-                                            scoring=self.config.difficulty.mode == 'score')
+                                            scoring=self.config.difficulty.mode == 'score',
+                                            compatible_provenance=state['provenance'])
             self.actor_rollout_wg.load_training_checkpoint(str(Path(self.config.difficulty.resume) / 'actor'))
             self.global_steps = self.difficulty.completed_step
         # perform validation before training
@@ -799,33 +806,44 @@ class RayPPOTrainer(object):
                 return
             if self.global_steps > self.total_training_steps:
                 return
+        # 动态模块只通过既有生成/奖励/worker接口接入，关闭时沿用原迭代器。
+        dynamic_filter = bool(self.difficulty and self.difficulty.dynamic)
+        training_data = self.train_dataloader
+        if dynamic_filter:
+            from verl.experimental.difficulty.dynamic_filter import training_batches
+            training_data = training_batches(self.train_dataloader, self.difficulty, generation_manager,
+                self.reward_fn, repeat_search_batch, self.actor_rollout_wg, self.tokenizer.pad_token_id,
+                self.total_training_steps, self.difficulty.max_candidate_rounds)
         # start training loop
         for epoch in range(1 if self.difficulty else self.config.trainer.total_epochs):
-            for batch_dict in self.train_dataloader:
+            for batch_dict in training_data:
                 print(f'epoch {epoch}, step {self.global_steps}')
                 metrics = {}
                 timing_raw = {}
 
-                batch: DataProto = DataProto.from_single_dict(batch_dict)
-                # [data-difficulty] 检索轨迹由 n_agent 展开；n 再展开会破坏一题一组的对应关系。
-                if self.config.do_search:
-                    if self.config.actor_rollout_ref.rollout.n != 1:
-                        raise ValueError('Search rollout requires n=1; set n_agent for the group size')
-                    batch = repeat_search_batch(batch, self.config.actor_rollout_ref.rollout.n_agent)
-                else:
-                    batch = batch.repeat(repeat_times=self.config.actor_rollout_ref.rollout.n_agent, interleave=True)
+                batch: DataProto = batch_dict if dynamic_filter else DataProto.from_single_dict(batch_dict)
+                if not dynamic_filter:
+                    # [data-difficulty] 检索轨迹由 n_agent 展开；n 再展开会破坏一题一组的对应关系。
+                    if self.config.do_search:
+                        if self.config.actor_rollout_ref.rollout.n != 1:
+                            raise ValueError('Search rollout requires n=1; set n_agent for the group size')
+                        batch = repeat_search_batch(batch, self.config.actor_rollout_ref.rollout.n_agent)
+                    else:
+                        batch = batch.repeat(repeat_times=self.config.actor_rollout_ref.rollout.n_agent, interleave=True)
 
-                # pop those keys for generation
-                gen_batch = batch.pop(batch_keys=['input_ids', 'attention_mask', 'position_ids'])
-                # [data-difficulty] 在轨迹展开后赋种子，并直接传到生成侧。
-                if self.difficulty:
-                    self.difficulty.attach_seeds(gen_batch, self.global_steps)
+                    # pop those keys for generation
+                    gen_batch = batch.pop(batch_keys=['input_ids', 'attention_mask', 'position_ids'])
+                    # [data-difficulty] 在轨迹展开后赋种子，并直接传到生成侧。
+                    if self.difficulty:
+                        self.difficulty.attach_seeds(gen_batch, self.global_steps)
 
                 ####################
                 # original code here
 
                 with _timer('step', timing_raw):
-                    if not self.config.do_search:
+                    if dynamic_filter:
+                        timing_raw['gen'] = batch.meta_info['dynamic_timing']['gen']
+                    elif not self.config.do_search:
                         gen_batch_output = self.actor_rollout_wg.generate_sequences(gen_batch)
 
                         batch.non_tensor_batch['uid'] = np.array([str(uuid.uuid4()) for _ in range(len(batch.batch))],
@@ -900,7 +918,8 @@ class RayPPOTrainer(object):
                             batch = batch.union(reward_tensor)
 
                         # we combine with rule-based rm
-                        reward_tensor = self.reward_fn(batch)
+                        # 筛选奖励已与轨迹同步补齐；明确恢复float，避免优势归一化被整数截断。
+                        reward_tensor = batch.batch.pop('dynamic_rewards').float() if dynamic_filter else self.reward_fn(batch)
                         batch.batch['token_level_scores'] = reward_tensor
 
                         # compute rewards. apply_kl_penalty if available
@@ -951,6 +970,9 @@ class RayPPOTrainer(object):
                         with _timer('save_checkpoint', timing_raw):
                             self._save_checkpoint()
 
+                # 候选生成发生在有效批yield之前，必须计入完整训练成本。
+                if dynamic_filter:
+                    timing_raw['step'] += batch.meta_info['dynamic_timing']['step']
                 # collect metrics
                 metrics.update(compute_data_metrics(batch=batch, use_critic=self.use_critic))
                 metrics.update(compute_timing_metrics(batch=batch, timing_raw=timing_raw))
@@ -959,7 +981,8 @@ class RayPPOTrainer(object):
                 if self.difficulty:
                     from pathlib import Path
                     metrics.update(self.difficulty.metrics(batch))
-                    self.difficulty.after_step(self.global_steps, metrics, timing_raw['step'])
+                    self.difficulty.after_step(self.global_steps, metrics, timing_raw['step'],
+                                               accepted_question_ids=batch.meta_info.get('dynamic_question_ids'))
                     if (self.global_steps < self.total_training_steps
                             and self.difficulty.should_refresh(self.global_steps)):
                         output = Path(self.config.difficulty.output_dir) / f'labels_step_{self.global_steps}.json'

@@ -6,6 +6,18 @@ from .checkpoint import read_checkpoint
 from .state import model_identity, seed_all, fingerprint, file_hash
 
 
+def provenance_matches(config, parent):
+    """严格校验父来源，仅允许 Adam 状态的 CPU/GPU 放置变化。"""
+    if provenance(config) == parent:
+        return True
+    saved = config.actor_rollout_ref.actor.fsdp_config.optimizer_offload
+    try:
+        config.actor_rollout_ref.actor.fsdp_config.optimizer_offload = not saved
+        return provenance(config) == parent
+    finally:
+        config.actor_rollout_ref.actor.fsdp_config.optimizer_offload = saved
+
+
 def prepare_config(config):
     # 在 tokenizer/worker 构建前恢复 actor 路径，reference 固定为初始模型。
     """实验入口前置检查及恢复路径解析；关闭实验时不修改原配置。
@@ -17,8 +29,23 @@ def prepare_config(config):
     d, ar = config.difficulty, config.actor_rollout_ref
     if d.mode not in ('train', 'score') or d.resume_mode not in ('continue', 'branch'):
         raise ValueError('Invalid difficulty mode or resume_mode')
-    if not config.do_search or config.algorithm.adv_estimator != 'grpo' or ar.rollout.n_agent != 4 or ar.rollout.n != 1:
-        raise ValueError('Difficulty requires search GRPO with n_agent=4 and n=1')
+    dynamic = d.get('dynamic_filter', {}).get('enabled', False)
+    group_size = ar.rollout.n_agent
+    if not config.do_search or config.algorithm.adv_estimator != 'grpo' or ar.rollout.n != 1:
+        raise ValueError('Difficulty requires search GRPO and n=1')
+    if group_size != 4 and not (dynamic and group_size == 8):
+        raise ValueError('Eight trajectories require dynamic filtering; legacy scoring remains four')
+    if dynamic:
+        if d.mode != 'train' or d.labels is not None or d.ratios is not None or d.refresh_steps or d.refresh_every:
+            raise ValueError('Dynamic filtering is online training only; no legacy labels or refresh')
+        if not 1 <= d.dynamic_filter.max_rounds <= 32:
+            raise ValueError('Dynamic max_rounds must be in 1..32')
+        if config.data.train_batch_size < 8:
+            raise ValueError('Dynamic filtering must retain at least eight questions per update')
+        with open_dict(config):
+            d.group_size = group_size
+    if ar.actor.get('loss_numerics', 'legacy') not in ('legacy', 'safe_v1'):
+        raise ValueError('Unknown loss numerical version')
     if ar.actor.strategy != 'fsdp' or ar.rollout.name != 'vllm' or config.reward_model.enable or not ar.actor.use_kl_loss:
         raise ValueError('Difficulty supports FSDP/vLLM, binary rule rewards and separate KL loss')
     # [data-difficulty] worker 按数据并行卡数整除 batch；训练前拒绝零微批或静默截断。
@@ -76,7 +103,7 @@ def prepare_config(config):
             d.lineage = d.initial_model_id
         if config.trainer.total_training_steps is None or config.trainer.total_training_steps < 1:
             raise ValueError('Set explicit absolute trainer.total_training_steps')
-    if d.resume and provenance(config) != meta['provenance']:
+    if d.resume and not provenance_matches(config, meta['provenance']):
         raise ValueError('Parent reference/model/training/retrieval provenance differs')
     seed_all(d.seed)
 
@@ -100,6 +127,9 @@ def provenance(config):
     answer_mode = c['reward_model'].get('answer_mode', 'legacy')
     if answer_mode != 'legacy':
         c['algorithm']['answer_mode'] = answer_mode
+    # 筛选改变候选消费及更新语义，纳入来源指纹；关闭时不改变历史指纹。
+    if c['difficulty'].get('dynamic_filter', {}).get('enabled', False):
+        c['algorithm']['dynamic_filter'] = c['difficulty']['dynamic_filter']
     retriever = dict(c['retriever'])
     retriever.pop('url', None)
     return {'initial_model_id': c['difficulty']['initial_model_id'],

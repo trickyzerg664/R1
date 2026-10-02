@@ -13,7 +13,14 @@ class DifficultyExperiment:
         """组合采样、评分与日志组件，不持有训练器或 worker 对象。
         settings 为解析后的普通字典；同一输出目录只能属于同一配置的任务。
         """
+        # 旧设置移除关闭的新字段，避免旧目录/旧策略无故失配。
+        settings = dict(settings)
+        if not settings.get('dynamic_filter', {}).get('enabled', False):
+            settings.pop('dynamic_filter', None)
         self.rows, self.settings = rows, settings
+        self.group_size = int(settings.get('group_size', 4))
+        self.dynamic = settings.get('dynamic_filter', {}).get('enabled', False)
+        self.max_candidate_rounds = int(settings.get('dynamic_filter', {}).get('max_rounds', 1))
         self.seed, self.output_dir = seed, Path(output_dir)
         self.output_dir.mkdir(parents=True, exist_ok=True)
         self.provenance = provenance
@@ -26,8 +33,13 @@ class DifficultyExperiment:
             ratios = None
         self.strategy = {key: settings.get(key) for key in ('ratios', 'refresh_steps', 'refresh_every', 'score_seed', 'score_batch_size')}
         self.lineage = settings.get('lineage', provenance['initial_model_id'])
-        self.sampler = DifficultyBatchSampler(rows, batch_size, steps, seed, ratios, labels)
+        # 候选消费次数与优化器训练周期分开；保存RNG/曝光才能重放额外补抽。
+        if self.dynamic:
+            self.strategy.update(group_size=self.group_size, dynamic_filter=settings['dynamic_filter'])
+        self.sampler = DifficultyBatchSampler(rows, batch_size,
+                    steps*self.max_candidate_rounds if self.dynamic else steps, seed, ratios, labels)
         self.completed_step = 0
+        self.accepted_question_ids = set()
         self.refresh_steps = set(settings.get('refresh_steps', []))
         self.refresh_every = int(settings.get('refresh_every', 0))
         self.initial_model_id = provenance['initial_model_id']
@@ -78,14 +90,16 @@ class DifficultyExperiment:
         self.sampler.refresh(labels)
         self.label_payload = payload
 
-    def attach_seeds(self, batch, step):
+    def attach_seeds(self, batch, step, candidate_round=None):
         # 数组属于逐轨迹字段，后续筛选、重排和并行分发时同步处理。
         """对已经展开成四条轨迹的生成批设置独立请求种子。
         训练位置使用绝对 step，恢复后不从零重新生成随机序列。
         """
         # [data-difficulty] DataProto 非张量字段必须为 object dtype，补齐和 Ray 分发会再次校验。
         batch.non_tensor_batch['rollout_seed'] = np.array(
-            [trajectory_seed(self.seed, 'train', step, i) for i in range(len(batch))], dtype=object)
+            [trajectory_seed(self.seed, 'train', step, i) if candidate_round is None else
+             trajectory_seed(self.seed, 'train-dynamic', step, candidate_round, i)
+             for i in range(len(batch))], dtype=object)
         batch.meta_info['recompute_log_prob'] = False
         return batch
 
@@ -98,12 +112,14 @@ class DifficultyExperiment:
             if score not in (0., 1.):
                 raise ValueError('Difficulty experiment requires binary correctness rewards')
             groups[str(uid)].append(score)
-        if any(len(g) != 4 for g in groups.values()):
-            raise ValueError('Difficulty group size must be four')
+        group_size = getattr(self, 'group_size', 4)
+        if any(len(g) != group_size for g in groups.values()):
+            raise ValueError('Difficulty trajectory group is incomplete')
         counts = Counter(int(sum(g)) for g in groups.values())
         total = len(groups)
-        metrics = {f'difficulty/k{k}': counts[k]/total for k in range(5)}
-        metrics['difficulty/effective_fraction'] = sum(counts[k] for k in (1,2,3))/total
+        metrics = {f'difficulty/k{k}': counts[k]/total for k in range(group_size+1)}
+        metrics['difficulty/effective_fraction'] = sum(counts[k] for k in range(1,group_size))/total
+        metrics.update(batch.meta_info.get('dynamic_metrics', {}))
         metrics['difficulty/unique_questions'] = int((self.sampler.exposures > 0).sum())
         metrics['difficulty/max_exposure'] = int(self.sampler.exposures.max())
         width = batch.batch['responses'].shape[-1]
@@ -131,10 +147,19 @@ class DifficultyExperiment:
         with (self.output_dir/'metrics.jsonl').open('a') as stream:
             stream.write(json.dumps({'schema_version': 1, 'seed': self.seed, **record}, default=float)+'\n')
 
-    def after_step(self, step, metrics, elapsed):
+    def after_step(self, step, metrics, elapsed, accepted_question_ids=None):
         """在参数更新结束后推进已完成 step 并记录该步成本与标签版本。
         此时 sampler 消费位置必须与 step 相同，后续完整保存才能安全恢复。
         """
+        # 只在完整训练周期提交有效问题曝光，checkpoint一起保存，跨步不重复训练问题。
+        if self.dynamic and accepted_question_ids is None:
+            raise ValueError('Dynamic update missing accepted question identities')
+        if self.dynamic and accepted_question_ids is not None:
+            ids=set(accepted_question_ids)
+            if len(ids)!=self.sampler.batch_size or ids & self.accepted_question_ids:
+                raise ValueError('Dynamic accepted questions must be new and fill target batch')
+            self.accepted_question_ids.update(ids)
+            metrics['dynamic/unique_trained_questions']=len(self.accepted_question_ids)
         self.completed_step = step
         self.train_seconds += elapsed
         self.generated_tokens += int(metrics.get('difficulty/generated_tokens', 0))
@@ -151,17 +176,18 @@ class DifficultyExperiment:
         return {'schema_version': 1, 'strategy': self.strategy, 'completed_step': self.completed_step, 'sampler': self.sampler.state_dict(),
                 'imported_label_seconds': self.imported_label_seconds,
                 'labels': self.label_payload, 'provenance': self.provenance, 'rng': capture_rng(),
+                'accepted_question_ids': sorted(self.accepted_question_ids),
                 'train_seconds': self.train_seconds, 'score_seconds': self.score_seconds,
                 'generated_tokens': self.generated_tokens, 'score_tokens': self.score_tokens}
 
-    def load_state_dict(self, state, branch=False, scoring=False):
+    def load_state_dict(self, state, branch=False, scoring=False, compatible_provenance=None):
         """验证题池与训练来源后恢复实验状态和 driver RNG。
         continue 保持策略不变；branch 保留父训练状态但采用显式新标签／比例；score 只恢复用于评估。
         """
         if state['schema_version'] != 1:
             raise ValueError('Unsupported difficulty checkpoint version')
         # 阶段二允许标签/比例变更，模型、参考模型、题池和训练关键参数必须保持一致。
-        if state['provenance'] != self.provenance:
+        if state['provenance'] != self.provenance and state['provenance'] != compatible_provenance:
             raise ValueError('Resume provenance differs (reference/model/training/retrieval settings)')
         if not branch and not scoring and state['strategy'] != self.strategy:
             raise ValueError('Continue mode requires the same refresh and scoring strategy')
@@ -171,7 +197,15 @@ class DifficultyExperiment:
                                    None if self.label_payload is None else validate_labels(self.label_payload, self.rows))
         self.sampler.load_state_dict(state['sampler'], branch=branch)
         self.completed_step = state['completed_step']
-        if self.sampler.cursor != self.completed_step:
+        self.accepted_question_ids=set(state.get('accepted_question_ids', []))
+        if self.dynamic and (len(self.accepted_question_ids)!=self.completed_step*self.sampler.batch_size
+                or not self.accepted_question_ids <= {r['question_id'] for r in self.rows}):
+            raise ValueError('Invalid dynamic trained-question exposure state')
+        # 动态模式每更新消费1至max_rounds个候选批；只允许完整更新边界恢复。
+        if self.dynamic:
+            if not self.completed_step <= self.sampler.cursor <= self.completed_step*self.max_candidate_rounds:
+                raise ValueError('Dynamic candidate cursor differs from completed update boundary')
+        elif self.sampler.cursor != self.completed_step:
             raise ValueError('Sampler cursor and completed training step differ')
         # 分支重用旧标签不重复收费；新标签成本单列，历史训练及在线评分成本仍从父状态继承。
         if not branch or state['labels'] == self.label_payload:

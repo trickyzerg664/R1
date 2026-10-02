@@ -187,6 +187,11 @@ class DifficultyCoreTests(unittest.TestCase):
         state = exp.state_dict()
         resumed = DifficultyExperiment(self.rows, settings, 20, 5, 42, self.root/'second', provenance)
         resumed.load_state_dict(state)
+        altered_origin = {**provenance, 'training': 'different placement'}
+        placement = DifficultyExperiment(self.rows, settings, 20, 5, 42, self.root/'placement', altered_origin)
+        with self.assertRaises(ValueError):
+            placement.load_state_dict(state)
+        placement.load_state_dict(state, compatible_provenance=provenance)
         self.assertEqual(next(iter(exp.sampler)), next(iter(resumed.sampler)))
         self.assertTrue(resumed.should_refresh(2))
         bad = copy.deepcopy(self.payload)
@@ -320,6 +325,21 @@ class DifficultyCoreTests(unittest.TestCase):
         config.trainer.total_training_steps = 3
         config.difficulty.enabled = True
         config.difficulty.refresh_steps = [1]
+        # 模拟fit也通过真实来源指纹校验；使用临时资产，不依赖机器上的默认gsm8k路径。
+        from verl.experimental.difficulty.configuration import provenance
+        from verl.experimental.difficulty.state import model_identity
+        toy_model = self.root / 'fit-model'
+        toy_model.mkdir()
+        (toy_model / 'config.json').write_text('{}')
+        (toy_model / 'model.safetensors').write_bytes(b'toy')
+        toy_data = self.root / 'fit-data.parquet'
+        toy_data.write_bytes(b'toy-input-for-provenance')
+        config.actor_rollout_ref.model.path = str(toy_model)
+        config.actor_rollout_ref.ref.model_path = str(toy_model)
+        config.data.train_files = str(toy_data)
+        config.data.val_files = str(toy_data)
+        config.difficulty.initial_model_id = model_identity(toy_model)
+        config.difficulty.retrieval_id = 'cpu-test-retrieval'
         rows = self.rows[:10]
         dataset = [{'input_ids': torch.tensor([1,2]), 'attention_mask': torch.ones(2, dtype=torch.long),
                     'position_ids': torch.tensor([0,1]), 'question_id': row['question_id'],
@@ -370,7 +390,7 @@ class DifficultyCoreTests(unittest.TestCase):
             trainer.logger = SimpleNamespace(log=lambda **kwargs: None)
             trainer._balance_batch = lambda *args, **kwargs: None
             trainer.difficulty = DifficultyExperiment(rows, OmegaConf.to_container(trainer.config.difficulty),
-                                                       2, 3, 42, output, {'initial_model_id': 'c0'})
+                                                       2, 3, 42, output, provenance(trainer.config))
             trainer.train_dataset = dataset
             trainer.train_dataloader = DataLoader(dataset, batch_sampler=trainer.difficulty.sampler,
                                                   collate_fn=collate_fn, num_workers=0)
@@ -430,6 +450,12 @@ class DifficultyCoreTests(unittest.TestCase):
         self.assertEqual(branch.actor_rollout_ref.ref.model_path, str(model))
         self.assertEqual(branch.actor_rollout_ref.model.path, str(checkpoint/'actor'))
         self.assertEqual(provenance(branch), origin)
+        # CPU/GPU optimizer 状态放置不改变训练语义，可从旧 checkpoint 续训。
+        offload = copy.deepcopy(branch)
+        offload.actor_rollout_ref.actor.fsdp_config.optimizer_offload = True
+        prepare_config(offload)
+        self.assertTrue(offload.actor_rollout_ref.actor.fsdp_config.optimizer_offload)
+        self.assertNotEqual(provenance(offload), origin)
         incompatible = copy.deepcopy(branch)
         incompatible.difficulty.seed = 99
         with self.assertRaises(ValueError):

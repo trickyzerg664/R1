@@ -200,6 +200,10 @@ difficulty:
   seed: 42
   score_seed: 1729
   score_batch_size: 8
+  # 动态筛选默认关闭；上限控制候选成本，目标有效题数沿用train_batch_size。
+  dynamic_filter:
+    enabled: false
+    max_rounds: 8
   score_trace_chars: 0 # 诊断时保存回答末尾字符；正式评分保持 0
   output_dir: outputs/difficulty/run
   labels: null
