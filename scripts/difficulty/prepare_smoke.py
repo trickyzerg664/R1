@@ -22,12 +22,14 @@ def main() -> None:
     parser.add_argument('--data-root', type=Path, required=True)
     parser.add_argument('--output-dir', type=Path, required=True)
     parser.add_argument('--max-prompt-length', type=int, default=256)
+    parser.add_argument('--model', type=Path, default=None, help='已有本地模型/tokenizer 目录')
     args = parser.parse_args()
     if args.max_prompt_length < 1:
         parser.error('--max-prompt-length 必须为正整数')
     data_root, output = args.data_root.resolve(), args.output_dir.resolve()
     source = data_root / 'datasets/nq_hotpotqa_train/train.parquet'
-    model = data_root / 'models/Qwen2.5-3B'
+    # 允许目标机复用已校验的模型目录，同时保留原迁移目录布局默认值。
+    model = args.model.resolve() if args.model is not None else data_root / 'models/Qwen2.5-3B'
     if not source.is_file() or not model.is_dir():
         parser.error('缺少原始训练 parquet 或 Qwen2.5-3B tokenizer')
     output.mkdir(parents=True, exist_ok=True)

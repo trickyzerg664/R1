@@ -45,6 +45,9 @@ if __name__ == '__main__':
     parser.add_argument('--hdfs_dir', default=None)
     parser.add_argument('--template_type', type=str, default='base')
     parser.add_argument('--data_sources', default='nq')
+    parser.add_argument('--raw_root', default=None, help='本地 FlashRAG JSONL 根目录；不填时沿用线上数据集')
+    parser.add_argument('--split', choices=('train', 'test'), default='train',
+                        help='输出 train 或留出 test；HotpotQA 的标注留出集为原始 dev')
 
     args = parser.parse_args()
 
@@ -54,9 +57,18 @@ if __name__ == '__main__':
 
     for data_source in data_sources:
 
-        dataset = datasets.load_dataset('RUC-NLPIR/FlashRAG_datasets', data_source)
-
-        train_dataset = dataset['train']
+        # 本地 test 合并使用 NQ test 与 HotpotQA dev；后者是本资产提供的标注留出集。
+        raw_split = ('dev' if data_source == 'hotpotqa' else 'test') if args.split == 'test' else 'train'
+        if args.raw_root is not None:
+            raw_file = os.path.join(args.raw_root, data_source, f'{raw_split}.jsonl')
+            if not os.path.isfile(raw_file):
+                raise FileNotFoundError(raw_file)
+            split_dataset = datasets.load_dataset('json', data_files=raw_file, split='train')
+            # 两个来源的额外 metadata 不同；只保留冻结题池需要的共同字段。
+            split_dataset = split_dataset.select_columns(['id', 'question', 'golden_answers'])
+        else:
+            dataset = datasets.load_dataset('RUC-NLPIR/FlashRAG_datasets', data_source)
+            split_dataset = dataset[raw_split]
 
         # add a row to each data item that represents a unique id
         def make_map_fn(split):
@@ -90,14 +102,16 @@ if __name__ == '__main__':
 
             return process_fn
 
-        train_dataset = train_dataset.map(function=make_map_fn('train'), with_indices=True)
-        all_dataset.append(train_dataset)
+        split_dataset = split_dataset.map(function=make_map_fn(args.split), with_indices=True)
+        all_dataset.append(split_dataset)
 
     local_dir = args.local_dir
     hdfs_dir = args.hdfs_dir
 
-    all_train_dataset = datasets.concatenate_datasets(all_dataset)
-    all_train_dataset.to_parquet(os.path.join(local_dir, 'train.parquet'))
+    all_split_dataset = datasets.concatenate_datasets(all_dataset)
+    # 目标目录可由迁移流程指定；不覆盖其他来源的原始数据。
+    os.makedirs(local_dir, exist_ok=True)
+    all_split_dataset.to_parquet(os.path.join(local_dir, f'{args.split}.parquet'))
 
     if hdfs_dir is not None:
         makedirs(hdfs_dir)

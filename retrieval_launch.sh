@@ -33,10 +33,28 @@ esac
 cache_root="${SEARCH_R1_CACHE_ROOT:-$asset_root/cache/retriever}"
 mkdir -p "$cache_root/hf" "$cache_root/datasets" "$cache_root/tmp"
 
-# [data-difficulty] 使用项目管理的 retriever 环境；在其环境初始化后覆盖大型缓存位置。
-exec bash "$project_dir/env/run.sh" retriever env \
-    HF_HOME="$cache_root/hf" HF_DATASETS_CACHE="$cache_root/datasets" \
-    XDG_CACHE_HOME="$cache_root" TMPDIR="$cache_root/tmp" python search_r1/search/retrieval_server.py \
-    --index_path "$index_file" --corpus_path "$corpus_file" \
-    --retriever_model "$retriever_model" --retriever_name e5 --topk 3 \
+# [data-difficulty] 参数统一组装；迁移机可使用已校验的独立检索环境。
+server_args=(
+    search_r1/search/retrieval_server.py
+    --index_path "$index_file" --corpus_path "$corpus_file"
+    --retriever_model "$retriever_model" --retriever_name e5 --topk 3
     "${faiss_args[@]}" "$@"
+)
+cache_env=(
+    "HF_HOME=$cache_root/hf"
+    "HF_DATASETS_CACHE=$cache_root/datasets"
+    "XDG_CACHE_HOME=$cache_root"
+    "TMPDIR=$cache_root/tmp"
+)
+if [[ -n "${SEARCH_R1_RETRIEVER_ENV:-}" ]]; then
+    if [[ ! -x "$SEARCH_R1_RETRIEVER_ENV/bin/python" ]]; then
+        echo "Missing retriever python: $SEARCH_R1_RETRIEVER_ENV/bin/python" >&2
+        exit 2
+    fi
+    # 独立环境仅引入当前仓库代码及指定缓存，避免依赖不存在的旧 .envs 目录。
+    cd "$project_dir"
+    exec env "PYTHONPATH=$project_dir" "${cache_env[@]}" "$SEARCH_R1_RETRIEVER_ENV/bin/python" "${server_args[@]}"
+fi
+
+# 原有部署继续使用项目管理的 retriever 环境，保持默认行为。
+exec bash "$project_dir/env/run.sh" retriever env "${cache_env[@]}" python "${server_args[@]}"
