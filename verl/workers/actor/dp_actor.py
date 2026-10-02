@@ -16,6 +16,7 @@ Single Process Actor
 """
 
 import itertools
+import math
 from typing import Iterable, Tuple
 
 import torch
@@ -26,6 +27,7 @@ from torch.distributed.fsdp.sharded_grad_scaler import ShardedGradScaler
 
 from verl import DataProto
 from verl.utils.torch_dtypes import PrecisionType
+from verl.utils.fsdp_utils import load_fsdp_optimizer, offload_fsdp_optimizer
 from verl.trainer.ppo import core_algos
 from verl.workers.actor import BasePPOActor
 from verl.utils.py_functional import append_to_dict
@@ -71,14 +73,19 @@ class DataParallelPPOActor(BasePPOActor):
         super().__init__(config)
         self.actor_module = actor_module
         self.actor_optimizer = actor_optimizer
+        self.optimizer_offload = bool(self.config.get('fsdp_config', {}).get('optimizer_offload', False)) and actor_optimizer is not None
         precision = self.config.get('fsdp_config', {}).get('mixed_precision') or {}
         self.compute_dtype = PrecisionType.to_dtype(precision.get('param_dtype', 'fp16'))
         scale_gradients = self.compute_dtype == torch.float16 and actor_optimizer is not None
+        # 7B 的长轨迹在默认 65536 loss scale 下可连续溢出；允许实验配置降低初值，默认行为不变。
+        init_scale = float(self.config.get('fsdp_config', {}).get('grad_scaler_init_scale', 65536.0))
+        if not math.isfinite(init_scale) or init_scale <= 0:
+            raise ValueError('grad_scaler_init_scale must be a finite positive number')
         if isinstance(actor_module, FSDP):
-            self.grad_scaler = ShardedGradScaler(enabled=scale_gradients,
+            self.grad_scaler = ShardedGradScaler(enabled=scale_gradients, init_scale=init_scale,
                                                 process_group=actor_module.process_group)
         else:
-            self.grad_scaler = torch.amp.GradScaler('cuda', enabled=scale_gradients)
+            self.grad_scaler = torch.amp.GradScaler('cuda', enabled=scale_gradients, init_scale=init_scale)
         self.use_remove_padding = self.config.get('use_remove_padding', False)
         print(f'Actor use_remove_padding={self.use_remove_padding}')
         self.ulysses_sequence_parallel_size = self.config.ulysses_sequence_parallel_size
@@ -188,9 +195,22 @@ class DataParallelPPOActor(BasePPOActor):
             grad_norm = self.actor_module.clip_grad_norm_(max_norm=self.config.grad_clip)
         else:
             grad_norm = torch.nn.utils.clip_grad_norm_(self.actor_module.parameters(), max_norm=self.config.grad_clip)
-        self.grad_scaler.step(self.actor_optimizer)
-        self.grad_scaler.update()
-        return grad_norm
+        # 优化器状态只在反传完成后搬入 GPU，避免 Adam 状态与激活同时占用显存。
+        optimizer_loaded = False
+        if getattr(self, 'optimizer_offload', False) and torch.isfinite(grad_norm).item():
+            torch.cuda.empty_cache()
+            load_fsdp_optimizer(optimizer=self.actor_optimizer, device_id=torch.cuda.current_device())
+            optimizer_loaded = True
+        try:
+            # GradScaler 在溢出时静默跳过 optimizer.step；缩放值回退是本 mini-batch 跳步的判据。
+            previous_scale = self.grad_scaler.get_scale() if self.grad_scaler.is_enabled() else None
+            self.grad_scaler.step(self.actor_optimizer)
+            self.grad_scaler.update()
+            updated = previous_scale is None or self.grad_scaler.get_scale() >= previous_scale
+            return grad_norm, updated
+        finally:
+            if optimizer_loaded:
+                offload_fsdp_optimizer(optimizer=self.actor_optimizer)
 
     def compute_log_prob(self, data: DataProto) -> torch.Tensor:
         """Compute the log probability of the responses given input_ids, attention_mask and position_ids
@@ -291,13 +311,19 @@ class DataParallelPPOActor(BasePPOActor):
                 # all return: (bsz, response_length)
                 entropy, log_prob = self._forward_micro_batch(micro_batch=data, temperature=temperature)
 
-                pg_loss, pg_clipfrac, ppo_kl = core_algos.compute_policy_loss(old_log_prob=old_log_prob,
+                safe_loss = self.config.get('loss_numerics', 'legacy') == 'safe_v1'
+                if safe_loss:
+                    from verl.experimental.difficulty.loss_safety import policy_loss, kl_loss as safe_kl_loss, entropy_loss as safe_entropy_loss
+                    pg_loss, pg_clipfrac, ppo_kl, safety_metrics = policy_loss(old_log_prob, log_prob, advantages, response_mask, clip_ratio)
+                    append_to_dict(metrics, safety_metrics)
+                else:
+                    pg_loss, pg_clipfrac, ppo_kl = core_algos.compute_policy_loss(old_log_prob=old_log_prob,
                                                                               log_prob=log_prob,
                                                                               advantages=advantages,
                                                                               eos_mask=response_mask,
                                                                               cliprange=clip_ratio)
                 # compute entropy loss from entropy
-                entropy_loss = verl_F.masked_mean(entropy, response_mask)
+                entropy_loss = safe_entropy_loss(entropy, response_mask) if safe_loss else verl_F.masked_mean(entropy, response_mask)
 
                 # compute policy loss
                 policy_loss = pg_loss - entropy_loss * entropy_coeff
@@ -305,16 +331,21 @@ class DataParallelPPOActor(BasePPOActor):
                 if self.config.use_kl_loss:
                     ref_log_prob = data['ref_log_prob']
                     # compute kl loss
-                    kld = core_algos.kl_penalty(logprob=log_prob,
-                                                ref_logprob=ref_log_prob,
-                                                kl_penalty=self.config.kl_loss_type)
-                    kl_loss = masked_mean(kld, response_mask)
+                    if safe_loss:
+                        kl_loss, safety_metrics = safe_kl_loss(log_prob, ref_log_prob, response_mask)
+                        append_to_dict(metrics, safety_metrics)
+                    else:
+                        kld = core_algos.kl_penalty(logprob=log_prob, ref_logprob=ref_log_prob,
+                                                  kl_penalty=self.config.kl_loss_type)
+                        kl_loss = masked_mean(kld, response_mask)
 
                     policy_loss = policy_loss + kl_loss * self.config.kl_loss_coef
-                    metrics['actor/kl_loss'] = kl_loss.detach().item()
-                    metrics['actor/kl_coef'] = self.config.kl_loss_coef
+                    # 保存全部微批，避免均值只有最后一条轨迹；不改变旧模式的实际损失。
+                    append_to_dict(metrics, {'actor/kl_loss': kl_loss.detach().item(), 'actor/kl_coef': self.config.kl_loss_coef})
 
                 loss = policy_loss / self.gradient_accumulation
+                if safe_loss and not torch.isfinite(loss).all():
+                    raise FloatingPointError('Nonfinite policy loss before backward')
                 self.grad_scaler.scale(loss).backward()
 
                 data = {
@@ -325,8 +356,10 @@ class DataParallelPPOActor(BasePPOActor):
                 }
                 append_to_dict(metrics, data)
 
-            grad_norm = self._optimizer_step()
-            data = {'actor/grad_norm': grad_norm.detach().item()}
+            grad_norm, updated = self._optimizer_step()
+            data = {'actor/grad_norm': grad_norm.detach().item(),
+                    'actor/optimizer_step': int(updated),
+                    'actor/grad_scaler_scale': self.grad_scaler.get_scale()}
             append_to_dict(metrics, data)
         self.actor_optimizer.zero_grad()
         return metrics

@@ -279,11 +279,19 @@ class ActorRolloutRefWorker(Worker):
             log_gpu_memory_usage('After building vllm rollout', logger=None)
             if torch.distributed.get_world_size() == 1:
                 self.config.rollout.load_format = 'dummy_hf'
-            rollout_sharding_manager = FSDPVLLMShardingManager(module=self.actor_module_fsdp,
-                                                               inference_engine=rollout.inference_engine,
-                                                               model_config=self.actor_model_config,
-                                                               full_params='hf' in self.config.rollout.load_format,
-                                                               device_mesh=rollout_device_mesh)
+            from verl.third_party.vllm import vllm_version
+            if vllm_version == '0.11.0':
+                # 沐曦 V1 使用独立的权重加载接口；由专用 manager 汇集完整 FSDP 权重。
+                from verl.workers.sharding_manager.metax_vllm import MetaxFSDPVLLMShardingManager
+                rollout_sharding_manager = MetaxFSDPVLLMShardingManager(
+                    module=self.actor_module_fsdp,
+                    inference_engine=rollout.inference_engine)
+            else:
+                rollout_sharding_manager = FSDPVLLMShardingManager(module=self.actor_module_fsdp,
+                                                                   inference_engine=rollout.inference_engine,
+                                                                   model_config=self.actor_model_config,
+                                                                   full_params='hf' in self.config.rollout.load_format,
+                                                                   device_mesh=rollout_device_mesh)
             log_gpu_memory_usage('After building sharding manager', logger=None)
 
         return rollout, rollout_sharding_manager
@@ -374,9 +382,7 @@ class ActorRolloutRefWorker(Worker):
             load_fsdp_param_and_grad(module=self.actor_module_fsdp,
                                      device_id=torch.cuda.current_device(),
                                      load_grad=self._is_offload_grad)
-        if self._is_offload_optimizer:
-            load_fsdp_optimizer(optimizer=self.actor_optimizer, device_id=torch.cuda.current_device())
-
+        # Adam 状态由 actor 在反传完成后、optimizer.step 前按需装载。
         data.batch = data.batch.cuda()
 
         log_gpu_memory_usage('Before update policy', logger=logger)
@@ -391,6 +397,9 @@ class ActorRolloutRefWorker(Worker):
             estimated_flops, promised_flops = self.flops_counter.estimate_flops(global_num_tokens, delta_time)
             metrics['mfu/actor'] = estimated_flops * self.config.actor.ppo_epochs / promised_flops / self.world_size
 
+            # 全部 mini-batch 均 FP16 溢出时不可把空更新计作训练 step；学习率也不能前进。
+            if not any(metrics.get('actor/optimizer_step', [])):
+                raise RuntimeError('All actor optimizer steps were skipped due to non-finite gradients')
             self.actor_lr_scheduler.step()
             lr = self.actor_lr_scheduler.get_last_lr()[0]
             metrics['actor/lr'] = lr
@@ -405,8 +414,10 @@ class ActorRolloutRefWorker(Worker):
 
         if self._is_offload_param:
             offload_fsdp_param_and_grad(module=self.actor_module_fsdp, offload_grad=self._is_offload_grad)
-        if self._is_offload_optimizer:
-            offload_fsdp_optimizer(optimizer=self.actor_optimizer)
+        # 每个 mini-batch 的 optimizer.step 后 actor 已将 Adam 状态卸回 CPU。
+        # actor 更新成功后使 MetaX 推理权重缓存失效；其他后端保持原同步行为。
+        if self._is_rollout and hasattr(self.rollout_sharding_manager, 'invalidate_weights'):
+            self.rollout_sharding_manager.invalidate_weights()
         torch.cuda.empty_cache()
         return output
 

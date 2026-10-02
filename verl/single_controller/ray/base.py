@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import os
 import time
 from typing import Dict, List, Any, Tuple
 
@@ -267,7 +268,11 @@ class RayWorkerGroup(WorkerGroup):
 
                 if rank == 0:
                     register_center_actor = None
-                    for _ in range(120):
+                    # 冷启动模型插件较慢时允许延长首个 actor 的注册等待，默认仍为 120 秒。
+                    wait_seconds = int(os.environ.get('SEARCH_R1_RAY_ACTOR_START_TIMEOUT', '120'))
+                    if wait_seconds < 1:
+                        raise ValueError('SEARCH_R1_RAY_ACTOR_START_TIMEOUT must be a positive integer')
+                    for _ in range(wait_seconds):
                         if f"{self.name_prefix}_register_center" not in list_named_actors():
                             time.sleep(1)
                         else:

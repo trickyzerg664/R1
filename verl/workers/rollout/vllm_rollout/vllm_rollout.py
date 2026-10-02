@@ -109,7 +109,8 @@ class vLLMRollout(BaseRollout):
         )
 
         # we may detokenize the result all together later
-        if vllm_version in ('0.4.2', '0.5.4', '0.6.3'):
+        if vllm_version in ('0.4.2', '0.5.4', '0.6.3', '0.11.0'):
+            # 沐曦路径只需要 token IDs；关闭额外解码以保持旧输出语义。
             kwargs['detokenize'] = False
 
         # supporting adding any sampling params from the config file

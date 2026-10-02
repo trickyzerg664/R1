@@ -45,7 +45,16 @@ elif package_version == '0.6.3':
     from .vllm_v_0_6_3.llm import LLM
     from .vllm_v_0_6_3.llm import LLMEngine
     from .vllm_v_0_6_3 import parallel_state
+elif package_version and package_version.split('+')[0] == '0.11.0':
+    # 沐曦单卡路径要求同版本插件；上游空设备构建可带 +empty 后缀。
+    plugin_version = get_version('vllm-metax')
+    if not plugin_version or not plugin_version.startswith('0.11.0'):
+        raise ValueError(f'vLLM 0.11.0 requires matching vllm-metax 0.11.0, got {plugin_version}')
+    vllm_version = '0.11.0'
+    from .metax_v_0_11_0.llm import LLM
+    from .metax_v_0_11_0.llm import NativeLLM as LLMEngine
+    from .metax_v_0_11_0 import parallel_state
 else:
     raise ValueError(
-        f'vllm version {package_version} not supported. Currently supported versions are 0.3.1, 0.4.2, 0.5.4 and 0.6.3.'
+        f'vllm version {package_version} not supported. Currently supported versions are 0.3.1, 0.4.2, 0.5.4, 0.6.3 and MetaX 0.11.0.'
     )

@@ -102,16 +102,44 @@ class RewardManager():
         return reward_tensor
 
 
+import os
 import ray
 import hydra
 
 
 @hydra.main(config_path='config', config_name='ppo_trainer', version_base=None)
 def main(config):
+    # 沐曦卡可被 PyTorch 识别，但 Ray 2.40 的自动发现结果为 0；按训练拓扑注册资源。
+    required_gpus = int(config.trainer.n_gpus_per_node) * int(config.trainer.nnodes)
     if not ray.is_initialized():
-        # this is for local ray cluster
-        ray.init(runtime_env={'env_vars': {'TOKENIZERS_PARALLELISM': 'true', 'NCCL_DEBUG': 'WARN'}})
+        init_kwargs = {
+            'runtime_env': {'env_vars': {'TOKENIZERS_PARALLELISM': 'true', 'NCCL_DEBUG': 'WARN'}}
+        }
+        # 仅本地单节点从可见设备数注册；外部集群须由各节点自行声明 GPU。
+        if not os.environ.get('RAY_ADDRESS') and int(config.trainer.nnodes) == 1:
+            visible_gpus = torch.cuda.device_count()
+            if required_gpus < 1 or required_gpus > visible_gpus:
+                raise ValueError(
+                    f'trainer requests {required_gpus} GPUs but torch sees {visible_gpus}; '
+                    'check CUDA_VISIBLE_DEVICES and trainer.n_gpus_per_node'
+                )
+            init_kwargs['num_gpus'] = required_gpus
+            # 大核数节点预启动所有 Ray worker 会拖慢 agent，按任务需要显式限制 CPU。
+            requested_cpus = os.environ.get('SEARCH_R1_RAY_CPUS')
+            if requested_cpus is not None:
+                cpu_count = int(requested_cpus)
+                if cpu_count < 1:
+                    raise ValueError('SEARCH_R1_RAY_CPUS must be a positive integer')
+                init_kwargs['num_cpus'] = cpu_count
+        ray.init(**init_kwargs)
 
+    # 在创建训练 worker 前失败，避免 Ray 无 GPU 资源时无限等待。
+    registered_gpus = ray.cluster_resources().get('GPU', 0)
+    if registered_gpus < required_gpus:
+        raise RuntimeError(
+            f'Ray has {registered_gpus} GPU resources but trainer needs {required_gpus}; '
+            'start each Ray node with --num-gpus or use a local single-node run'
+        )
     ray.get(main_task.remote(config))
 
 
