@@ -536,6 +536,9 @@ class RayPPOTrainer(object):
 
                 # evaluate using reward_function
                 # for certain reward function (e.g. sandbox), the generation can overlap with reward
+                # 逐题记录绑定绝对训练步数，区分初始、定期和结束评价。
+                test_batch.meta_info['evaluation_step'] = self.global_steps
+                test_batch.meta_info['evaluation_round'] = self.validation_round
                 reward_tensor = self.val_reward_fn(test_batch)
 
                 reward_tensor_lst.append(reward_tensor)
@@ -570,6 +573,9 @@ class RayPPOTrainer(object):
                     
                     # evaluate using reward_function
                     # for certain reward function (e.g. sandbox), the generation can overlap with reward
+                    # 逐题记录绑定绝对训练步数，区分初始、定期和结束评价。
+                    test_batch.meta_info['evaluation_step'] = self.global_steps
+                    test_batch.meta_info['evaluation_round'] = self.validation_round
                     reward_tensor = self.val_reward_fn(test_batch)
 
                     reward_tensor_lst.append(reward_tensor)

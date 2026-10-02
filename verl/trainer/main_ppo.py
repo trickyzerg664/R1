@@ -33,10 +33,16 @@ class RewardManager():
     """The reward manager.
     """
 
-    def __init__(self, tokenizer, num_examine, format_score=0.) -> None:
+    def __init__(self, tokenizer, num_examine, format_score=0., answer_mode='legacy', audit_path=None) -> None:
         self.tokenizer = tokenizer
         self.num_examine = num_examine  # the number of batches of decoded responses to print to the console
         self.format_score = format_score
+        # 评分边界和逐题记录由显式配置控制，训练与开发集共用同一奖励实现。
+        if answer_mode not in ('legacy', 'response_only_v1'):
+            raise ValueError('Unknown answer extraction mode')
+        self.answer_mode = answer_mode
+        self.audit_path = audit_path
+        self.audit_call = 0
 
     def __call__(self, data: DataProto):
         """We will expand this function gradually based on the available datasets"""
@@ -50,6 +56,10 @@ class RewardManager():
         # all_scores = []
 
         already_print_data_sources = {}
+        # 只在开发评价启用文件记录；完整批次算完再追加，写入失败直接报错。
+        audit_rows = []
+        if self.audit_path:
+            self.audit_call += 1
 
         for i in range(len(data)):
             data_item = data[i]  # DataProtoItem
@@ -73,6 +83,9 @@ class RewardManager():
             # decode
             sequences = torch.cat((valid_prompt_ids, scoring_response_ids))
             sequences_str = self.tokenizer.decode(sequences)
+            # 新评分只读取模型token，检索文本已由info_mask去除，提示示例不能成为答案。
+            model_response = self.tokenizer.decode(scoring_response_ids)
+            scoring_text = model_response if self.answer_mode == 'response_only_v1' else sequences_str
 
             ground_truth = data_item.non_tensor_batch['reward_model']['ground_truth']
 
@@ -80,9 +93,20 @@ class RewardManager():
             data_source = data_item.non_tensor_batch['data_source']
             compute_score_fn = _select_rm_score_fn(data_source)
 
-            score = compute_score_fn(solution_str=sequences_str, ground_truth=ground_truth, format_score=self.format_score)
+            score = compute_score_fn(solution_str=scoring_text, ground_truth=ground_truth,
+                                     format_score=self.format_score, answer_mode=self.answer_mode)
+            if self.audit_path:
+                from verl.utils.reward_score.answer_audit import make_record
+                audit_rows.append(make_record(
+                    self.tokenizer.decode(valid_prompt_ids), model_response,
+                    self.tokenizer.decode(valid_response_ids), ground_truth, data_source,
+                    score, self.answer_mode, data.meta_info.get('evaluation_step'), self.audit_call,
+                    data_item.non_tensor_batch.get('question_id'), i))
+                audit_rows[-1]['evaluation_round'] = data.meta_info.get('evaluation_round')
 
-            reward_tensor[i, valid_response_length - 1] = score
+            # 空生成不得把奖励写到末尾padding位置。
+            if valid_response_length > 0:
+                reward_tensor[i, valid_response_length - 1] = score
             # all_scores.append(score)
 
             if data_source not in already_print_data_sources:
@@ -99,6 +123,9 @@ class RewardManager():
         # print(f"[DEBUG] all_scores min: {np.min(all_scores)}")
         # print(f"[DEBUG] all_scores std: {np.std(all_scores)}")
 
+        if self.audit_path:
+            from verl.utils.reward_score.answer_audit import append_records
+            append_records(self.audit_path, audit_rows)
         return reward_tensor
 
 
@@ -216,10 +243,13 @@ def main_task(config):
         role_worker_mapping[Role.RewardModel] = ray.remote(RewardModelWorker)
         mapping[Role.RewardModel] = global_pool_id
 
-    reward_fn = RewardManager(tokenizer=tokenizer, num_examine=0)
+    # 新旧奖励显式分版本，训练和验证必须一致；逐题记录仅用于验证。
+    answer_mode = config.reward_model.get('answer_mode', 'legacy')
+    reward_fn = RewardManager(tokenizer=tokenizer, num_examine=0, answer_mode=answer_mode)
 
     # Note that we always use function-based RM for validation
-    val_reward_fn = RewardManager(tokenizer=tokenizer, num_examine=1)
+    val_reward_fn = RewardManager(tokenizer=tokenizer, num_examine=1, answer_mode=answer_mode,
+                                 audit_path=config.reward_model.get('validation_audit_path'))
 
     resource_pool_manager = ResourcePoolManager(resource_pool_spec=resource_pool_spec, mapping=mapping)
     trainer = RayPPOTrainer(config=config,

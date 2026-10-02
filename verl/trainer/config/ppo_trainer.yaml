@@ -135,6 +135,9 @@ critic:
   cliprange_value: 0.5
 
 reward_model:
+  # 默认保留历史奖励；新正式实验显式选择response_only_v1并设置逐题评价输出。
+  answer_mode: legacy
+  validation_audit_path: null
   enable: False
   strategy: fsdp
   model:

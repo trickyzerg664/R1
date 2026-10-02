@@ -96,6 +96,10 @@ def provenance(config):
     for key in ('train_files', 'val_files'):
         paths = data[key] if isinstance(data[key], list) else [data[key]]
         data[key] = [file_hash(Path(p).expanduser()) for p in paths]
+    # 保持旧模式指纹不变；启用新奖励后纳入训练来源，拒绝混用旧标签或状态。
+    answer_mode = c['reward_model'].get('answer_mode', 'legacy')
+    if answer_mode != 'legacy':
+        c['algorithm']['answer_mode'] = answer_mode
     retriever = dict(c['retriever'])
     retriever.pop('url', None)
     return {'initial_model_id': c['difficulty']['initial_model_id'],

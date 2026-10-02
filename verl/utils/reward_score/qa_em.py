@@ -59,7 +59,25 @@ def subem_check(prediction, golden_answers):
     return score
 
 
-def extract_solution(solution_str):
+def extract_response_answer(solution_str):
+    # 仅处理模型回答：重复起始标签取最内层闭合答案，尾部未闭合不能借用旧答案。
+    start, answer = None, None
+    for tag in re.finditer(r'<answer>|</answer>', solution_str):
+        if tag.group() == '<answer>':
+            start = tag.end()
+        elif start is not None:
+            content = solution_str[start:tag.start()].strip()
+            answer = content if content and not re.search(r'</?(?:think|search|information)>', content) else None
+            start = None
+    return answer if start is None else None
+
+
+def extract_solution(solution_str, answer_mode='legacy'):
+    # 旧实验默认沿用原提取；新实验显式启用回答边界，避免历史标签被静默重算。
+    if answer_mode == 'response_only_v1':
+        return extract_response_answer(solution_str)
+    if answer_mode != 'legacy':
+        raise ValueError('Unknown answer extraction mode')
     """Extract the equation from the solution string."""
     # Remove everything before the first "Assistant:"
     # if "Assistant:" in solution_str:
@@ -82,7 +100,7 @@ def extract_solution(solution_str):
     return matches[-1].group(1).strip()
 
 
-def compute_score_em(solution_str, ground_truth, method='strict', format_score=0., score=1.):
+def compute_score_em(solution_str, ground_truth, method='strict', format_score=0., score=1., answer_mode='legacy'):
     """The scoring function for exact match (EM).
 
     Args:
@@ -92,7 +110,7 @@ def compute_score_em(solution_str, ground_truth, method='strict', format_score=0
         format_score: the score for the format
         score: the score for the correct answer
     """
-    answer = extract_solution(solution_str=solution_str)
+    answer = extract_solution(solution_str=solution_str, answer_mode=answer_mode)
     do_print = random.randint(1, 64) == 1
     
     if do_print:
@@ -110,7 +128,7 @@ def compute_score_em(solution_str, ground_truth, method='strict', format_score=0
             return format_score
 
 
-def compute_score_subem(solution_str, ground_truth, method='strict', format_score=0., score=1.):
+def compute_score_subem(solution_str, ground_truth, method='strict', format_score=0., score=1., answer_mode='legacy'):
     """The scoring function for substring exact match (EM).
 
     Args:
@@ -120,7 +138,7 @@ def compute_score_subem(solution_str, ground_truth, method='strict', format_scor
         format_score: the score for the format
         score: the score for the correct answer
     """
-    answer = extract_solution(solution_str=solution_str)
+    answer = extract_solution(solution_str=solution_str, answer_mode=answer_mode)
     do_print = random.randint(1, 64) == 1
     
     if do_print:
