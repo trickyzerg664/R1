@@ -183,3 +183,15 @@ warmup 支持绝对步数配置，恢复不能重新计算为新的追加步数�
 本机资产根目录采用 `/root/data/search-r1/`，已创建 models、datasets、retrieval、runs、cache、tmp 子目录并验证读写。无需另行挂载。模型、问答数据、检索资产、运行产物分别存入对应子目录；下载及解压临时文件也使用该卷。
 
 下载时显式配置缓存和临时目录，避免 env/run.sh 将缓存重定向到代码所在磁盘。实际下载脚本需要在读取 env/run.sh 后确认或覆盖 HF_HOME、HF_HUB_CACHE、HF_DATASETS_CACHE、TMPDIR 等有效路径，现阶段未修改该环境脚本。此容量为共享文件系统当时的可用值，下载前仍应检查资产总量。
+
+
+## 2026-10-03 SFT冷启动方案（仅设计）
+
+静态核查：verl/trainer/fsdp_sft_trainer.py导入SFTDataset，但dataset/__init__.py仅导出RLHFDataset/RMDataset，仓库未找到class SFTDataset；SFT FSDP与autocast写死BF16，通用配置默认max_length1024/4epoch，不能直接复用为MetaX检索SFT。实施前需要逐轮可见上下文、只预测assistant的token mask、按问题权重、显式精度/scaler及导出重载验收；复用现有generation/context/reward，避免复制检索及判分实现。模块职责、CPU/GPU验收边界见[sft_cold_start_plan.md](sft_cold_start_plan.md#9-当前实现状态与后续改动范围)。本次未修改生产代码、未运行CPU或GPU测试。
+
+
+## 2026-10-03 main修改范围与开发基准补充
+
+- main静态核查提交71e072a，线上活动分支data-difficulty-muxi的HEAD为b00d68c；此前计划主要按活动分支增量考虑。严格main实施时先集成已验证的MetaX/生成判分/G8等必需基础，详细规模见[sft_cold_start_main_scope.md](sft_cold_start_main_scope.md)。SFT专属增量静态估算14–20个代码/配置/测试文件、1800–3300行，文档另计，尚无实际diff。
+- main保留435行通用SFT入口和配置，但缺SFTDataset、多轮检索SFT数据与专用启动链路；当前环境peft缺失且入口顶层导入，BF16写死、尾批丢弃、调度预算/精确恢复和统一检索评价待补齐。未运行SFT导入/CPU测试/GPU测试。
+- 只读比较v4 source-snapshot.tar.gz确认rl_dataset.py、dp_actor.py及新增test_rl_dataset_collate.py与当前工作区字节一致。建议把b00d68c及这三项已验证修复整理成明确基准，再建立独立SFT实验分支；本次仅评估，未创建分支、提交、合并或改生产代码。当前训练继续。

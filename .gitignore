@@ -173,3 +173,15 @@ consolidated.*.pth
 .pytest_cache/
 .mypy_cache/
 .ruff_cache/
+
+# 单次运行记录与验证产物仅在本地保留；核心方案、说明和约束文档继续跟踪。
+/docs/experiments/runs/*
+!/docs/experiments/runs/README.md
+!/docs/experiments/runs/TEMPLATE.md
+/docs/experiments/validation/
+/experiments/**/runs/
+/experiments/**/validation/
+/experiments/**/*.json*
+/experiments/**/*.csv
+/experiments/**/*.tsv
+/experiments/**/*.txt

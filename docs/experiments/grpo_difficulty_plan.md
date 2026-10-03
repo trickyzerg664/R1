@@ -319,3 +319,16 @@ B1/B3 中，M 内部和 E 内部按新桶自然条件分布采样；因此刷新
 - 新控制器计划每分钟记录进度，实时进度条；所有历史周期中出现非有限梯度或optimizer_step不等于1立即停本训练进程组。保存每20步、D32评估每50步及初始/结束。D32已知一题标注错误保留，分析时同时报告剔除该题的31题结果。48小时是停止上限，耗时尚未实测；候选抽满停止或数值异常均保留记录，不自动重启。
 - 产物：/mnt/public/code/lyk/lzy/runs/metax-dynamic-preparation-20261002；运行目标：/mnt/public/code/lyk/lzy/runs/metax-dynamic-g8-20261002-v1。配置/快照/冻结数据哈希核对进行中；GPU尚未启动。恢复保存候选游标与已训练题目ID，CPU通过，GPU恢复未验证。
 - 注释检查范围：模块职责、混合组判断、补抽上限、跨批padding、成本统计、随机流、跨步去重、恢复边界、旧模式兼容、有效token筛选、指数边界、异常路径，关键逻辑均有中文说明。
+
+
+## 动态G8显存失败与修复 2026-10-02T05:36:10.232175+00:00
+- v1退出1、0/100更新、无检查点。初始开发评价完成后，第1周期3批候选24问题/192轨迹，已保留8混合题64轨迹；失败在reference compute_ref_log_prob -> token_statistics -> entropy_from_logits，额外分配2.23GiB，剩余显存约0.3至0.7GiB。显存48GiB左右为PyTorch已分配，加预留及其他占用耗尽64GiB。
+- 推理概率路径原来计算未使用熵，参考模型也未开启response_logits_only；跨候选批统一长度扩大词表中间量峰值。逐token分块256并省去推理熵；reference启用回答范围logits，actor训练仍计算所需熵；轨迹数、有效问题数不减少。
+- 生产改动集中dp_actor.token_statistics及其调用，默认chunk_size=0保留旧行为；修改前备份runs/metax-dynamic-memory-fix-20261002/dp_actor.before.py。CPU原公式/分块值及梯度、重算、跳过熵与块宽验证进行中；GPU尚未重启。
+- 首次独立CPU测试抽取函数未提供FlashAttention可用性变量，测试脚本退出1，生产修改已保留；补齐CPU参考分支后复验。此项是测试环境错误，尚不能宣称修复验证通过。
+- git当前HEAD b00d68c，另一任务已整理提交，未回退其修改；新修复暂未提交。v1原日志与状态保留，不自动续接无检查点的失败运行。
+
+
+## 2026-10-03 SFT冷启动方案（仅设计）
+
+根据用户最新范围，本轮仅研究SFT冷启动是否改善后续RL，数据重叠比例研究延期。独立方案见[sft_cold_start_plan.md](sft_cold_start_plan.md)，不更改当前v4训练或既有难度研究历史。核心比较Base、SFT-only、Base→RL、SFT→RL；SFT从原训练split排除整个P/D/T后取题，RL固定P10000。先导256题/25周期，正式1000题/100周期/3种子；同时区分固定RL更新下效果与计入SFT、示例生成的完整成本。方案数值为计划，尚无新增实验结果。

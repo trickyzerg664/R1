@@ -470,7 +470,7 @@ mx的7B八卡有效训练与恢复已验收到step4，完整哈希本轮复核�
 
 <!-- dynamic-g8-current -->
 
-正式训练：{"checked_utc": "2026-10-03T11:02:12.678599+00:00", "status": "running", "trained_step": 60, "published_checkpoints": ["step_20", "step_40", "step_60"], "exit_code": null}
+正式训练：{"checked_utc": "2026-10-03T11:04:13.019959+00:00", "status": "running", "trained_step": 60, "published_checkpoints": ["step_20", "step_40", "step_60"], "exit_code": null}
 
 <!-- /dynamic-g8-current -->
 
@@ -572,3 +572,12 @@ mx的7B八卡有效训练与恢复已验收到step4，完整哈希本轮复核�
 - 独立生产函数CPU核对通过：完整/分块概率、熵和梯度一致，checkpoint重算一致，跳过熵后概率一致；17token按4分块最大块宽4，关闭熵无熵调用。命令：`CUDA_VISIBLE_DEVICES= bash env/metax/run.sh /mnt/public/code/lyk/lzy/runs/metax-dynamic-memory-fix-20261002/test_token_statistics.py`，退出码0。
 - 三个代码/测试文件SHA256与v4冻结源码一致。当前职责、默认兼容性和关键中文注释已检查；未接入SFT。本轮没有运行GPU验证，完整GPU恢复和SFT链路仍未验收；正在运行的v4代码、配置及进程保持原状。
 - 验证证据补充保存至`/mnt/public/code/lyk/lzy/runs/metax-collate-fix-20261002/commit-validation-20261003.json`。提交前执行`git diff --check`；下步整理运行记录/验证产物的忽略规则，保留核心方案与交接文档。
+
+
+## 2026-10-03T19:04:45+08:00 文档版本管理整理
+
+- 负责人Codex；代码修复已提交为`93a6f348de8ecfebeeee7ba476dba68611bc0305`，可作为SFT增量开发的已提交代码基准。51项CPU回归及独立token分块数值/梯度验证本轮通过；未新增GPU实验或SFT实现。
+- `.gitignore`由整目录忽略收窄为单次运行记录和验证产物；核心方案、步骤、就绪/实现/进度台账、AGENTS、SFT设计/范围评估、MetaX说明及运行记录README/TEMPLATE继续版本管理。
+- 18个已跟踪运行/验证产物从索引移除，其中17份旧运行Markdown在本轮操作前已经不存在；现存文件仅停止跟踪，逐文件哈希确认内容保留。当前v4记录及验证报告保持原路径、仅在本地留存。没有删除本轮任何运行产物。
+- `git check-ignore --no-index`已分别验证核心文档可跟踪、v4记录与验证报告被忽略。`git diff --check`和暂存差异检查作为提交验收；下一步可基于整理后的分支HEAD建立独立SFT开发分支，尚未执行。
+- v4控制器仍会自动更新进度台账中的状态块；提交代表当时的文档快照，后续自动更新产生的台账差异不属于未提交代码。
