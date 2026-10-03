@@ -465,3 +465,44 @@ Qwen2.5-3B 普通推理输出 `1+1等于2。` 且退出码 0。tiny-Qwen2 仅启
 提交分为MetaX运行环境及FP16稳定性、检索与本地数据准备、生成长度控制、奖励边界与逐题评价、八轨迹动态筛选及恢复状态五批。新增Markdown不提交，仅纳入原有文档更新。
 本次CPU复验60项通过：difficulty_core17、generation_budget8、reward_boundary17、actor_scaler_step3、dynamic_filter13、metax_sync_cache2；命令均为CUDA_VISIBLE_DEVICES= bash env/metax/run.sh -m unittest discover -s tests -p test_<名称>.py。Shell语法与git diff --check通过。各中间提交未分别重跑测试，GPU运行结果沿用既有记录，本次不新增GPU验证结论。
 首次直接调用env/metax/run.sh因缺少可执行权限失败，改用bash调用；首个连续测试SSH会话在输出25项通过后无后续结果，已停止该会话，后四组独立复验通过。
+
+
+## 动态G8显存失败与修复 2026-10-02T05:36:10.232175+00:00
+- v1退出1、0/100更新、无检查点。初始开发评价完成后，第1周期3批候选24问题/192轨迹，已保留8混合题64轨迹；失败在reference compute_ref_log_prob -> token_statistics -> entropy_from_logits，额外分配2.23GiB，剩余显存约0.3至0.7GiB。显存48GiB左右为PyTorch已分配，加预留及其他占用耗尽64GiB。
+- 推理概率路径原来计算未使用熵，参考模型也未开启response_logits_only；跨候选批统一长度扩大词表中间量峰值。逐token分块256并省去推理熵；reference启用回答范围logits，actor训练仍计算所需熵；轨迹数、有效问题数不减少。
+- 生产改动集中dp_actor.token_statistics及其调用，默认chunk_size=0保留旧行为；修改前备份runs/metax-dynamic-memory-fix-20261002/dp_actor.before.py。CPU原公式/分块值及梯度、重算、跳过熵与块宽验证进行中；GPU尚未重启。
+- 首次独立CPU测试抽取函数未提供FlashAttention可用性变量，测试脚本退出1，生产修改已保留；补齐CPU参考分支后复验。此项是测试环境错误，尚不能宣称修复验证通过。
+- git当前HEAD b00d68c，另一任务已整理提交，未回退其修改；新修复暂未提交。v1原日志与状态保留，不自动续接无检查点的失败运行。
+
+
+2026-10-02T05:37:26.438780+00:00：CPU显存修复核对退出0：完整/分块概率和熵输出一致，完整/分块梯度一致，checkpoint重算一致，推理省略熵仍得到相同概率；17token按4分块的实际熵调用最大块宽4，关闭熵后调用0。GPU显存尚未验证。记录runs/metax-dynamic-memory-fix-20261002/tests.log，配置v2准备进行中。
+
+
+2026-10-02T05:39:17.191367+00:00：修复版本v2开始启动，控制器PID 1339606；实际0/100，checkpoint0。v1失败记录保留。当前数值/3项scaler CPU验证通过，GPU验证待完成；块256、参考回答logits开关已核对，正式配置数据源码预检通过。
+
+
+## 答案元数据维度修复 2026-10-02T08:20:17.789341+00:00
+
+- 已实现：`verl/utils/dataset/rl_dataset.py::collate_fn` 将每题非张量元数据保存为一维对象数组，避免等长列表自动升维。复用共用入口，兼容普通训练与动态筛选，不改变答案内容、张量堆叠、评分或采样规则。
+- 新增 `tests/test_rl_dataset_collate.py`，覆盖固定/不同答案数量、Parquet数组对象保留、标量/字典/对话/张量兼容性以及跨候选批实际合并。
+- 修复前4项测试复现失败，合并路径出现同一ValueError；修复后的测试正在运行。GPU重跑未启动；v3停在1/100步，无完整检查点。
+
+
+### 答案维度修复验证完成 2026-10-02T08:24:32.986587+00:00
+
+- CPU回归51项全部通过：新增整理/跨批合并4项、动态筛选与安全损失13项、实验核心17项、奖励边界17项。修复前新增测试复现同一数组拼接ValueError，修复后通过。
+- 验证命令：`CUDA_VISIBLE_DEVICES= bash env/metax/run.sh /mnt/public/code/lyk/lzy/runs/metax-collate-fix-20261002/run_cpu_tests.py`；证据：`runs/metax-collate-fix-20261002/tests.log`、`verification.json`、修改源码快照与差异。`git diff --check`通过。
+- 共用入口保持张量堆叠、标量和字典值兼容；列表/数组/对话统一按题保存。未改模型生成、奖励、题池、采样规则或无限时启动器。
+- v3仍为失败状态：完成1/100步、无完整检查点；本次没有启动GPU训练。下次启动须重新冻结源码哈希，使用新运行目录从初始权重开始。GPU完整联调未验证。
+
+
+2026-10-02T08:31:28.807594+00:00：用户要求重启，v4已从初始权重启动；控制器PID1365003，实测0/100步，checkpoint0。修复后51项CPU测试通过，本次源码/冻结数据哈希预检通过，无总时间上限；GPU完整联调待验证。运行记录：[v4](runs/metax-dynamic-g8-20261002-v4.md)，快照SHA256：ed2eafa53d86cd71b553fb04056df4a335033e24e762e9d21c450f483a802b5f。
+
+
+## 2026-10-03T19:03:09+08:00 提交前CPU复验与开发基准整理
+
+- 负责人Codex；按用户要求整理现有未提交修复。实现集中于`rl_dataset.py::collate_fn`和`dp_actor.py::token_statistics`及其调用；新增`tests/test_rl_dataset_collate.py`。前者保持每题元数据为一维对象数组，后者沿回答token分块并在概率推理时跳过未使用熵。默认分块0保持旧计算路径；无新增实验开关或训练参数改动。
+- 本轮CPU复验51项通过：整理/跨批合并4、动态筛选13、实验核心17、奖励边界17。命令：`CUDA_VISIBLE_DEVICES= bash env/metax/run.sh /mnt/public/code/lyk/lzy/runs/metax-collate-fix-20261002/run_cpu_tests.py`，退出码0。
+- 独立生产函数CPU核对通过：完整/分块概率、熵和梯度一致，checkpoint重算一致，跳过熵后概率一致；17token按4分块最大块宽4，关闭熵无熵调用。命令：`CUDA_VISIBLE_DEVICES= bash env/metax/run.sh /mnt/public/code/lyk/lzy/runs/metax-dynamic-memory-fix-20261002/test_token_statistics.py`，退出码0。
+- 三个代码/测试文件SHA256与v4冻结源码一致。当前职责、默认兼容性和关键中文注释已检查；未接入SFT。本轮没有运行GPU验证，完整GPU恢复和SFT链路仍未验收；正在运行的v4代码、配置及进程保持原状。
+- 验证证据补充保存至`/mnt/public/code/lyk/lzy/runs/metax-collate-fix-20261002/commit-validation-20261003.json`。提交前执行`git diff --check`；下步整理运行记录/验证产物的忽略规则，保留核心方案与交接文档。

@@ -49,16 +49,27 @@ def forward_response_logits(model, response_length, response_logits_only=False, 
     return model(**model_inputs).logits[:, -response_length - 1:-1]
 
 
-def token_statistics(logits, responses, recompute=False):
-    """计算回答 token 的对数概率和熵；训练时可重算以减少反传保留的词表张量。"""
+def token_statistics(logits, responses, recompute=False, chunk_size=0, compute_entropy=True):
+    """回答概率和熵；显式分块降低词表中间量峰值，概率推理可不计算熵。"""
     def calculate(logits, responses):
-        return logprobs_from_logits(logits, responses), verl_F.entropy_from_logits(logits)
+        log_probs = logprobs_from_logits(logits, responses)
+        entropy = verl_F.entropy_from_logits(logits) if compute_entropy else torch.zeros_like(log_probs)
+        return log_probs, entropy
 
-    # [data-difficulty] checkpoint 前向只保留 logits，反传时重算 softmax 等中间量；
-    # 仅在有梯度的训练前向启用，旧评分/参考模型路径保持原计算顺序。
-    if recompute and torch.is_grad_enabled():
-        return checkpoint(calculate, logits, responses, use_reentrant=False)
-    return calculate(logits, responses)
+    def evaluate(logits, responses):
+        # 每块独立重算，仅保留必要的logits；保持原公式及token顺序。
+        if recompute and torch.is_grad_enabled():
+            return checkpoint(calculate, logits, responses, use_reentrant=False)
+        return calculate(logits, responses)
+
+    if chunk_size < 0:
+        raise ValueError('token_statistics_chunk_size must be nonnegative')
+    if chunk_size == 0:
+        return evaluate(logits, responses)
+    # 词表维度不截断，只沿token维度分块；输出仍为完整回答长度。
+    parts = [evaluate(logits[:, i:i+chunk_size], responses[:, i:i+chunk_size])
+             for i in range(0, responses.shape[-1], chunk_size)]
+    return tuple(torch.cat([p[j] for p in parts], dim=1) for j in range(2))
 
 
 class DataParallelPPOActor(BasePPOActor):
@@ -183,7 +194,11 @@ class DataParallelPPOActor(BasePPOActor):
                     logits = logits[:, -response_length - 1:-1]
                 log_probs, entropy = token_statistics(
                     logits, micro_batch['responses'],
-                    recompute=self.config.get('checkpoint_token_statistics', False))
+                    recompute=self.config.get('checkpoint_token_statistics', False),
+                    chunk_size=self.config.get('token_statistics_chunk_size', 0),
+                    # 概率推理只使用log_probs；开关显式启用时跳过未使用的熵。
+                    compute_entropy=not (self.config.get('token_statistics_chunk_size', 0)
+                                         and not torch.is_grad_enabled()))
 
             return entropy, log_probs
 

@@ -47,7 +47,11 @@ def collate_fn(data_list: list[dict]) -> dict:
         tensors[key] = torch.stack(val, dim=0)
 
     for key, val in non_tensors.items():
-        non_tensors[key] = np.array(val, dtype=object)
+        # 每题元数据作为独立对象保存；等长答案/对话列表也不展开为二维数组，保证跨批可拼接。
+        values = np.empty(len(val), dtype=object)
+        for index, value in enumerate(val):
+            values[index] = value
+        non_tensors[key] = values
 
     output = {}
     output.update(tensors)
