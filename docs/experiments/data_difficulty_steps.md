@@ -253,3 +253,14 @@ nvidia-smi
 ## 2026-10-03 SFT冷启动方案（仅设计）
 
 新增执行顺序见[sft_cold_start_plan.md](sft_cold_start_plan.md#8-分阶段执行顺序与验收)：冻结问题与P/D/T/模型→64题演示质量及成本探针→修复并验收SFT数据/精度/导出链路→256题SFT与两条25周期RL先导→1000题SFT与两条100周期RL、3种子→锁定后统一T评价。每一步的产物与验收标准均在独立方案中。未启动新训练、不抢占当前任务；实际启动时才创建run_id，不把计划当作实测。
+
+
+## 2026-10-03T20:26:17+08:00 SFT冷启动代码实施计划（未实施）
+
+- 负责人Codex；本轮完成SFT入口、batch换算、mask移位、FP16/scaler、逐轮生成/检索接口及保存/恢复的静态核查。技术计划见[sft_cold_start_implementation_plan.md](sft_cold_start_implementation_plan.md)，代码基准为`7a9789a306aa4231665cbed3ad0d03457839d1c1`；未创建SFT开发分支。
+- 拟定职责：独立cold_start模块负责数据manifest/轨迹转换/报告；通用SFTDataset、sampler、loss及checkpoint工具负责数据/梯度/状态；旧SFT trainer只保留适配。生成器通过默认关闭的trace sink记录真实输入和检索，RL入口沿用现有实现。
+- 关键约定：labels按目标token位置定义并使用[1:]移位；每题全部目标token均值后按题平均；跨卡汇总真实样本分母，微批分子累加；global batch32/micro8在8卡对应每卡4/1。尾批零权重占位，真实样本不丢不复制；后缀logits按实际context/右padding位置对齐。
+- 精度方案：FP32主权重、FP16计算、FP32通信/缓冲、ShardedGradScaler初值16；优化器状态卸载单独验收，梯度累积初版关闭FSDP原生CPU参数卸载。保存完整训练状态与HF导出，C3加载HF权重并新建全部RL状态/reference。
+- 实施顺序A–F及CPU/GPU/导出/恢复/单条检索EM验收详见技术计划。细化范围估算22–27个代码/配置/测试文件、2600–4300行，文档另计；此前14–20文件估算为粗估，本版增加追踪、尾批、恢复和统一评价细节。
+- 当前仅更新计划及相关文档，没有修改训练源码/配置、制作演示、运行新CPU/GPU测试或启动实验；注释覆盖率不适用。现有v4不在本次操作范围。PyTorch2.6官方FSDP与AMP文档已核对；首次只读SSH审批超时，重试成功，未造成代码变更。
+- 下一步先实施A的数据/损失/sampler及CPU验收，再接入B追踪采集、C训练、D恢复导出、E接续评价、F256题先导；全部新增/修改函数与关键逻辑按中文标签和逻辑单元≥50%规则检查。方案数值为计划，不构成SFT能力或实验收益的验收结论。
