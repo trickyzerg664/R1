@@ -533,3 +533,127 @@ Qwen2.5-3B 普通推理输出 `1+1等于2。` 且退出码 0。tiny-Qwen2 仅启
 - 实施顺序A–F及CPU/GPU/导出/恢复/单条检索EM验收详见技术计划。细化范围估算22–27个代码/配置/测试文件、2600–4300行，文档另计；此前14–20文件估算为粗估，本版增加追踪、尾批、恢复和统一评价细节。
 - 当前仅更新计划及相关文档，没有修改训练源码/配置、制作演示、运行新CPU/GPU测试或启动实验；注释覆盖率不适用。现有v4不在本次操作范围。PyTorch2.6官方FSDP与AMP文档已核对；首次只读SSH审批超时，重试成功，未造成代码变更。
 - 下一步先实施A的数据/损失/sampler及CPU验收，再接入B追踪采集、C训练、D恢复导出、E接续评价、F256题先导；全部新增/修改函数与关键逻辑按中文标签和逻辑单元≥50%规则检查。方案数值为计划，不构成SFT能力或实验收益的验收结论。
+
+
+## 2026-10-05T04:18:48.636571+00:00 检查点曲线独立入口
+
+新增verl/experimental/checkpoint_eval下core/runtime/controller及scripts/difficulty/checkpoint_curve.py、tests/test_checkpoint_eval.py；未修改训练器、生成器或奖励实现。core负责选题/诊断/配对统计，runtime复用原生成/检索/奖励，controller负责资产/状态/子进程与文档同步，CLI仅参数适配。8项CPU边界验收、语法和diff检查通过；真实GPU尚未测。函数与控制逻辑清单见/mnt/public/code/lyk/lzy/runs/metax-checkpoint-curve-d256-20261005-v1/cpu-verification.json：32+89=121项，中文覆盖121/121；所有函数接口标签通过。最后补注释AST相同；GPU效果、完整训练恢复和真实finish_reason未验证。
+
+
+## 2026-10-05T04:35:23.192396+00:00 阶段A重复性修复
+
+v1 Base D32两轮同15/32但文本/检索轨迹不一致，D256未启动，已停止并保留证据。v2冻结同一256题/15题风险清单；独立ObservedRollout每轮调用原生公开缓存清空接口，控制器Base完成立即验收。新增2项缓存调用顺序/失败停止测试，10项CPU验收、语法和diff检查通过；中文接口34项、逻辑覆盖123/126，见/mnt/public/code/lyk/lzy/runs/metax-checkpoint-curve-d256-20261005-v2/cpu-verification.json。训练/奖励共享实现未改，未启动RL/SFT；GPU重复一致性待实测。详见runs/metax-checkpoint-curve-d256-20261005-v2.md。
+
+
+## 2026-10-05T04:48:48.121904+00:00 有限评价后处理
+
+负责人Codex /root；启动单次结果后处理PID1620336，不重启失败任务或执行训练。六模型完整D256且重复门槛通过才输出diagnostic.json并追加原最终评估报告第6节及本run记录。区分首次数值下降与两组负配对区间；输出所有相邻节点、全部对→错题ID及过程特征，开发峰值为事后探索、未多重比较校正，不断言因果。代码产物/mnt/public/code/lyk/lzy/runs/metax-checkpoint-curve-d256-20261005-v2/finish_report.py，SHA256 3e6c6446423fc22f0a0ad56f56ff797204b0e238ffe76ed0adbe170492af047b；语法检查通过，真实结果尚未生成。单一main函数中文接口完备；各结果校验、等待/失败分支、统计和写入逻辑均就近中文说明。此前冻结的评价源码/题集不改。
+
+
+## 2026-10-05T04:54:15.707640+00:00 后处理边界验收通过
+
+负责人Codex /root。独立临时合成结果CPU验收退出0：失败不写完整报告、同题下降区间、全部32道合成转错索引、峰值及防重复覆盖；没有把合成指标当作真实GPU结果。证据/mnt/public/code/lyk/lzy/runs/metax-checkpoint-curve-d256-20261005-v2/report-boundary-verification.json，代码函数中文接口2项、逻辑说明覆盖16/22=72.73%，清单/源码哈希已保存。关键等待、数据校验、下降判定、逐题索引及历史写入逻辑有中文说明；只读模型仍在复评，未启动训练。
+
+
+## HF离线复评异常，暂停D256
+
+step100第一轮D32实测0/32，32题均无答案，57次真实搜索，78290生成token，32次强制结束，349次长度命中；总585.34秒（生成510.04、检索73.53）。与训练内15/32不符，不作为真实退化结论。第二轮首批输出一致，但未等全轮，控制器SIGINT仅停止所属任务；D256仍0/1536，后处理和本机同步按失败处理。已冻结异常前后两题实际输入到loading-probe/inputs.json，有限单卡探针比较冷HF加载batch2/batch1、Base初始化后原训练RPC加载以及保留/清空前缀缓存。只读权重/已保存输入，未启动训练，未改原HF配置或共享加载器；探针目前未验收。源码probe.py语法通过，接口与关键加载/重置/记录逻辑有中文说明。负责人Codex /root。
+
+
+### 5.2 新发现：训练权重更新后前缀缓存未失效（2026-10-05T05:13:28.316548+00:00）
+
+D256在开始前暂停，step100冷缓存D32实际0/32且32题无答案，与训练内15/32不符。有限探针已确认：Base引擎先生成固定上下文、通过原MetaxWeightUpdateExtension公开RPC加载step100全部7份HF分片，同一权重与相同输入保留旧KV时产出正常答案/搜索，公开reset_prefix_cache后转为calling重复且命中长度上限；直接HF冷加载（batch2和batch1）也出现重复。英国国籍上下文保留旧KV输出<answer> English </answer>并停止，清空后重复calling至256token。证据/mnt/public/code/lyk/lzy/runs/metax-checkpoint-curve-d256-20261005-v2/loading-probe/cache-update-finding.json、rpc-retained-prefix.json、rpc-cleared-prefix.json、rpc-load.json及cold-*.json。
+
+静态代码核对：worker.load_weights_from_safetensors仅model.load_weights，LLM.sync_model_weights未调用reset_prefix_cache；权重dirty标记会触发重新导出，但不清前缀KV。因此历史D32应视为可能混入旧权重KV的指标，不能用15→18→15直接推断真实参数退化起点。尚未完整重放历史，不能量化各次污染，也不能据2题断言全部训练无效或reward hacking因果。先用冷缓存评价实际保存权重定位首次下降/循环区间，原训练已结束且未改源码或重启；后续训练须另验收权重更新后的缓存失效。没有把0/32当作HF文件损坏证明，完整COMPLETE哈希仍一致。
+
+
+## 2026-10-05T05:14:38.754797+00:00 机制核查后按冻结协议继续
+
+已证明相同HF权重通过原训练RPC加载、清空前缀后也重复，不能将0/32简单归因于HF导出文件损坏。历史带旧KV分数不作复评正确率门槛；继续v2相同冻结代码/数据/权重/每轮清缓存协议，从已完成批次接续step100第二轮。先验收冷缓存重复，再执行D256六模型曲线。旧中断状态/进程/报告状态保存为*-before-resume-1.json，日志追加；没有修改模型或训练源码，后处理同时恢复。负责人Codex /root。
+
+
+## 2026-10-05T05:17:51.150767+00:00 已保存节点小探针
+
+GPU1实测无进程（859MiB为设备基础占用），顺序运行Base/20/40/60/80/100的同2个初始输入及同2个搜索后输入、batch1/每次空缓存；各节点独立进程，物理GPU1一致。仅比较原始生成循环症状，不计算完整题EM，不混入GPU0的D256曲线。产物loading-probe/curve-probe，各阶段退出码/实际状态独立保存；源代码及驱动哈希已保存，语法通过，GPU全节点未验收。新增/修改函数接口及关键循环/失败/文件锁有中文说明。负责人Codex /root。
+
+
+### 5.3 保存节点小探针结果（2026-10-05T05:26:24.412226+00:00）
+
+Base/20/40/60/80/100六节点全部退出0；同一GPU1、batch1、每次空前缀缓存、同2个初始及2个真实搜索后上下文（共24次单条原始生成）。该冰雨上下文step60输出<answer>Freezing rain</answer>并停止；step80在相同输入下输出连续<search>标签至256token，最大同token三元组重复70次；step100转为calla lilies重复，国籍上下文calling重复248次。严重循环的这个样本在保存节点上首次见于step80，能定位到60→80区间；step40已有部分长输出命中256上限，但这不等同严重循环。另一国籍上下文step80仍能给出English，症状并非所有题同时出现。
+
+这是固定上下文机制探针，不是完整检索单轨迹EM；不能将60–80称作整体准确率退化的确定起点或step60最优。完整GPU0 D32重复门槛已通过：Base两轮15/32、step100两轮0/32且全部输出/奖励逐题一致，六模型D256已开始。实际总体/来源/256及241题配对曲线完成后由有限后处理自动追加第6节，当前还未完成。证据/mnt/public/code/lyk/lzy/runs/metax-checkpoint-curve-d256-20261005-v2/loading-probe/curve-probe-summary.json、各节点cold-*.json及/mnt/public/code/lyk/lzy/runs/metax-checkpoint-curve-d256-20261005-v2/repeat-check.json。未修训练源码或启动RL/SFT；训练内旧分数受已确认的权重更新后KV残留缺陷影响，需要先以冷缓存曲线为准。
+
+小探针中文接口3项，逻辑说明覆盖14/19=73.68%，完整清单curve-source-verification.json；真实6节点退出均0，不称完整EM验证。
+
+
+## 2026-10-05 MetaX 权重更新后的前缀缓存失效修复（验证待执行）
+
+用户明确授权修复。源码范围：verl/third_party/vllm/metax_v_0_11_0/llm.py；新增 tests/test_metax_weight_cache_invalidation.py。
+完整权重加载并唤醒 KV 后调用公开 reset_prefix_cache；兼容当前 V1 正常返回 None 和布尔 True，其他返回或异常停止。同步前拒绝未完成请求，生成资格只有完整同步和缓存失效完成后恢复，失败后不能继续生成。同权重多轮生成保留缓存；worker、训练损失、奖励和已完成权重均未修改。
+补丁/原始文件证据 runs/metax-prefix-cache-fix-20261005-v1。CPU 回归、语法/diff 验收和真实 GPU 热更新/冷加载对照尚未执行，下一步按阶段单独记录。
+现有 GPU0 D256 评价保持运行；本修复不重启它、不改其冻结协议。CPU 模拟不能代替 GPU 验收。
+
+
+## 2026-10-05 前缀缓存修复 CPU 验收
+
+真实适配器与既有 manager 共10项 CPU 回归通过（新8项+既有2项）；命令 CUDA_VISIBLE_DEVICES= bash env/metax/run.sh -m unittest discover -s tests -p test_metax*.py -v。覆盖旧前缀失效、加载/唤醒/重置顺序、V1 None/True兼容、失败拒绝生成、活动请求拒绝更新、成功重试、同权重缓存及原补齐语义。修改源码/新测试/探针语法与 git diff --check 通过。证据 runs/metax-prefix-cache-fix-20261005-v1/cpu-verification.json；GPU固定输入对照仍待执行，未运行训练、未停止现有评价。
+
+
+## 2026-10-05 MetaX 前缀缓存修复验收完成
+
+用户授权的权重更新缓存缺陷已修复。10项CPU回归通过，隔离原源码的同一旧缓存回归按预期失败；语法和git diff --check通过。真实GPU1以Base暖缓存后经修复的生产适配器完整同步step100，同4个固定输入与同GPU独立冷加载输出全部逐token一致；同步日志确认Successfully reset prefix cache，失败日志未见。所有输出仍命中256长度上限，这反映step100在此协议下已有行为异常，修复不恢复模型能力。GPU0既有D256曲线继续运行，未启动新RL/SFT。
+
+验证产物 runs/metax-prefix-cache-fix-20261005-v1/verification.json、sync-result.json、cold-result.json、cpu-verification.json、regression-before.log、fix.patch。CPU补充说明仅改注释，AST相同；没有重复训练或改写原指标。真实休眠GPU路径与多卡FSDP新训练未运行，休眠顺序由CPU覆盖。
+
+中文说明验收：19个新增/修改函数的@brief/@param/@return全部通过，关键逻辑说明逐项检查；逻辑单元44/44=100%，清单见comment-verification.json。
+- 函数职责 __init__：有中文说明。
+- 函数职责 sync_model_weights：有中文说明。
+- 函数职责 generate：有中文说明。
+- 函数职责 setUp：有中文说明。
+- 函数职责 configure_output：有中文说明。
+- 函数职责 assert_generation_blocked：有中文说明。
+- 函数职责 test_new_weights_invalidate_old_prefix_before_generation：有中文说明。
+- 函数职责 test_reset_after_load_accepts_v1_none_and_boolean_success：有中文说明。
+- 函数职责 test_sleep_wakes_kv_before_reset：有中文说明。
+- 函数职责 test_reset_failure_or_exception_blocks_generation：有中文说明。
+- 函数职责 test_load_failure_never_marks_cache_ready：有中文说明。
+- 函数职责 test_active_requests_reject_update_before_any_weight_mutation：有中文说明。
+- 函数职责 test_successful_retry_restores_generation：有中文说明。
+- 函数职责 test_same_weight_generation_preserves_cache_and_padding_semantics：有中文说明。
+- 函数职责 load_weights：有中文说明。
+- 函数职责 reset_prefix：有中文说明。
+- 函数职责 generate_native：有中文说明。
+- 函数职责 generate_adapter：有中文说明。
+- 函数职责 main：有中文说明。
+- 冷加载的权重和缓存一致：有中文说明。
+- 先关闭生成资格：有中文说明。
+- 临时目录只在同步期间存在：有中文说明。
+- 只导出训练张量：有中文说明。
+- 加载失败时保留不可生成状态：有中文说明。
+- 完整加载并唤醒 KV 后只重置一次：有中文说明。
+- V1 同步接口正常返回 None：有中文说明。
+- 同步中断或缓存失败后拒绝：有中文说明。
+- 按原请求/候选顺序展开输出：有中文说明。
+- 仅在真实 token 区域填值：有中文说明。
+- 仅替换导入边界：有中文说明。
+- 只更新权重，不清除旧 prefix：有中文说明。
+- 缺陷版仍保留 prefix=1：有中文说明。
+- 当前 V1 返回 None：有中文说明。
+- 逐个覆盖正常失败返回：有中文说明。
+- 空加载、零参数加载和中断：有中文说明。
+- 活动请求持有的旧块：有中文说明。
+- 新的一次完整成功同步：有中文说明。
+- 两次同权重生成不重复清空缓存：有中文说明。
+- 每轮单请求：有中文说明。
+- 单条请求没有右侧 padding：有中文说明。
+- 使用真实训练适配器从 Base 初始化：有中文说明。
+- 交给修复后的完整同步方法：有中文说明。
+- 同设备和相同精度/长度配置：有中文说明。
+- 仅运行有限输入探针：有中文说明。
+
+
+## 2026-10-05 sft-mx 分支创建前的已有改动验收
+
+用户要求先提交未提交改动，再以 data-difficulty-muxi（经用户确认的实际分支名）创建 sft-mx。已有修改包含检查点评价、KV 缓存失效修复及历史实验文档，本节未新增训练算法。
+实际命令：`bash env/metax/run.sh -m unittest tests.test_checkpoint_eval tests.test_metax_weight_cache_invalidation tests.test_metax_sync_cache -v`，20 项 CPU 测试全部通过（2026-10-05 14:52 +08:00），修改的 Python 文件 AST 解析通过；提交前执行 git diff --check。系统 Python 与 searchr1-metax 环境未安装 pytest，首次入口检查未运行测试，随后使用项目既有 unittest/MetaX 入口完成验收，未安装新依赖。
+本轮没有 GPU 训练/新增 GPU 验证。此前 KV 修复 GPU 验收与检查点曲线结果保持各自记录；本次 CPU 通过不代替它们。代码注释清单沿用本次待提交代码对应的既有检查记录，此处只新增文档，新增代码覆盖不适用。
