@@ -925,6 +925,9 @@ class RayPPOTrainer(object):
 
                         # we combine with rule-based rm
                         # 筛选奖励已与轨迹同步补齐；明确恢复float，避免优势归一化被整数截断。
+                        # 普通训练只标注日志步数；动态候选已有轮次，奖励不重复计算。
+                        if not dynamic_filter:
+                            batch.meta_info['trajectory_step'] = self.global_steps
                         reward_tensor = batch.batch.pop('dynamic_rewards').float() if dynamic_filter else self.reward_fn(batch)
                         batch.batch['token_level_scores'] = reward_tensor
 

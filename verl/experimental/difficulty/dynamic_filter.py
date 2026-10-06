@@ -126,6 +126,9 @@ def training_batches(loader,controller,manager,reward_fn,repeat_fn,worker,pad_id
             width=candidate.batch['responses'].shape[-1]
             candidate_tokens+=int(candidate.batch['info_mask'][:,-width:].sum())
             candidate_searches+=sum(candidate.meta_info.get('valid_search_stats',[]))
+            # 仅给展示标注更新步数和候选轮次，不改变身份、奖励或随机种子。
+            candidate.meta_info.update(trajectory_step=step, trajectory_candidate_round=round_index,
+                                       trajectory_phase='train_candidates')
             candidate.batch['dynamic_rewards']=reward_fn(candidate)
             # 关闭过程功能的原奖励函数不提供模式属性，继续沿用binary。
             accepted,records=mixed_groups(candidate,group_size,seen,

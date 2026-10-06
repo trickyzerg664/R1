@@ -100,25 +100,30 @@ def extract_solution(solution_str, answer_mode='legacy'):
     return matches[-1].group(1).strip()
 
 
-def compute_score_em(solution_str, ground_truth, method='strict', format_score=0., score=1., answer_mode='legacy'):
-    """The scoring function for exact match (EM).
-
-    Args:
-        solution_str: the solution text
-        ground_truth: the ground truth
-        method: the method to extract the solution, choices are 'strict' and 'flexible'
-        format_score: the score for the format
-        score: the score for the correct answer
+def compute_score_em(solution_str, ground_truth, method='strict', format_score=0., score=1., answer_mode='legacy', log_details=True):
+    """
+    @brief 按原EM规则评分，可关闭旧随机调试文本并保留随机流。
+    @param solution_str 原评分输入文本，不改写。
+    @param ground_truth 含target标准答案或别名列表的映射。
+    @param method 既有兼容参数，当前沿用严格相等。
+    @param format_score 有可提取但错误答案时的格式分。
+    @param score 正确答案分值。
+    @param answer_mode 原答案提取版本，默认legacy。
+    @param log_details 是否允许旧随机打印；不影响分值与随机数消耗。
+    @return 原正确分、错误格式分或无答案0分。
+    @raises ValueError 答案提取版本无法识别。
     """
     answer = extract_solution(solution_str=solution_str, answer_mode=answer_mode)
+    # 保留随机抽取；关闭打印不改变Python随机状态或后续采样。
     do_print = random.randint(1, 64) == 1
     
-    if do_print:
+    if do_print and log_details:
         print(f"--------------------------------")
         print(f"Golden answers: {ground_truth['target']}")
         print(f"Extracted answer: {answer}")
         print(f"Solution string: {solution_str}")
     
+    # 原奖励分支保持，展示开关不参与分值计算。
     if answer is None:
         return 0
     else:

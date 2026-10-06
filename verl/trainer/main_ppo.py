@@ -16,6 +16,7 @@ Note that we don't combine the main with ray_trainer as ray_trainer is used by o
 """
 
 from verl import DataProto
+from verl.utils.trajectory_logging import HumanTrajectoryLogger
 import torch
 from verl.utils.reward_score import qa_em
 from verl.trainer.ppo.ray_trainer import RayPPOTrainer
@@ -35,7 +36,7 @@ class RewardManager():
     """
 
     def __init__(self, tokenizer, num_examine, format_score=0., answer_mode='legacy', audit_path=None,
-                 process_checks=None, apply_process_reward=True) -> None:
+                 process_checks=None, apply_process_reward=True, trajectory_logging=None) -> None:
         """
         @brief 初始化原答案评分及可选过程门控，开发评价保持原EM。
         @param tokenizer 共用分词器。
@@ -45,9 +46,12 @@ class RewardManager():
         @param audit_path 既有答案审计JSONL路径。
         @param process_checks 可选过程检查配置映射，默认关闭。
         @param apply_process_reward 是否将门控及惩罚写入训练奖励；验证为False。
+        @param trajectory_logging 可读轨迹日志配置；不传时保留原打印。
         @return 无。
         @raises ValueError 过程开关或答案提取配置不一致。
         """
+        # 展示只接收已有结果，不参与评分、随机流或状态恢复。
+        self.human_logger = HumanTrajectoryLogger(trajectory_logging)
         self.tokenizer = tokenizer
         self.num_examine = num_examine  # the number of batches of decoded responses to print to the console
         self.format_score = format_score
@@ -67,7 +71,7 @@ class RewardManager():
 
     def __call__(self, data: DataProto):
         """
-        @brief 复用原EM规则，按真实接受动作计算可选过程奖励并保存分项。
+        @brief 复用原EM与过程奖励，保存分项并可选只读展示，展示故障不影响评分。
         @param data 完整响应DataProto，检查开启时要求同行来源报告及轨迹ID。
         @return token级奖励矩阵；开发评价返回原EM，训练可返回门控/惩罚。
         @raises ValueError 来源报告不可信、故障批次、空token负奖励或外部RM绕过检查。
@@ -85,6 +89,8 @@ class RewardManager():
         # all_scores = []
 
         already_print_data_sources = {}
+        # 候选与普通训练共用日志入口，按评分批次限量展示。
+        self.human_logger.begin_batch()
         # 原EM与候选过程分并列保存，禁止用修改后的奖励替代验证正确率。
         process_rows = []
         # 只在开发评价启用文件记录；完整批次算完再追加，写入失败直接报错。
@@ -125,7 +131,8 @@ class RewardManager():
             compute_score_fn = _select_rm_score_fn(data_source)
 
             score = compute_score_fn(solution_str=scoring_text, ground_truth=ground_truth,
-                                     format_score=self.format_score, answer_mode=self.answer_mode)
+                                     format_score=self.format_score, answer_mode=self.answer_mode,
+                                     log_details=not self.human_logger.enabled)
             original_em = float(score)
             if self.process_config['enabled']:
                 report = data_item.non_tensor_batch.get('process_checks')
@@ -168,7 +175,25 @@ class RewardManager():
             if data_source not in already_print_data_sources:
                 already_print_data_sources[data_source] = 0
 
-            if already_print_data_sources[data_source] < self.num_examine:
+            # 额外解码只发生在展示行；展示异常不改变已算奖励，不能中断训练。
+            if self.human_logger.selected(data_source):
+                try:
+                    self.human_logger.emit(data_source, dict(
+                        prompt=self.tokenizer.decode(valid_prompt_ids), model_response=model_response,
+                        full_response=self.tokenizer.decode(valid_response_ids), scoring_text=scoring_text,
+                        target=ground_truth['target'], data_source=data_source, row=i,
+                        question_id=data_item.non_tensor_batch.get('question_id'),
+                        uid=data_item.non_tensor_batch.get('uid'), meta=data.meta_info,
+                        phase=data.meta_info.get('trajectory_phase', data.meta_info.get('process_reward_phase',
+                            'train' if self.apply_process_reward else 'validation')),
+                        batch_number=self.human_logger.batch_number, answer_mode=self.answer_mode,
+                        original_em=original_em, returned_reward=float(score), format_score=self.format_score,
+                        process_report=record if self.process_config['enabled'] else None,
+                        reward_gate=self.process_config['reward_gate'], penalty=self.process_config['missing_answer_penalty'],
+                        apply_process_reward=self.apply_process_reward))
+                except Exception as exc:
+                    self.human_logger.warn(exc)
+            elif not self.human_logger.enabled and already_print_data_sources[data_source] < self.num_examine:
                 already_print_data_sources[data_source] += 1
                 print(sequences_str)
         
@@ -233,7 +258,7 @@ def main(config):
 @ray.remote
 def main_task(config):
     """
-    @brief 组装既有分布式训练资源与共用生成/奖励协议。
+    @brief 组装既有分布式资源与共用协议，显式接入不改变评分的轨迹展示。
     @param config 项目Hydra配置，过程检查默认关闭。
     @return 无。
     @raises ValueError 在非检索任务启用过程检查。
@@ -312,16 +337,19 @@ def main_task(config):
     # 新旧奖励显式分版本，训练和验证必须一致；逐题记录仅用于验证。
     answer_mode = config.reward_model.get('answer_mode', 'legacy')
     # 训练与验证共用检查配置；验证仍按原EM报告任务表现。
+    # 两阶段展示计数独立，不自动启用过程奖励。
     process_config = check_config(config.get('process_checks', {}))
     if process_config['enabled'] and not config.do_search:
         raise ValueError('Process checks currently require search generation')
     reward_fn = RewardManager(tokenizer=tokenizer, num_examine=0, answer_mode=answer_mode,
-                             process_checks=process_config)
+                             process_checks=process_config,
+                             trajectory_logging=config.get('trajectory_logging', {'enabled': True}))
 
     # Note that we always use function-based RM for validation
     val_reward_fn = RewardManager(tokenizer=tokenizer, num_examine=1, answer_mode=answer_mode,
                                  audit_path=config.reward_model.get('validation_audit_path'),
-                                 process_checks=process_config, apply_process_reward=False)
+                                 process_checks=process_config, apply_process_reward=False,
+                                 trajectory_logging=config.get('trajectory_logging', {'enabled': True}))
 
     resource_pool_manager = ResourcePoolManager(resource_pool_spec=resource_pool_spec, mapping=mapping)
     trainer = RayPPOTrainer(config=config,

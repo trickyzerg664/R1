@@ -223,3 +223,13 @@ process_checks:
   reward_gate: false
   missing_answer_penalty: 0.0
   audit_path: null
+
+# 默认每评分批次每来源展示1条；不触发额外生成或开启过程奖励。
+trajectory_logging:
+  enabled: true
+  console_samples_per_source: 1
+  every_n_batches: 1
+  max_chars_per_trajectory: 12000
+  # 可选可读文本文件；0表示选中批次记录全部轨迹，默认不额外落盘。
+  file_path: null
+  file_samples_per_source: 0

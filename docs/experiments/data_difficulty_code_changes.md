@@ -887,3 +887,161 @@ process_checks.audit_path=/mnt/public/code/lyk/lzy/runs/<new_run_id>/process-che
 - test_real_fit_keeps_fractional_reward_and_advantages：保留真实fit和优势控制流仅替换GPU边界（有说明）
 - test_real_fit_keeps_fractional_reward_and_advantages：浮点奖励概率与整数token断言（有说明）
 - test_real_fit_keeps_fractional_reward_and_advantages：优势正负符号断言（有说明）
+
+
+## 可读训练轨迹日志实现中
+
+负责人Codex /root；检查时间2026-10-06T06:39:21.179584+00:00。既有18份过程检查及静态修复文件已提交f2132a1，提交后工作区干净；Git提交身份复用既有作者，仅本次命令指定，未改全局配置。新增独立只读展示模块、奖励入口窄适配、候选轮次/普通训练步数标注以及展示配置；真实换行、模型/环境分离、真实可见工具结果、未执行尾部、原EM/候选过程分/实际返回分分别展示。默认每评分批次每来源1条，12000字符上限，额外文本文件默认关闭。日志失败隔离，评分随机抽取保留；奖励算法、优化器、采样和来源审计策略未改。新增CPU回归待执行，实际GPU训练未启动，当前不能宣称联调通过。
+
+
+## 可读训练轨迹日志验收完成
+
+负责人Codex /root；检查时间2026-10-06T06:48:21.001614+00:00；run_id=metax-readable-logs-20261006-v1。
+
+本次只调整训练/验证/打标共用评分入口的可读展示。独立模块`verl/utils/trajectory_logging.py`只接受已有结果，不持有训练器，不重新生成或评分。`RewardManager`只保留窄适配；训练器和动态筛选只增加展示用步数/候选轮次。候选阶段使用独立`trajectory_phase`，保留原`process_reward_phase`及来源审计语义。旧EM随机调试仅抑制打印，仍消耗同一次random.randint；关闭日志保持既有直接调用及旧打印。新日志不自动启用过程门控。
+
+展示问题、按轮次模型原文、实际接受动作、真实调用ID/查询、仅模型可见检索结果、未执行尾部、原答案分、接受答案EM、违规原因码、门控公式、候选过程分与实际返回分。语义支持和多跳仍待复核，不加入额外奖励；规则分不冒称KL调整后奖励、GRPO优势或损失。账本关闭时展示模型输出与环境历史，并明确来源未验证，不伪造轮次。真实换行和段落边界已人工检查；标签排版幂等，终端控制字符仅在显示副本过滤，字面量反斜线n不误转换。
+
+默认`trajectory_logging.enabled=true`，每评分批次每来源前1条，`every_n_batches=1`，每条总预算12000字符。`file_path=null`默认不额外写文件；显式配置远程运行目录里的文件路径后，`file_samples_per_source=0`记录选中批次全部轨迹，仍受单条字符预算。完整原文需另启用既有来源审计JSONL；展示截断不改原token和报告。需要关闭时设置`trajectory_logging.enabled=false`。日志格式化、额外解码、控制台和可选文件输出异常分别隔离，至多提示一次，评分和主流程继续；原来源校验和必需审计错误仍按原规则处理。同步文件追加会有I/O开销，默认不开启，实际GPU吞吐未测。
+
+本次新增`verl/utils/trajectory_logging.py`、`tests/test_trajectory_logging.py`；修改`verl/trainer/main_ppo.py`、`verl/utils/reward_score/qa_em.py`、`verl/trainer/ppo/ray_trainer.py`、`verl/experimental/difficulty/dynamic_filter.py`、`verl/trainer/config/ppo_trainer.yaml`。已有代码先提交为`f2132a1`（18文件），随后才开始日志改动；没有push。日志改动保留远程工作区以便查看diff，未创建本机源码缓存。
+
+验证：首轮102项CPU通过；收紧预算并新增展示解码失败后103项相关CPU回归全部通过；人工样例发现重复空行和奖励标题粘连，修复后11项日志CPU针对性回归通过，补充幂等、块边界和长答案预算断言。注释补齐已验证AST等价；最终截断提示仅调整文字，语法检查通过，不把CPU材料当作真实模型训练。27个新增/修改函数接口中文@brief/@param/@return通过；7份源码AST与YAML检查和git diff --check通过。新训练0步、新GPU调用0次；真实GPU检索联调及吞吐尚未验证。下一次实际运行使用本日志，不为验收日志单独启动训练。
+
+注释验收：27函数接口通过；独立逻辑单元82/86=95.35%，关键漏项0。未覆盖项为非关键机械装配：render_trajectory:初始提示材料排版、HumanTrajectoryLogger.__init__:独立计数初值装配、RewardManager.__call__:展示字典字段机械装配、process_data:DataProto同行材料装配。完整清单如下：
+
+- verl/utils/trajectory_logging.py:display_text职责：有有效中文说明。
+- verl/utils/trajectory_logging.py:render_trajectory职责：有有效中文说明。
+- verl/utils/trajectory_logging.py:__init__职责：有有效中文说明。
+- verl/utils/trajectory_logging.py:begin_batch职责：有有效中文说明。
+- verl/utils/trajectory_logging.py:selected职责：有有效中文说明。
+- verl/utils/trajectory_logging.py:warn职责：有有效中文说明。
+- verl/utils/trajectory_logging.py:emit职责：有有效中文说明。
+- tests/test_trajectory_logging.py:process_data职责：有有效中文说明。
+- tests/test_trajectory_logging.py:sample_record职责：有有效中文说明。
+- tests/test_trajectory_logging.py:test_rewards_rng_and_input_unchanged职责：有有效中文说明。
+- tests/test_trajectory_logging.py:test_forged_observation_reward_explained职责：有有效中文说明。
+- tests/test_trajectory_logging.py:test_validation_keeps_original_score职责：有有效中文说明。
+- tests/test_trajectory_logging.py:test_missing_answer_negative_reward职责：有有效中文说明。
+- tests/test_trajectory_logging.py:test_real_turns_visible_evidence_and_tail职责：有有效中文说明。
+- tests/test_trajectory_logging.py:test_newlines_controls_and_length_budget职责：有有效中文说明。
+- tests/test_trajectory_logging.py:test_deterministic_limits_and_batch_frequency职责：有有效中文说明。
+- tests/test_trajectory_logging.py:test_file_all_rows_and_console_failure_independent职责：有有效中文说明。
+- tests/test_trajectory_logging.py:test_reward_survives_file_and_formatter_failures职责：有有效中文说明。
+- tests/test_trajectory_logging.py:test_display_decode_failure_preserves_reward职责：有有效中文说明。
+- tests/test_trajectory_logging.py:test_invalid_configuration_rejected职责：有有效中文说明。
+- tests/test_trajectory_logging.py:decode职责：有有效中文说明。
+- verl/trainer/main_ppo.py:main_task职责：有有效中文说明。
+- verl/trainer/main_ppo.py:__init__职责：有有效中文说明。
+- verl/trainer/main_ppo.py:__call__职责：有有效中文说明。
+- verl/utils/reward_score/qa_em.py:compute_score_em职责：有有效中文说明。
+- verl/trainer/ppo/ray_trainer.py:fit职责：有有效中文说明。
+- verl/experimental/difficulty/dynamic_filter.py:training_batches职责：有有效中文说明。
+- display_text:统一CR换行与终端控制字符过滤：有有效中文说明。
+- display_text:控制标签换行且重复渲染幂等：有有效中文说明。
+- display_text:字符预算与显式截断：有有效中文说明。
+- render_trajectory:最小预算校验：有有效中文说明。
+- render_trajectory:同行身份、阶段、候选轮次展示：有有效中文说明。
+- render_trajectory:初始提示材料排版：非关键机械装配，未单注。
+- render_trajectory:调用表和按轮次模型输出：有有效中文说明。
+- render_trajectory:接受动作与违规原文位置：有有效中文说明。
+- render_trajectory:真实工具身份及仅可见结果：有有效中文说明。
+- render_trajectory:未执行尾部单独标记：有有效中文说明。
+- render_trajectory:沿用引用诊断不新增语义奖惩：有有效中文说明。
+- render_trajectory:关闭账本的模型和环境历史分离：有有效中文说明。
+- render_trajectory:共用答案提取且不再评分：有有效中文说明。
+- render_trajectory:原分、接受EM和门控公式解释：有有效中文说明。
+- render_trajectory:训练候选与验证实际返回策略：有有效中文说明。
+- render_trajectory:规则分与后续KL优势损失区分：有有效中文说明。
+- render_trajectory:长总结预算及最终分保留：有有效中文说明。
+- render_trajectory:整条总预算与明确块间空行：有有效中文说明。
+- HumanTrajectoryLogger.__init__:布尔和整数类型校验：有有效中文说明。
+- HumanTrajectoryLogger.__init__:限额、频率与字符预算校验：有有效中文说明。
+- HumanTrajectoryLogger.__init__:文件路径类型与空串拒绝：有有效中文说明。
+- HumanTrajectoryLogger.__init__:独立计数初值装配：非关键机械装配，未单注。
+- HumanTrajectoryLogger.begin_batch:只读展示计数重置：有有效中文说明。
+- HumanTrajectoryLogger.selected:关闭与确定性批次频率：有有效中文说明。
+- HumanTrajectoryLogger.selected:按来源独立控制台和文件限额：有有效中文说明。
+- HumanTrajectoryLogger.warn:一次警告及警告失败隔离：有有效中文说明。
+- HumanTrajectoryLogger.emit:先消费展示名额：有有效中文说明。
+- HumanTrajectoryLogger.emit:格式化异常隔离：有有效中文说明。
+- HumanTrajectoryLogger.emit:控制台失败隔离：有有效中文说明。
+- HumanTrajectoryLogger.emit:UTF8文件追加及失败独立隔离：有有效中文说明。
+- RewardManager.__init__:独立展示对象初始化：有有效中文说明。
+- RewardManager.__call__:评分批次展示计数：有有效中文说明。
+- RewardManager.__call__:关闭旧打印但保留随机评分调用：有有效中文说明。
+- RewardManager.__call__:只在展示行额外解码：有有效中文说明。
+- RewardManager.__call__:展示字典字段机械装配：非关键机械装配，未单注。
+- RewardManager.__call__:展示故障捕获及关闭后的旧打印兼容：有有效中文说明。
+- main_task:训练和验证同配置且独立计数：有有效中文说明。
+- RayPPOTrainer.fit:普通训练日志绝对步数标注：有有效中文说明。
+- training_batches:候选步数轮次与独立日志阶段标注：有有效中文说明。
+- compute_score_em:同一次随机数消耗及仅抑制旧打印：有有效中文说明。
+- compute_score_em:原奖励分支保持：有有效中文说明。
+- ppo_trainer.yaml:默认有限样例和可选文件配置：有有效中文说明。
+- process_data:真实执行器生成来源身份：有有效中文说明。
+- process_data:DataProto同行材料装配：非关键机械装配，未单注。
+- sample_record:只用于展示的固定字段装配：有有效中文说明。
+- test_rewards_rng_and_input_unchanged:真实入口多模式奖励随机流与张量比较：有有效中文说明。
+- test_forged_observation_reward_explained:原EM1与门控实际0对照：有有效中文说明。
+- test_validation_keeps_original_score:验证保留原EM及候选分并列：有有效中文说明。
+- test_missing_answer_negative_reward:缺答案真实浮点负分展示：有有效中文说明。
+- test_real_turns_visible_evidence_and_tail:按真实工具返回裁剪可见证据：有有效中文说明。
+- test_real_turns_visible_evidence_and_tail:原记录不变、块间空行与幂等：有有效中文说明。
+- test_newlines_controls_and_length_budget:真实换行及字面量转义边界：有有效中文说明。
+- test_newlines_controls_and_length_budget:长正文和长奖励总结总预算：有有效中文说明。
+- test_deterministic_limits_and_batch_frequency:批次频率与来源限额无随机消耗：有有效中文说明。
+- test_file_all_rows_and_console_failure_independent:一个目的地失败不妨碍另一个：有有效中文说明。
+- test_reward_survives_file_and_formatter_failures:文件及格式化失败仍返回奖励：有有效中文说明。
+- DisplayFailTokenizer.decode:仅展示解码失败的条件边界：有有效中文说明。
+- test_display_decode_failure_preserves_reward:额外解码失败隔离：有有效中文说明。
+- test_invalid_configuration_rejected:非法开关限额频率路径拒绝：有有效中文说明。
+
+证据目录：/mnt/public/code/lyk/lzy/runs/metax-readable-logs-20261006-v1。
+
+
+## 2026-10-06T07:08:01.330646+00:00 最小必要真实联调完成
+
+负责人Codex /root；run_id=metax-process-preflight-20261006-v1。
+
+训练核心未修改；在远程独立目录组合已验证共享接口联调。脚本语法、5函数中文接口通过；逻辑注释覆盖27/28，清单见comment-verification.json。全部8条/30调用已复核，实际GPU零参数更新；通过技术接线不表示语义奖惩已实现。真实产物与源码哈希见manifest.json，原始审计/可读日志保存在同运行目录，无本机缓存。
+
+- save:职责与原子输出：有效中文说明。
+- freeze:职责与拒绝覆盖：有效中文说明。
+- freeze:来源/哈希选题：有效中文说明。
+- freeze:标签校验：有效中文说明。
+- freeze:原数据与独立种子固定：有效中文说明。
+- summarize_rewards:职责：有效中文说明。
+- summarize_rewards:同一批三种共享评分：有效中文说明。
+- summarize_rewards:浮点与有限奖励：有效中文说明。
+- summarize_rewards:完整组筛选/真实GRPO：有效中文说明。
+- summarize_rewards:有限优势/原模型token提取：有效中文说明。
+- summarize_rewards:同行报告保存：有效中文说明。
+- main:职责：有效中文说明。
+- main:prepare与GPU分离：有效中文说明。
+- main:只读模型和原配置：有效中文说明。
+- main:分词器一致性：有效中文说明。
+- main:冻结题集匹配：有效中文说明。
+- main:原同题展开和独立种子：有效中文说明。
+- main:仅推理通信组：有效中文说明。
+- main:共用冷加载和检索配置：有效中文说明。
+- main:真实事件与阶段保存：有效中文说明。
+- main:轨迹数/唯一ID校验：有效中文说明。
+- main:最终结果字段装配：非关键字段装配，未单注。
+- main:仅本任务资源释放：有效中文说明。
+- supervisor:职责：有效中文说明。
+- supervisor:新进程组隔离：有效中文说明。
+- supervisor:1200秒预算：有效中文说明。
+- supervisor:超时TERM/KILL：有效中文说明。
+- supervisor:真实退出记录：有效中文说明。
+
+## 2026-10-06T07:38:50.183654+00:00 用户授权单组40步正式实验
+
+负责人Codex /root；run_id=metax-process-r1-40-20261006-v1。用户明确同意先只跑带无答案惩罚的一组，并要求直接进行40步；本节取代此前R0/R1各25步或分阶段延长的启动方案。仅运行R1，不启动R0、SFT或额外诊断训练。
+从旧v4的step40 actor权重冷初始化；固定reference为Qwen2.5-7B Base，优化器、随机流、采样器重新初始化，新global step从0到40。旧优化器/协议指纹不恢复，新40步不能直接当作旧训练的绝对step80。
+P候选10000题，每步保留8道新有效题×8轨迹=64；40步目标320道本运行内不同题、2560条入选轨迹。动态有限实数组方差筛选，最多8候选轮/步，候选量与入选量分别记账；新题可与父模型历史训练题重合。
+开启process_checks.enabled/reward_gate，beta=0.1；奖励=接受答案EM×协议合法−0.1×无接受答案。保持原GRPO、lr=1e-6/warmup10、KL=0.001、mini/micro=32/8、温度1/top_p0.95、轮次10、上下文4096/单轮256/观察2048和已修KV失效。
+D64从已有冻结D256按来源30NQ+34Hotpot及固定哈希选取，0/5/10/15/20/25/30/35/40评价；原主流程结束会再评价一次D64，单独标轮次不混合。10/20/30/40保存完整状态，结束后同新协议val_only零更新复核D256。T仅检查manifest隔离ID，不读封存题或答案。
+资源8×MetaX C500，原GPU7检索服务保留；磁盘实测剩余3.3T，参考完整检查点86G，计划4个约344G，仅估算。所有小脚本、配置、源码/dirty快照、审计、可读日志和模型留远程/mnt/public/code/lyk/lzy/runs/metax-process-r1-40-20261006-v1，本机不落盘。
+初始状态：准备完成，CPU父推理完整性、分词器同Base、P/D隔离、Hydra train配置解析通过；训练0/40步、完整新checkpoint无，GPU尚未启动。注释接口12函数全部通过，逻辑单元48/50=96.00%，关键遗漏0；清单见comment-verification.json。本次仅新增运行目录脚本，未修改训练主流程；此前103项CPU及一题真实联调保留其原范围，不代替新多卡训练验收。
+监管器每60秒同步实测状态；非有限梯度/优化器跳过或基础设施错误停止并保留现场，答案率/正确率异常先记录，无任意改奖励或自动重启。整套策略效果可评价，无独立R0无法分离beta贡献；事实和多跳语义仍未知/人工审查。
