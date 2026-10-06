@@ -1,13 +1,29 @@
 """在线筛选完整问题组：先生成评分，再补齐有效问题，不持有训练器或worker。"""
 from collections import defaultdict
 import copy
+import math
 import time
 import numpy as np
 import torch
 import torch.nn.functional as F
 
 
-def mixed_groups(batch, group_size, seen=None):
+def mixed_groups(batch, group_size, seen=None, reward_mode='binary', variance_epsilon=1e-12):
+    """
+    @brief 保留完整、有奖励差异且未重复的问题组，原二值模式保持默认。
+    @param batch 含dynamic_rewards、uid和question_id的DataProto。
+    @param group_size 每问题完整轨迹数。
+    @param seen 已接受的问题ID集合，可为空。
+    @param reward_mode binary沿用0/1正确数组规则；finite允许有限实数奖励。
+    @param variance_epsilon 非负有限的组奖励方差容差。
+    @return 接受行索引组及每个候选组的分项记录。
+    @raises ValueError 模式/容差错误、组不完整、奖励非法或组身份不一致。
+    """
+    # 模式显式决定筛选，避免实数奖励被强转为历史正确数k。
+    if not isinstance(group_size, int) or group_size <= 0:
+        raise ValueError('Group size must be a positive integer')
+    if reward_mode not in ('binary', 'finite') or not math.isfinite(variance_epsilon) or variance_epsilon < 0:
+        raise ValueError('Invalid group reward mode/variance threshold')
     # uid区分抽题实例；question_id阻止同一更新批内重复问题，组内轨迹不能拆分。
     scores=batch.batch['dynamic_rewards'].sum(-1).tolist()
     groups=defaultdict(list)
@@ -15,14 +31,24 @@ def mixed_groups(batch, group_size, seen=None):
     accepted=[]; records=[]; seen=set() if seen is None else seen
     for uid,indices in groups.items():
         values=[scores[i] for i in indices]
-        if len(indices)!=group_size or any(v not in (0.,1.) for v in values):
-            raise ValueError('Filtering requires complete groups and binary rewards')
+        # 残组和非有限数不能参与筛选；二值模式继续拒绝负奖励和非0/1数。
+        if len(indices)!=group_size or any(not math.isfinite(v) for v in values):
+            raise ValueError('Filtering requires complete groups and finite rewards')
+        if reward_mode == 'binary' and any(v not in (0.,1.) for v in values):
+            raise ValueError('Binary filtering requires 0/1 rewards')
         q=str(batch.non_tensor_batch['question_id'][indices[0]])
         if any(str(batch.non_tensor_batch['question_id'][i])!=q for i in indices):
             raise ValueError('Question identities differ inside group')
-        k=int(sum(values)); valid=0<k<group_size and q not in seen
+        # finite模式依组内方差筛选；同分组仍无GRPO信号，不能因均值为负强行入选。
+        mean=sum(values)/group_size; variance=sum((v-mean)**2 for v in values)/group_size
+        k=int(sum(values)) if reward_mode == 'binary' else None
+        valid=(0<k<group_size if reward_mode == 'binary' else variance>variance_epsilon) and q not in seen
         source=str(batch.non_tensor_batch['data_source'][indices[0]]) if 'data_source' in batch.non_tensor_batch else 'unknown'
-        records.append(dict(question_id=q,uid=uid,k=k,eligible=valid,source=source))
+        # 原EM正确数与新训练奖励分别保存；缺原EM报告时不伪造正确数。
+        reports=batch.non_tensor_batch.get('process_checks')
+        em_k=sum(float(reports[i]['original_em']) for i in indices) if reports is not None else k
+        records.append(dict(question_id=q,uid=uid,k=k,em_k=em_k,eligible=valid,source=source,
+                            reward_mode=reward_mode,reward_mean=mean,reward_variance=variance))
         if valid:
             accepted.append(indices); seen.add(q)
     return accepted,records
@@ -68,6 +94,21 @@ def merge_groups(parts,pad_id):
 
 
 def training_batches(loader,controller,manager,reward_fn,repeat_fn,worker,pad_id,total_steps,max_rounds):
+    """
+    @brief 复用原补抽流程，按同一奖励入口选择二值或实数组筛选。
+    @param loader 原问题DataLoader。
+    @param controller 难度实验状态控制器。
+    @param manager 共用检索生成管理器。
+    @param reward_fn 奖励入口，可显式提供group_reward_mode。
+    @param repeat_fn 原问题轨迹展开函数。
+    @param worker 原actor概率计算worker。
+    @param pad_id 原补齐token。
+    @param total_steps 完成更新周期上限。
+    @param max_rounds 每周期候选补抽上限。
+    @return 按原规则产出完整DataProto批次的迭代器。
+    @raises ValueError 组或奖励非法。
+    @raises RuntimeError 候选耗尽，禁止部分更新。
+    """
     # 只有凑齐完整有效批才yield并更新参数；候选消费与训练步数分别保存，禁止小批降级。
     from verl import DataProto
     iterator=iter(loader); target=controller.sampler.batch_size; group_size=controller.group_size
@@ -86,7 +127,9 @@ def training_batches(loader,controller,manager,reward_fn,repeat_fn,worker,pad_id
             candidate_tokens+=int(candidate.batch['info_mask'][:,-width:].sum())
             candidate_searches+=sum(candidate.meta_info.get('valid_search_stats',[]))
             candidate.batch['dynamic_rewards']=reward_fn(candidate)
-            accepted,records=mixed_groups(candidate,group_size,seen)
+            # 关闭过程功能的原奖励函数不提供模式属性，继续沿用binary。
+            accepted,records=mixed_groups(candidate,group_size,seen,
+                                          reward_mode=getattr(reward_fn,'group_reward_mode','binary'))
             candidates+=len(records)
             controller.record({'event':'filter_candidates','step':step,'round':round_index,'groups':records,
                                'accepted_so_far':len(parts),'candidate_groups_so_far':candidates})

@@ -13,6 +13,9 @@ from verl.protocol import pad_dataproto_to_divisor, unpad_dataproto
 from verl.utils.tracking import Tracking
 import shutil
 import requests
+import numpy as np
+from verl.experimental.process_checks.protocol import TraceLedger, parse_action
+from verl.experimental.process_checks.reward import append_reports
 
 @dataclass
 class GenerationConfig:
@@ -31,6 +34,9 @@ class GenerationConfig:
     observation_truncation: str = 'legacy'
     context_policy: str = 'legacy'
     record_diagnostics: bool = False
+    # 默认关闭；开启后使用共用解析及程序来源账本，审计路径由实验配置提供。
+    process_checks_enabled: bool = False
+    process_audit_path: str = None
 
 class LLMGenerationManager:
     def __init__(
@@ -40,6 +46,15 @@ class LLMGenerationManager:
         config: GenerationConfig,
         is_validation: bool = False,
     ):
+        """
+        @brief 初始化共用生成协议及可选过程账本配置。
+        @param tokenizer 项目现有分词器。
+        @param actor_rollout_wg 生成worker组，CPU测试可使用替代实现。
+        @param config GenerationConfig，过程检查要求完整预算协议。
+        @param is_validation 是否为开发评价调用。
+        @return 无。
+        @raises ValueError 未知或不能保存完整过程的配置。
+        """
         self.tokenizer = tokenizer
         self.actor_rollout_wg = actor_rollout_wg
         self.config = config
@@ -49,6 +64,9 @@ class LLMGenerationManager:
             raise ValueError('Unknown observation/context protocol')
         if config.context_policy == 'bounded' and config.observation_truncation != 'structured':
             raise ValueError('Bounded context requires structured observation truncation')
+        # 来源报告必须与完整模型轨迹相符，禁止在旧静默裁剪路径启用门控。
+        if config.process_checks_enabled and config.context_policy != 'bounded':
+            raise ValueError('Process checks require bounded context')
 
         self.tensor_fn = TensorHelper(TensorConfig(
             pad_token_id=tokenizer.pad_token_id,
@@ -67,18 +85,27 @@ class LLMGenerationManager:
         )['input_ids']
 
     def _postprocess_responses(self, responses: torch.Tensor) -> torch.Tensor:
-        """Process responses to stop at search operation or answer operation."""
+        """
+        @brief 按共用消费边界处理模型输出，关闭检查时保留原后处理。
+        @param responses 活动轨迹生成token矩阵。
+        @return 重分词token及对应消费字符串二元组。
+        @raises ValueError 不支持的no_think_rl设置。
+        """
         responses_str = self.tokenizer.batch_decode(
             responses, 
             skip_special_tokens=True
         )
 
-        responses_str = [resp.split('</search>')[0] + '</search>'
-                 if '</search>' in resp 
-                 else resp.split('</answer>')[0] + '</answer>'
-                 if '</answer>' in resp 
-                 else resp
-                 for resp in responses_str]
+        # 首个实际动作终止本轮；尚未执行的尾部交给账本保存而不作为第二次动作惩罚。
+        if self.config.process_checks_enabled:
+            responses_str = [parse_action(resp)['consumed'] for resp in responses_str]
+        else:
+            responses_str = [resp.split('</search>')[0] + '</search>'
+                     if '</search>' in resp
+                     else resp.split('</answer>')[0] + '</answer>'
+                     if '</answer>' in resp
+                     else resp
+                     for resp in responses_str]
 
         if self.config.no_think_rl:
             raise ValueError('stop')
@@ -234,7 +261,15 @@ class LLMGenerationManager:
         return unpad_dataproto(output, padding_size)
 
     def run_llm_loop(self, gen_batch, initial_input_ids: torch.Tensor) -> Tuple[Dict, Dict]:
-        """Run main LLM generation loop."""
+        """
+        @brief 执行原检索循环，启用时随轨迹保存独立来源报告。
+        @param gen_batch 原始真实轨迹DataProto，GPU补齐在活动生成内部处理。
+        @param initial_input_ids 初始输入token矩阵。
+        @return 完整响应与逐行过程报告组成的DataProto。
+        @raises ValueError 预算、来源或工具返回对应关系错误。
+        """
+        # 账本只属于本次调用，禁止挂在共享worker或训练器状态上。
+        checks = TraceLedger(len(gen_batch)) if self.config.process_checks_enabled else None
         
         # 新协议的奖励/训练前缀与实际生成输入完全一致，长问题不能只保留末尾256 token。
         if self.config.context_policy == 'bounded':
@@ -294,12 +329,18 @@ class LLMGenerationManager:
 
             # Execute in environment and process observations
             next_obs, dones, valid_action, is_search = self.execute_predictions(
-                responses_str, self.tokenizer.pad_token, active_mask, final_mask=final_mask
+                responses_str, self.tokenizer.pad_token, active_mask, final_mask=final_mask,
+                checks=checks, turn=len(active_num_list) - 1,
+                raw_predictions=self.tokenizer.batch_decode(gen_output.batch['responses'], skip_special_tokens=True)
+                if checks is not None else None
             )
             if budget is not None:
                 # 物理终止与合法回答分别统计，预算用尽不能误报为答题成功。
                 actions, _ = self.postprocess_predictions(responses_str)
-                answered |= active_mask & torch.tensor([action == 'answer' for action in actions])
+                # 新解析可能拒绝空/嵌套answer，物理结束不能冒充成功作答。
+                accepted_answers = ([row['answered'] for row in checks.rows] if checks is not None
+                                    else [action == 'answer' for action in actions])
+                answered |= active_mask & torch.tensor(accepted_answers)
             
             curr_active_mask = torch.tensor([not done for done in dones], dtype=torch.bool)
             active_mask = active_mask * curr_active_mask
@@ -310,6 +351,10 @@ class LLMGenerationManager:
 
             limits = budget.observation_limits(original_right_side['responses'], responses_ids, active_mask) if budget else None
             next_obs_ids = self._process_next_obs(next_obs, limits, diagnostics)
+            # 推理诊断使用实际裁剪/分词后的观察，不能使用工具返回的不可见全文。
+            if checks is not None:
+                checks.observe_visible(self.tokenizer.batch_decode(next_obs_ids, skip_special_tokens=True),
+                                       len(active_num_list) - 2)
             
             # Update states
             rollings = self._update_rolling_state(
@@ -355,11 +400,17 @@ class LLMGenerationManager:
             # # Execute in environment and process observations
             _, dones, valid_action, is_search = self.execute_predictions(
                 responses_str, self.tokenizer.pad_token, active_mask, do_search=False,
-                final_mask=active_mask if budget is not None else None
+                final_mask=active_mask if budget is not None else None,
+                checks=checks, turn=len(active_num_list) - 1,
+                raw_predictions=self.tokenizer.batch_decode(gen_output.batch['responses'], skip_special_tokens=True)
+                if checks is not None else None
             )
             if budget is not None:
                 actions, _ = self.postprocess_predictions(responses_str)
-                answered |= active_mask & torch.tensor([action == 'answer' for action in actions])
+                # 最后一轮仍只统计执行器实际接受的答案。
+                accepted_answers = ([row['answered'] for row in checks.rows] if checks is not None
+                                    else [action == 'answer' for action in actions])
+                answered |= active_mask & torch.tensor(accepted_answers)
 
             curr_active_mask = torch.tensor([not done for done in dones], dtype=torch.bool)
             active_mask = active_mask * curr_active_mask
@@ -386,7 +437,16 @@ class LLMGenerationManager:
         
         print("ACTIVE_TRAJ_NUM:", active_num_list)
         
-        return self._compose_final_output(original_left_side, original_right_side, meta_info)
+        output = self._compose_final_output(original_left_side, original_right_side, meta_info)
+        if checks is not None:
+            # non_tensor_batch随行筛选/重排/补齐，避免用批级meta_info导致报告串行。
+            reports = checks.reports()
+            report_array = np.empty(len(reports), dtype=object)
+            report_array[:] = reports
+            output.non_tensor_batch['process_checks'] = report_array
+            output.non_tensor_batch['process_trace_uid'] = np.array([r['trace_uid'] for r in reports], dtype=object)
+            append_reports(self.config.process_audit_path, reports, 'generation')
+        return output
 
     def _compose_final_output(self, left_side: Dict,
                             right_side: Dict,
@@ -420,20 +480,31 @@ class LLMGenerationManager:
         
         return final_output
 
-    def execute_predictions(self, predictions: List[str], pad_token: str, active_mask=None, do_search=True, final_mask=None) -> List[str]:
+    def execute_predictions(self, predictions: List[str], pad_token: str, active_mask=None, do_search=True,
+                            final_mask=None, checks=None, turn=0, raw_predictions=None) -> List[str]:
         """
-        Execute predictions across multiple environments.
-        NOTE: the function is the actual `step` function in the environment
-        NOTE penalty_for_invalid is not included in observation shown to the LLM
-        
-        Args:
-            envs: List of environment instances
-            predictions: List of action predictions
-            pad_token: Token to use for padding
-            
-        Returns:
-            List of observation strings
+        @brief 执行批次动作，启用检查时委托独立账本，关闭时保持既有行为。
+        @param predictions 全批次消费输出。
+        @param pad_token 原接口补齐token。
+        @param active_mask 全批次活动掩码。
+        @param do_search 是否允许真实搜索。
+        @param final_mask 可选仅允许最终答案的掩码。
+        @param checks 可选本次生成调用的独立TraceLedger。
+        @param turn 当前全局生成轮次。
+        @param raw_predictions 可选活动行原始输出。
+        @return 观察、结束状态、合法动作和搜索标记四元组。
+        @raises Exception 真实工具故障传播，上层不得评分失败批次。
         """
+        # 工具执行和奖励共享账本；故障报告写出后传播异常，不伪造空观察。
+        if checks is not None:
+            active = [True] * len(predictions) if active_mask is None else [bool(v) for v in active_mask]
+            final = [bool(not do_search or (final_mask is not None and final_mask[i]))
+                     for i in range(len(predictions))]
+            try:
+                return checks.execute(predictions, active, final, self.batch_search, turn, raw_predictions)
+            except Exception:
+                append_reports(self.config.process_audit_path, checks.reports(), 'generation_failed')
+                raise
         cur_actions, contents = self.postprocess_predictions(predictions)
         next_obs, dones, valid_action, is_search = [], [], [], []
         

@@ -657,3 +657,233 @@ Base/20/40/60/80/100六节点全部退出0；同一GPU1、batch1、每次空前�
 用户要求先提交未提交改动，再以 data-difficulty-muxi（经用户确认的实际分支名）创建 sft-mx。已有修改包含检查点评价、KV 缓存失效修复及历史实验文档，本节未新增训练算法。
 实际命令：`bash env/metax/run.sh -m unittest tests.test_checkpoint_eval tests.test_metax_weight_cache_invalidation tests.test_metax_sync_cache -v`，20 项 CPU 测试全部通过（2026-10-05 14:52 +08:00），修改的 Python 文件 AST 解析通过；提交前执行 git diff --check。系统 Python 与 searchr1-metax 环境未安装 pytest，首次入口检查未运行测试，随后使用项目既有 unittest/MetaX 入口完成验收，未安装新依赖。
 本轮没有 GPU 训练/新增 GPU 验证。此前 KV 修复 GPU 验收与检查点曲线结果保持各自记录；本次 CPU 通过不代替它们。代码注释清单沿用本次待提交代码对应的既有检查记录，此处只新增文档，新增代码覆盖不适用。
+
+
+## 2026-10-05T12:56:28.212687+00:00 独立CPU回溯审计脚本
+
+新增运行产物/mnt/public/code/lyk/lzy/runs/metax-dynamic-g8-20261002-v4/retrospective-audit-20261005/audit.py，未修改共享训练、生成、奖励源码。职责集中于已有日志解析、窗口统计、同题退化特征及来源校验；复用原qa_em评分，冻结源码快照与当前评分函数哈希一致。原输入以符号链接引用，未复制大日志到远程、不读取T。
+实际执行python3 /mnt/public/code/lyk/lzy/runs/metax-dynamic-g8-20261002-v4/retrospective-audit-20261005/audit.py；退出0，3项解析边界检查通过，100步唯一连续指标、256同题结果、有限指标与来源哈希检查通过，本机/mx windows、261条样本计数、98题配对与早期获奖样本一致。未跑GPU、未启动RL/SFT，没有把历史10项CPU/4条GPU结果当本脚本验收。
+6个函数clean_console、parse_debug、protocol_features、summarize_window、boundary_checks、main均具备中文@brief/逐参数@param/@return与适用约束说明。逻辑单元清单/接口与关键逻辑核查在comment-verification.json：38/44=86.36%，6个未覆盖项为非关键机械处理；关键字段校验、解析拒绝、样本归属、分母限制、配对、早期题组关联与来源校验均有就近中文说明。AST解析通过；源码SHA256见verification.json。
+未验证：完整历史生成概率/KV命中无法恢复；无真实新训练的因果证据。同步最终报告、原v4和检查点曲线运行记录、计划/步骤与进度；不新建Markdown报告。
+
+
+## 2026-10-06 过程检查实现验收
+
+负责人Codex /root。run_id=metax-process-checks-20261006-v1；仓库/mnt/public/code/lyk/lzy/R1-vllm-metax，分支data-difficulty-muxi（此前确认的实际难度分支）；HEAD 28da7731b9f4b37bc5fa7007acfbac9101748876。修改在远程工作区，未提交。
+
+最终90项CPU测试全部通过，包括25项新过程检查测试。首次70项中1项失败：测试复制已生成批次后使用了未展开的旧批级统计；按真实流水线先筛选合并、再独立验证报告复制修正。中间89项和24项边界复验通过；失败及成功日志全部保留。部署编排转义错误未造成部分源码写入，随后已改为直接SSH修复。本机本轮暂存711327字节已删除。
+
+实际命令：`CUDA_VISIBLE_DEVICES="" bash env/metax/run.sh -m unittest tests.test_process_checks tests.test_generation_budget tests.test_reward_boundary tests.test_dynamic_filter tests.test_checkpoint_eval tests.test_difficulty_core -v`。AST与git diff --check通过。未启动实际RL/SFT训练、GPU调用或新检查点评价；测试训练循环使用CPU替代worker。真实模型/检索服务联调、长期稳定性与改善正确率效果未验证；历史KV验收不代替本模块GPU验收。
+
+验收时间2026-10-06T05:45:15.596608+00:00；注释接口64项全部通过，语义逻辑单元覆盖147/185=79.46%，关键漏项0。证据目录/mnt/public/code/lyk/lzy/runs/metax-process-checks-20261006-v1。
+共用解析器只执行首个未保护的闭合非空动作；空/嵌套动作、超预算搜索、消费区域伪造information和答案后新增事件得到检查。代码和明确引用内标签受保护，未消费尾部只审计。真实轨迹/工具调用身份由程序分配，绑定轮次、查询、原返回和实际裁剪分词后的可见结果。报告和独立轨迹身份作为DataProto非张量同行字段，随补齐、筛选和重排传递。合法空检索不罚；工具服务故障及错配向上抛出，失败批次不当作模型负奖励。
+
+推理诊断记录明确引文与已见正文匹配、文档引用、重复/近重复查询和新增可见文档。仅使用本轮生成前已见证据；事实支持、多跳成立性和数值冲突保持unknown/待复核，不直接扣分。字面重合不证明推理正确。
+
+奖励为R=接受答案EM乘协议合法门控减beta乘无接受答案标记。EM复用qa_em规则；训练可写入新分，验证继续返回原EM。原EM、接受答案EM、协议奖励和返回奖励旁列。beta>0时完整问题组按有限实数组内方差筛选，全同分负组仍丢弃；原正确数统计及四轨迹难度标签继续使用原EM，负奖励另列。打标审计使用difficulty_score阶段。GRPO损失、KL、优化器、学习率和SFT未改。新过程版本/奖励参数进入恢复指纹，关闭保持历史指纹，审计路径不进入身份。
+
+修改文件：
+
+- `search_r1/llm_agent/generation.py`
+- `tests/test_process_checks.py`
+- `verl/experimental/difficulty/dynamic_filter.py`
+- `verl/experimental/process_checks/protocol.py`
+- `verl/experimental/process_checks/reasoning.py`
+- `verl/experimental/process_checks/reward.py`
+- `verl/experimental/process_checks/__init__.py`
+- `verl/trainer/main_ppo.py`
+- `verl/trainer/config/ppo_trainer.yaml`
+- `verl/trainer/ppo/ray_trainer.py`
+- `verl/experimental/difficulty/configuration.py`
+- `verl/experimental/difficulty/controller.py`
+- `verl/experimental/difficulty/generation.py`
+
+默认功能关闭，保持既有运行行为。仅启用检查/审计时支持以下显式配置；这只是配置说明，本轮未启动运行。
+
+```text
+data.context_policy=bounded
+data.observation_truncation=structured
+reward_model.answer_mode=response_only_v1
+process_checks.enabled=true
+process_checks.reward_gate=false
+process_checks.missing_answer_penalty=0.0
+process_checks.audit_path=/mnt/public/code/lyk/lzy/runs/<new_run_id>/process-checks.jsonl
+```
+
+训练门控设`process_checks.reward_gate=true`；R0的beta=0，R1设`process_checks.missing_answer_penalty=0.1`。开启审计已改变动作解析，因此R0/R1必须固定相同新解析和其他条件。开启新协议后不能混用旧训练状态的恢复指纹，应从同一已确认父模型初始化独立实验。历史1536条输出缺完整工具账本，不伪造调用身份重评分。下一步先在独立run_id保存真实生成来源，检查误判及未知语义，再决定是否接入裁判或进行正式对照；不以长时间训练验收实现。
+
+接口与逻辑覆盖按新增/修改职责检查，未改旧逻辑不计入分母。函数说明不自动覆盖内部控制逻辑；非关键机械字段组合和测试样例装配未单独注释。未按注释行数计算。完整源码位置及清单另见comment-verification.json。
+
+接口清单：
+
+- `search_r1/llm_agent/generation.py:LLMGenerationManager.__init__`：中文@brief、逐参数@param、@return通过。
+- `search_r1/llm_agent/generation.py:LLMGenerationManager._postprocess_responses`：中文@brief、逐参数@param、@return通过。
+- `search_r1/llm_agent/generation.py:LLMGenerationManager.run_llm_loop`：中文@brief、逐参数@param、@return通过。
+- `search_r1/llm_agent/generation.py:LLMGenerationManager.execute_predictions`：中文@brief、逐参数@param、@return通过。
+- `tests/test_process_checks.py:execute`：中文@brief、逐参数@param、@return通过。
+- `tests/test_process_checks.py:execute.search`：中文@brief、逐参数@param、@return通过。
+- `tests/test_process_checks.py:score`：中文@brief、逐参数@param、@return通过。
+- `tests/test_process_checks.py:ProcessChecksTests.test_invalid_actions_and_empty_queries`：中文@brief、逐参数@param、@return通过。
+- `tests/test_process_checks.py:ProcessChecksTests.test_literal_tags_are_not_environment_impersonation`：中文@brief、逐参数@param、@return通过。
+- `tests/test_process_checks.py:ProcessChecksTests.test_terminal_answer_consumes_no_later_action`：中文@brief、逐参数@param、@return通过。
+- `tests/test_process_checks.py:ProcessChecksTests.test_forged_result_correct_answer_is_gated`：中文@brief、逐参数@param、@return通过。
+- `tests/test_process_checks.py:ProcessChecksTests.test_forbidden_search_never_calls_tool`：中文@brief、逐参数@param、@return通过。
+- `tests/test_process_checks.py:ProcessChecksTests.test_empty_real_result_is_valid`：中文@brief、逐参数@param、@return通过。
+- `tests/test_process_checks.py:ProcessChecksTests.test_active_row_binding`：中文@brief、逐参数@param、@return通过。
+- `tests/test_process_checks.py:ProcessChecksTests.test_no_future_evidence`：中文@brief、逐参数@param、@return通过。
+- `tests/test_process_checks.py:ProcessChecksTests.test_truncated_evidence_not_full_return`：中文@brief、逐参数@param、@return通过。
+- `tests/test_process_checks.py:ProcessChecksTests.test_repeated_query_and_new_evidence_separated`：中文@brief、逐参数@param、@return通过。
+- `tests/test_process_checks.py:ProcessChecksTests.test_semantics_conflict_and_hops_remain_unknown`：中文@brief、逐参数@param、@return通过。
+- `tests/test_process_checks.py:ProcessChecksTests.test_infrastructure_exception_is_not_model_penalty`：中文@brief、逐参数@param、@return通过。
+- `tests/test_process_checks.py:ProcessChecksTests.test_infrastructure_exception_is_not_model_penalty.fail`：中文@brief、逐参数@param、@return通过。
+- `tests/test_process_checks.py:ProcessChecksTests.test_result_count_mismatch_stops_batch`：中文@brief、逐参数@param、@return通过。
+- `tests/test_process_checks.py:ProcessChecksTests.test_result_count_mismatch_stops_batch.empty`：中文@brief、逐参数@param、@return通过。
+- `tests/test_process_checks.py:ProcessChecksTests.test_parse_mismatch_stops_batch`：中文@brief、逐参数@param、@return通过。
+- `tests/test_process_checks.py:ProcessChecksTests.test_report_tampering_and_uid_mismatch`：中文@brief、逐参数@param、@return通过。
+- `tests/test_process_checks.py:ProcessChecksTests.test_event_after_answer_cannot_hide_reason`：中文@brief、逐参数@param、@return通过。
+- `tests/test_process_checks.py:ProcessChecksTests.test_real_reward_gate_validation_and_shadow_em`：中文@brief、逐参数@param、@return通过。
+- `tests/test_process_checks.py:ProcessChecksTests.test_real_reward_no_answer_and_disabled`：中文@brief、逐参数@param、@return通过。
+- `tests/test_process_checks.py:ProcessChecksTests.test_real_generation_gpu_padding_and_metadata`：中文@brief、逐参数@param、@return通过。
+- `tests/test_process_checks.py:ProcessChecksTests.test_real_generation_gpu_padding_and_metadata.Worker.generate_sequences`：中文@brief、逐参数@param、@return通过。
+- `tests/test_process_checks.py:ProcessChecksTests.test_real_generation_gpu_padding_and_metadata.Manager.batch_search`：中文@brief、逐参数@param、@return通过。
+- `tests/test_process_checks.py:ProcessChecksTests.test_finite_group_filter_and_constant_groups`：中文@brief、逐参数@param、@return通过。
+- `tests/test_process_checks.py:ProcessChecksTests.test_finite_group_filter_and_constant_groups.group`：中文@brief、逐参数@param、@return通过。
+- `tests/test_process_checks.py:ProcessChecksTests.test_configuration_fails_before_reward_changes`：中文@brief、逐参数@param、@return通过。
+- `tests/test_process_checks.py:ProcessChecksTests.test_difficulty_metrics_keep_original_em`：中文@brief、逐参数@param、@return通过。
+- `tests/test_process_checks.py:ProcessChecksTests.test_process_protocol_enters_resume_fingerprint`：中文@brief、逐参数@param、@return通过。
+- `tests/test_process_checks.py:ProcessChecksTests.test_scoring_labels_remain_binary_with_penalty`：中文@brief、逐参数@param、@return通过。
+- `tests/test_process_checks.py:ProcessChecksTests.test_scoring_labels_remain_binary_with_penalty.SearchWorker.generate_sequences`：中文@brief、逐参数@param、@return通过。
+- `tests/test_process_checks.py:ProcessChecksTests.test_jsonl_audit_preserves_originals`：中文@brief、逐参数@param、@return通过。
+- `tests/test_process_checks.py:score_from_report`：中文@brief、逐参数@param、@return通过。
+- `verl/experimental/difficulty/dynamic_filter.py:mixed_groups`：中文@brief、逐参数@param、@return通过。
+- `verl/experimental/difficulty/dynamic_filter.py:training_batches`：中文@brief、逐参数@param、@return通过。
+- `verl/experimental/process_checks/protocol.py:digest`：中文@brief、逐参数@param、@return通过。
+- `verl/experimental/process_checks/protocol.py:protected_text`：中文@brief、逐参数@param、@return通过。
+- `verl/experimental/process_checks/protocol.py:parse_action`：中文@brief、逐参数@param、@return通过。
+- `verl/experimental/process_checks/protocol.py:TraceLedger.__init__`：中文@brief、逐参数@param、@return通过。
+- `verl/experimental/process_checks/protocol.py:TraceLedger.execute`：中文@brief、逐参数@param、@return通过。
+- `verl/experimental/process_checks/protocol.py:TraceLedger.observe_visible`：中文@brief、逐参数@param、@return通过。
+- `verl/experimental/process_checks/protocol.py:TraceLedger.reports`：中文@brief、逐参数@param、@return通过。
+- `verl/experimental/process_checks/protocol.py:validate_report`：中文@brief、逐参数@param、@return通过。
+- `verl/experimental/process_checks/reasoning.py:normalized`：中文@brief、逐参数@param、@return通过。
+- `verl/experimental/process_checks/reasoning.py:documents`：中文@brief、逐参数@param、@return通过。
+- `verl/experimental/process_checks/reasoning.py:review_reasoning`：中文@brief、逐参数@param、@return通过。
+- `verl/experimental/process_checks/reasoning.py:search_diagnostic`：中文@brief、逐参数@param、@return通过。
+- `verl/experimental/process_checks/reward.py:check_config`：中文@brief、逐参数@param、@return通过。
+- `verl/experimental/process_checks/reward.py:process_score`：中文@brief、逐参数@param、@return通过。
+- `verl/experimental/process_checks/reward.py:append_reports`：中文@brief、逐参数@param、@return通过。
+- `verl/trainer/main_ppo.py:RewardManager.__init__`：中文@brief、逐参数@param、@return通过。
+- `verl/trainer/main_ppo.py:RewardManager.__call__`：中文@brief、逐参数@param、@return通过。
+- `verl/trainer/main_ppo.py:main_task`：中文@brief、逐参数@param、@return通过。
+- `verl/trainer/ppo/ray_trainer.py:RayPPOTrainer._validate`：中文@brief、逐参数@param、@return通过。
+- `verl/trainer/ppo/ray_trainer.py:RayPPOTrainer.fit`：中文@brief、逐参数@param、@return通过。
+- `verl/experimental/difficulty/configuration.py:provenance`：中文@brief、逐参数@param、@return通过。
+- `verl/experimental/difficulty/controller.py:DifficultyExperiment.metrics`：中文@brief、逐参数@param、@return通过。
+- `verl/experimental/difficulty/generation.py:score_batch`：中文@brief、逐参数@param、@return通过。
+
+逻辑单元完整清单：
+
+- `protocol.py:digest`：文本哈希与来源证明边界（有说明）
+- `protocol.py:protected_text`：代码块与行内代码保护（有说明）；引用行保护（有说明）；含协议标签引号保护（有说明）；等长替换保持位置（有说明）；字符列表物化（非关键未单注）
+- `protocol.py:parse_action`：原始类型拒绝（有说明）；首个未保护动作定位与闭合边界（有说明）；嵌套动作拒绝（有说明）；空白动作拒绝（有说明）；未闭合或无动作反馈（有说明）；仅消费区域信息角色识别（有说明）；动作接受与来源门控分离（有说明）；初始局部变量容器（非关键未单注）
+- `protocol.py:TraceLedger.__init__`：真实轨迹数量校验（有说明）；程序轨迹身份分配（有说明）
+- `protocol.py:TraceLedger.execute`：整批行数及轮次校验（有说明）；活动行原始输出对应（有说明）；原始消费尾部事件保存（有说明）；解析边界不一致停止（有说明）；答案后事件拒绝（有说明）；闭合非空答案接受（有说明）；程序调用身份与请求绑定（有说明）；末轮搜索禁止及错误动作反馈（有说明）；多余原始行拒绝（有说明）；等长字符串返回与合法空结果（有说明）；基础设施故障传播与错误调用保留（有说明）；程序工具结果原文与观察绑定（有说明）；输出标记列表初始化（非关键未单注）
+- `protocol.py:TraceLedger.observe_visible`：观察全批次行数一致（有说明）；当前轮成功调用附着真实可见正文（有说明）
+- `protocol.py:TraceLedger.reports`：成功调用按历史顺序计算搜索诊断（有说明）；推理仅使用生成前已经可见的证据（有说明）；共用动作边界定位推理前缀（有说明）；版本无答案及客观事件重验（有说明）；协议合法性与未知语义分离（有说明）；报告深拷贝（非关键未单注）
+- `protocol.py:validate_report`：版本与同行轨迹身份核对（有说明）；调用身份唯一（有说明）；答案后客观事件拒绝（有说明）；原始文字重算动作与消费（有说明）；接受动作与真实执行一致（有说明）；答案内容重建（有说明）；同轮同查询调用与末轮禁止（有说明）；接受搜索与返回账本一一对应（有说明）；轮次有序唯一（有说明）；全局答案状态一致（有说明）；原始工具结果哈希校验（有说明）；可见正文哈希与文档校验（有说明）；故障调用状态不得评分（有说明）；原因去重返回（非关键未单注）
+- `reasoning.py:normalized`：空白大小写归一化不替代EM（有说明）
+- `reasoning.py:documents`：文档编号绑定真实调用（有说明）；可见正文边界和内容指纹（有说明）；文档记录字段组合（非关键未单注）
+- `reasoning.py:review_reasoning`：实际动作边界之外推理文字（有说明）；明确引文逐字对照已见正文（有说明）；文档编号定位实际调用候选（有说明）；有限断言待复核而非语义放行（有说明）；多跳断言未知（有说明）；数值冲突只列待复核候选（有说明）；诊断返回字段组合（非关键未单注）
+- `reasoning.py:search_diagnostic`：准确重复查询记录（有说明）；近重复至少三词及交并比阈值（有说明）；可见内容指纹计算新增文档（有说明）；重复且无新证据才列冗余候选（有说明）；查询词集合物化（非关键未单注）
+- `reward.py:check_config`：默认关闭与空审计路径（有说明）；拒绝字符串开关真值（有说明）；非负有限惩罚（有说明）；启用检查与门控前置约束（有说明）；配置映射复制（非关键未单注）
+- `reward.py:process_score`：重验身份和故障拒绝（有说明）；接受答案EM及惩罚范围（有说明）；无答案EM不得非零（有说明）；从原事件重新计算硬违规（有说明）；EM门控及无答案公式（有说明）
+- `reward.py:append_reports`：空路径不写盘（有说明）；整批UTF8 JSONL追加及失败传播（有说明）；目标路径对象物化（非关键未单注）
+- `dynamic_filter.py:mixed_groups`：模式及组数范围（有说明）；完整组有限奖励与二值兼容（有说明）；问题身份与去重（有说明）；实数组方差有效性（有说明）；原EM与新奖励分项（有说明）；统计记录字段组合（非关键未单注）
+- `dynamic_filter.py:training_batches`：奖励入口显式决定二值或实数筛选（有说明）
+- `controller.py:metrics`：原正确数用原EM（有说明）；有限实数奖励合法性（有说明）；组奖励方差有效率单列（有说明）；来源合法与无答案比例单列（有说明）
+- `configuration.py:provenance`：开启协议版本及奖励参数进入恢复指纹（有说明）；关闭保持历史指纹及审计路径迁移（有说明）
+- `generation.py:GenerationConfig`：过程开关默认关闭（有说明）
+- `generation.py:LLMGenerationManager.__init__`：来源检查完整历史前置约束（有说明）
+- `generation.py:LLMGenerationManager._postprocess_responses`：共用解析消费边界与关闭兼容（有说明）
+- `generation.py:LLMGenerationManager.run_llm_loop`：本次调用独立真实轨迹账本（有说明）；普通轮原始输出及轮次传入（有说明）；只统计实际接受答案（有说明）；实际裁剪分词观察入账（有说明）；最终轮搜索禁止与答案接受（有说明）；报告同行非张量身份传递及审计（有说明）；对象数组物化（非关键未单注）
+- `generation.py:LLMGenerationManager.execute_predictions`：显式活动与最终掩码委托（有说明）；工具故障审计与传播（有说明）；关闭保留旧执行器（有说明）
+- `main_ppo.py:RewardManager.__init__`：过程配置与奖励筛选模式（有说明）；新协议要求回答边界且零格式分（有说明）
+- `main_ppo.py:RewardManager.__call__`：外部RM绕过拒绝（有说明）；同行报告与独立身份要求（有说明）；仅真实接受答案EM计算（有说明）；原EM与候选训练奖励分项（有说明）；验证返回原EM与审计兼容（有说明）；空响应不得写padding奖励（有说明）；完整批次分阶段保存（有说明）；审计记录字段组合（非关键未单注）；评分调用方阶段标记传递（有说明）
+- `main_ppo.py:main_task`：仅检索任务启用过程检查（有说明）；训练与验证显式共用检查配置（有说明）
+- `ray_trainer.py:_validate`：验证生成传入相同来源协议（有说明）
+- `ray_trainer.py:fit`：训练生成显式过程检查配置（有说明）
+- `ppo_trainer.yaml:process_checks`：配置默认关闭并分开审计和奖励（有说明）
+- `test_process_checks.py:execute`：经真实账本执行测试输出，同时记录模型实际可见观察。（有说明）
+- `test_process_checks.py:score`：用真实报告与独立行身份计算候选分数。（有说明）
+- `test_process_checks.py:score_from_report`：验证真实生成入口产生的报告可以直接评分。（有说明）
+- `test_process_checks.py:search`：记录实际检索请求并返回等长工具结果。（有说明）
+- `test_process_checks.py:test_invalid_actions_and_empty_queries`：@brief 空、嵌套、未闭合动作不得检索或被接受。（有说明）；样例材料及CPU批次装配（非关键未单注）
+- `test_process_checks.py:test_literal_tags_are_not_environment_impersonation`：@brief 代码及明确引用中的协议标签不能被误执行或误罚。（有说明）；样例材料及CPU批次装配（非关键未单注）
+- `test_process_checks.py:test_terminal_answer_consumes_no_later_action`：@brief 首个答案之后的原始尾部只审计，不检索或重复惩罚。（有说明）；样例材料及CPU批次装配（非关键未单注）
+- `test_process_checks.py:test_forged_result_correct_answer_is_gated`：@brief 复现无真实搜索却自写information并答对的获奖通道。（有说明）；样例材料及CPU批次装配（非关键未单注）
+- `test_process_checks.py:test_forbidden_search_never_calls_tool`：@brief 预算到期搜索不能调用工具，按无答案惩罚。（有说明）；样例材料及CPU批次装配（非关键未单注）
+- `test_process_checks.py:test_empty_real_result_is_valid`：@brief 合法空检索结果与基础设施失败严格区分。（有说明）；样例材料及CPU批次装配（非关键未单注）
+- `test_process_checks.py:test_active_row_binding`：@brief 一条轨迹先结束后，另一条搜索的观察仍绑定原行。（有说明）；样例材料及CPU批次装配（非关键未单注）
+- `test_process_checks.py:test_no_future_evidence`：@brief 同轮搜索后新出现的文档不能为生成前引文作事后证明。（有说明）；样例材料及CPU批次装配（非关键未单注）
+- `test_process_checks.py:test_truncated_evidence_not_full_return`：@brief 不可见工具正文不算引文支持，引用文档包含调用身份。（有说明）；样例材料及CPU批次装配（非关键未单注）
+- `test_process_checks.py:test_repeated_query_and_new_evidence_separated`：@brief 重复查询返回新文档不判冗余，重复也不会直接扣分。（有说明）；样例材料及CPU批次装配（非关键未单注）
+- `test_process_checks.py:test_semantics_conflict_and_hops_remain_unknown`：@brief 字面引文不替代语义判定，数值冲突与多跳只给复核候选。（有说明）；样例材料及CPU批次装配（非关键未单注）
+- `test_process_checks.py:test_infrastructure_exception_is_not_model_penalty`：@brief 检索异常传播并保留账本，失败批次不能变成模型负分。（有说明）；样例材料及CPU批次装配（非关键未单注）
+- `test_process_checks.py:test_result_count_mismatch_stops_batch`：@brief 工具返回数量错配不得评分或绑定其他行结果。（有说明）；样例材料及CPU批次装配（非关键未单注）
+- `test_process_checks.py:test_parse_mismatch_stops_batch`：@brief 后处理与执行消费边界不同必须显式停止。（有说明）；样例材料及CPU批次装配（非关键未单注）
+- `test_process_checks.py:test_report_tampering_and_uid_mismatch`：@brief 同行身份、调用参数及可见证据篡改均被拒绝。（有说明）；样例材料及CPU批次装配（非关键未单注）
+- `test_process_checks.py:test_event_after_answer_cannot_hide_reason`：@brief 答案后的新增事件即使删除违规标签也无法评分。（有说明）；样例材料及CPU批次装配（非关键未单注）
+- `test_process_checks.py:test_real_reward_gate_validation_and_shadow_em`：@brief 真实奖励入口区分原EM、门控奖励与验证返回值。（有说明）；样例材料及CPU批次装配（非关键未单注）
+- `test_process_checks.py:test_real_reward_no_answer_and_disabled`：@brief 无答案负奖励写入真实token，关闭功能保留原EM。（有说明）；样例材料及CPU批次装配（非关键未单注）
+- `test_process_checks.py:test_real_generation_gpu_padding_and_metadata`：使用真实DataProto补齐、重复、重排、筛选及合并实现检验行级元数据。（有说明）；样例材料及CPU批次装配（非关键未单注）
+- `test_process_checks.py:test_finite_group_filter_and_constant_groups`：@brief 实数模式只保留有差异的完整组，二值模式原规则保持。（有说明）；样例材料及CPU批次装配（非关键未单注）
+- `test_process_checks.py:test_configuration_fails_before_reward_changes`：@brief 不完整开关、非法惩罚及旧上下文配置拒绝启用。（有说明）；样例材料及CPU批次装配（非关键未单注）
+- `test_process_checks.py:test_difficulty_metrics_keep_original_em`：@brief 真实难度统计入口接受负奖励，原正确数与方差分别汇报。（有说明）；样例材料及CPU批次装配（非关键未单注）
+- `test_process_checks.py:test_process_protocol_enters_resume_fingerprint`：仅隔离模型大文件身份IO；真正配置解析和指纹计算不替换。（有说明）；样例材料及CPU批次装配（非关键未单注）
+- `test_process_checks.py:test_jsonl_audit_preserves_originals`：@brief 审计阶段和原始模型尾部以JSONL完整保存。（有说明）；样例材料及CPU批次装配（非关键未单注）
+- `test_process_checks.py:fail`：模拟检索基础设施不可用。（有说明）
+- `test_process_checks.py:empty`：模拟检索接口返回数量错误。（有说明）
+- `test_process_checks.py:group`：构造完整同题组供真实筛选入口验收。（有说明）
+- `test_process_checks.py:generate_sequences`：使用输入历史决定模拟输出，覆盖活动集缩小和设备补齐。（有说明）
+- `test_process_checks.py:batch_search`：按真实批次调用提供固定检索内容。（有说明）
+- `difficulty/generation.py:score_batch`：打标与训练审计阶段区分（有说明）；四轨迹原EM二值标签与负奖励分开（有说明）；同行过程证据和奖励旁列保存（有说明）
+- `test_process_checks.py:test_scoring_labels_remain_binary_with_penalty`：真实打标原EM为0且候选奖励为-0.1（有说明）；样例材料及CPU批次装配（非关键未单注）
+- `test_process_checks.py:SearchWorker.generate_sequences`：按CPU批次返回固定最终搜索动作（有说明）
+
+
+## 2026-10-06 静态检查修复
+
+负责人Codex /root；验收时间2026-10-06T14:22:00.765715+08:00；run_id=metax-process-checks-static-20261006-v1。
+
+本轮静态检查发现并修复两个会影响过程奖励的bug，均先由CPU用例复现失败：
+
+- P1：RayPPOTrainer.fit原来将除old_log_probs外的所有批次张量long化，dynamic_rewards中-0.1被截成0，随后.float()无法恢复。修复为保留old_log_probs和dynamic_rewards浮点值，仅沿用token/掩码整数转换；真实fit至GRPO优势及actor接口的CPU回归确认负奖励、小数概率和优势符号正确。
+- P1：protected_text把don't/What's/That's里的两个撇号识别为成对引用，跨越search/answer起始标签，导致合法动作丢失。单引号只在词边界外开闭，允许明确引用内部缩写及转义，保留代码/引用中的协议标签保护；覆盖单轮search即停和答案未消费尾部两种路径。
+
+修复后92项相关CPU回归全部通过（新增2项），以及最终2项针对性复验；11份相关Python源码AST解析通过，git diff --check通过。本轮代码变更仅protocol.py、ray_trainer.py和test_process_checks.py；其余此前代码/文档改动保留。分支data-difficulty-muxi，HEAD 28da773；未提交，默认新过程开关关闭。真实GPU/长期效果未验证，推理事实及多跳依然unknown，不能据本次CPU通过宣布消除所有捏造推理。
+
+证据目录/mnt/public/code/lyk/lzy/runs/metax-process-checks-static-20261006-v1；本轮4个函数中文@brief/逐参数@param/@return通过，逻辑单元覆盖10/14=71.43%，关键逻辑漏项0。
+
+接口清单：
+
+- `verl/experimental/process_checks/protocol.py:protected_text`：接口通过。
+- `verl/trainer/ppo/ray_trainer.py:RayPPOTrainer.fit`：接口通过。
+- `tests/test_process_checks.py:ProcessChecksTests.test_contraction_does_not_hide_action`：接口通过。
+- `tests/test_process_checks.py:ProcessChecksTests.test_real_fit_keeps_fractional_reward_and_advantages`：接口通过。
+
+逻辑单元完整清单：
+
+- protected_text：缩写撇号与单引号词边界（有说明）
+- protected_text：明确引用内缩写及反斜线转义保护（有说明）
+- fit：候选奖励保留浮点且旧概率保留浮点（有说明）
+- test_contraction_does_not_hide_action：缩写跨答案的测试材料构造（非关键机械装配未单注）
+- test_contraction_does_not_hide_action：实际接受答案及未消费尾部奖励断言（有说明）
+- test_contraction_does_not_hide_action：单轮搜索的缩写不遮蔽查询（有说明）
+- test_contraction_does_not_hide_action：引用字面量样例构造（非关键机械装配未单注）
+- test_contraction_does_not_hide_action：明确引用不被误门控（有说明）
+- test_real_fit_keeps_fractional_reward_and_advantages：CPU配置和材料装配（非关键机械装配未单注）
+- test_real_fit_keeps_fractional_reward_and_advantages：完整同题组字段与替代对象装配（非关键机械装配未单注）
+- test_real_fit_keeps_fractional_reward_and_advantages：禁止候选奖励重复计算（有说明）
+- test_real_fit_keeps_fractional_reward_and_advantages：保留真实fit和优势控制流仅替换GPU边界（有说明）
+- test_real_fit_keeps_fractional_reward_and_advantages：浮点奖励概率与整数token断言（有说明）
+- test_real_fit_keeps_fractional_reward_and_advantages：优势正负符号断言（有说明）

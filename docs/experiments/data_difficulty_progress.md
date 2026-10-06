@@ -639,7 +639,7 @@ v1 Base D32两轮同15/32但文本/检索轨迹不一致，D256未启动，已�
 
 <!-- metax-checkpoint-curve-d256-20261005-v2-current -->
 
-检查点曲线：{"status": "running", "model": "step_40", "phases": {"D256": {"status": "running", "model": "step_40", "phase": "D256", "completed": 200, "total": 256, "checked_utc": "2026-10-05T06:54:10.656307+00:00"}}, "child_pid": 1627171, "completed_d256_models": 2, "target_models": 6, "log": "/mnt/public/code/lyk/lzy/runs/metax-checkpoint-curve-d256-20261005-v2/04-step_40-D256.log", "checked_utc": "2026-10-05T06:55:24.327967+00:00"}
+检查点曲线：{"status": "completed", "completed_d256_models": 6, "target_models": 6, "curve": "/mnt/public/code/lyk/lzy/runs/metax-checkpoint-curve-d256-20261005-v2/curve.json", "models": [{"label": "base", "step": 0, "summary": {"n": 256, "correct": 87.0, "em": 0.33984375, "missing_answer": 5, "format_anomaly": 14, "model_information": 3, "rewarded_model_information": 1, "actual_search_queries": 515, "generated_tokens": 57358, "forced_final": 39, "generation_limit_hits": 139, "sources": {"hotpotqa": {"n": 136, "correct": 48.0, "em": 0.35294117647058826}, "nq": {"n": 120, "correct": 39.0, "em": 0.325}}}, "label_risk_excluded_summary": {"n": 241, "correct": 85.0, "em": 0.35269709543568467, "missing_answer": 5, "format_anomaly": 14, "model_information": 3, "rewarded_model_information": 1, "actual_search_queries": 491, "generated_tokens": 54636, "forced_final": 38, "generation_limit_hits": 135, "sources": {"hotpotqa": {"n": 134, "correct": 48.0, "em": 0.3582089552238806}, "nq": {"n": 107, "correct": 37.0, "em": 0.34579439252336447}}}, "cost": {"total_seconds": 1774.5696716308594, "generation_seconds": 622.2239934336394, "search_seconds": 1144.936321567744}}, {"label": "step_20", "step": 20, "summary": {"n": 256, "correct": 99.0, "em": 0.38671875, "missing_answer": 7, "format_anomaly": 87, "model_information": 0, "rewarded_model_information": 0, "actual_search_queries": 473, "generated_tokens": 54753, "forced_final": 26, "generation_limit_hits": 134, "sources": {"hotpotqa": {"n": 136, "correct": 52.0, "em": 0.38235294117647056}, "nq": {"n": 120, "correct": 47.0, "em": 0.39166666666666666}}}, "label_risk_excluded_summary": {"n": 241, "correct": 94.0, "em": 0.3900414937759336, "missing_answer": 7, "format_anomaly": 81, "model_information": 0, "rewarded_model_information": 0, "actual_search_queries": 437, "generated_tokens": 51582, "forced_final": 23, "generation_limit_hits": 127, "sources": {"hotpotqa": {"n": 134, "correct": 52.0, "em": 0.3880597014925373}, "nq": {"n": 107, "correct": 42.0, "em": 0.3925233644859813}}}, "cost": {"total_seconds": 1560.4598627127707, "generation_seconds": 585.3473068997264, "search_seconds": 968.167842220515}}, {"label": "step_40", "step": 40, "summary": {"n": 256, "correct": 104.0, "em": 0.40625, "missing_answer": 14, "format_anomaly": 76, "model_information": 0, "rewarded_model_information": 0, "actual_search_queries": 920, "generated_tokens": 57187, "forced_final": 54, "generation_limit_hits": 426, "sources": {"hotpotqa": {"n": 136, "correct": 56.0, "em": 0.4117647058823529}, "nq": {"n": 120, "correct": 48.0, "em": 0.4}}}, "label_risk_excluded_summary": {"n": 241, "correct": 100.0, "em": 0.4149377593360996, "missing_answer": 14, "format_anomaly": 68, "model_information": 0, "rewarded_model_information": 0, "actual_search_queries": 868, "generated_tokens": 54172, "forced_final": 50, "generation_limit_hits": 402, "sources": {"hotpotqa": {"n": 134, "correct": 56.0, "em": 0.417910447761194}, "nq": {"n": 107, "correct": 44.0, "em": 0.411214953271028}}}, "cost": {"total_seconds": 2445.0911745857447, "generation_seconds": 1016.5524505451322, "search_seconds": 1419.0422988645732}}, {"label": "step_60", "step": 60, "summary": {"n": 256, "correct": 104.0, "em": 0.40625, "missing_answer": 18, "format_anomaly": 1, "model_information": 0, "rewarded_model_information": 0, "actual_search_queries": 758, "generated_tokens": 37400, "forced_final": 18, "generation_limit_hits": 315, "sources": {"hotpotqa": {"n": 136, "correct": 61.0, "em": 0.4485294117647059}, "nq": {"n": 120, "correct": 43.0, "em": 0.35833333333333334}}}, "label_risk_excluded_summary": {"n": 241, "correct": 101.0, "em": 0.4190871369294606, "missing_answer": 17, "format_anomaly": 1, "model_information": 0, "rewarded_model_information": 0, "actual_search_queries": 718, "generated_tokens": 35664, "forced_final": 17, "generation_limit_hits": 295, "sources": {"hotpotqa": {"n": 134, "correct": 61.0, "em": 0.4552238805970149}, "nq": {"n": 107, "correct": 40.0, "em": 0.37383177570093457}}}, "cost": {"total_seconds": 2029.7849469557405, "generation_seconds": 837.5070797242224, "search_seconds": 1184.8136606235057}}, {"label": "step_80", "step": 80, "summary": {"n": 256, "correct": 6.0, "em": 0.0234375, "missing_answer": 245, "format_anomaly": 28, "model_information": 4, "rewarded_model_information": 0, "actual_search_queries": 1703, "generated_tokens": 65353, "forced_final": 245, "generation_limit_hits": 1647, "sources": {"hotpotqa": {"n": 136, "correct": 6.0, "em": 0.04411764705882353}, "nq": {"n": 120, "correct": 0.0, "em": 0.0}}}, "label_risk_excluded_summary": {"n": 241, "correct": 6.0, "em": 0.024896265560165973, "missing_answer": 232, "format_anomaly": 27, "model_information": 3, "rewarded_model_information": 0, "actual_search_queries": 1609, "generated_tokens": 61928, "forced_final": 232, "generation_limit_hits": 1557, "sources": {"hotpotqa": {"n": 134, "correct": 6.0, "em": 0.04477611940298507}, "nq": {"n": 107, "correct": 0.0, "em": 0.0}}}, "cost": {"total_seconds": 4629.041022447869, "generation_seconds": 2275.3085025604814, "search_seconds": 2340.1212466061115}}, {"label": "step_100", "step": 100, "summary": {"n": 256, "correct": 0.0, "em": 0.0, "missing_answer": 256, "format_anomaly": 102, "model_information": 0, "rewarded_model_information": 0, "actual_search_queries": 428, "generated_tokens": 628356, "forced_final": 256, "generation_limit_hits": 2779, "sources": {"hotpotqa": {"n": 136, "correct": 0.0, "em": 0.0}, "nq": {"n": 120, "correct": 0.0, "em": 0.0}}}, "label_risk_excluded_summary": {"n": 241, "correct": 0.0, "em": 0.0, "missing_answer": 241, "format_anomaly": 94, "model_information": 0, "rewarded_model_information": 0, "actual_search_queries": 407, "generated_tokens": 591288, "forced_final": 241, "generation_limit_hits": 2618, "sources": {"hotpotqa": {"n": 134, "correct": 0.0, "em": 0.0}, "nq": {"n": 107, "correct": 0.0, "em": 0.0}}}, "cost": {"total_seconds": 4483.345507124439, "generation_seconds": 3864.0526474639773, "search_seconds": 606.0249838139862}}], "checked_utc": "2026-10-05T10:13:49.016907+00:00"}
 
 <!-- /metax-checkpoint-curve-d256-20261005-v2-current -->
 
@@ -754,3 +754,66 @@ Base/20/40/60/80/100六节点全部退出0；同一GPU1、batch1、每次空前�
 用户要求先提交未提交改动，再以 data-difficulty-muxi（经用户确认的实际分支名）创建 sft-mx。已有修改包含检查点评价、KV 缓存失效修复及历史实验文档，本节未新增训练算法。
 实际命令：`bash env/metax/run.sh -m unittest tests.test_checkpoint_eval tests.test_metax_weight_cache_invalidation tests.test_metax_sync_cache -v`，20 项 CPU 测试全部通过（2026-10-05 14:52 +08:00），修改的 Python 文件 AST 解析通过；提交前执行 git diff --check。系统 Python 与 searchr1-metax 环境未安装 pytest，首次入口检查未运行测试，随后使用项目既有 unittest/MetaX 入口完成验收，未安装新依赖。
 本轮没有 GPU 训练/新增 GPU 验证。此前 KV 修复 GPU 验收与检查点曲线结果保持各自记录；本次 CPU 通过不代替它们。代码注释清单沿用本次待提交代码对应的既有检查记录，此处只新增文档，新增代码覆盖不适用。
+
+
+## 2026-10-05T08:39:35.917827+00:00 总体下降区间的提前界限
+
+负责人Codex /root；完整D256 Base87/256、step20 99/256、step40/60均104/256。step80已保存192/256题、正确4、无答案184；即使未完成题全对，最终最多68/256=26.56%，严格低于60步40.625%。因此按已保存节点总体EM的首个下降可确定60→80，不能定位具体更新步或据此宣布全实验结束。配对仅同题已完成前缀，完整比较待80/100完成。证据/mnt/public/code/lyk/lzy/runs/metax-checkpoint-curve-d256-20261005-v2/early-onset-bound-20261005.json；主评价与后处理仍在运行，未启动训练。
+
+
+2026-10-05T10:13:53.887376+00:00：metax-checkpoint-curve-d256-20261005-v2完成1536条D256；首个观测下降('step_60', 'step_80')。完整统计/区间与不确定性见运行记录及最终评估报告第6节；未启动下一项训练实验。负责人Codex /root。
+
+
+## 2026-10-05T12:08:58.316051+00:00 检查点退化定位完成核验
+
+负责人Codex /root；冷缓存6×256=1536评价已于2026-10-05T10:13:49Z完成，后处理完成，本机同步哈希已核对。Base87/256，20步99/256，40与60步并列104/256，80步6/256，100步0/256；首个保存节点总体下降60→80，98题对→错/0改善，配对95%差值区间[-44.14,-32.42]个百分点；排除预先风险15题仍成立。80/100无答案245/256及256/256。已明确报告中并列峰值与按步骤顺序选40的规则；源码与评分结果未改，本轮不运行新代码测试。原缓存机制对照证据保留，不能用原受旧KV影响的验证分数解释真实冷模型进度，也不能据曲线单独证明训练因果。未启动学习率对照、RL或SFT。证据运行目录curve.json、diagnostic.json及最终报告第6节。
+
+
+## 2026-10-05T12:56:28.212687+00:00 60–80步零训练回溯审计
+
+负责人Codex /root。仅CPU核查已有100步日志、启动时冻结源码、261条有限调试输出及60/80节点同256题结果；新训练0步、GPU调用0次，T未访问。98个对→错样本全部无可提取最终答案；51–60步合法answer比例98.91%至71–75步85.94%，长度命中25.35%至44.54%，入选奖励仍约0.50。窗口题目不同且筛选后统计，不把它当固定评价准确率。
+原生成端概率没有进入DataProto，old_log_probs由actor重算；原权重同步未清KV且prefix caching启用，因此旧PPO指标不能排除生成/训练策略不一致。缺少历史逐token概率与KV命中，无法量化污染或证明唯一因果。第17步已关联无search却自写information、answer=yes且EM=1的P样本；该题k=7整组入选，按原损失代码有强化不规范过程的通道。
+证据：/mnt/public/code/lyk/lzy/runs/metax-dynamic-g8-20261002-v4/retrospective-audit-20261005/audit-result.json、debug-samples.json、source-path-audit.json、verification.json；本机与mx重算一致，3项CPU解析边界检查通过、100步/同256唯一题检查通过。6函数接口标签通过，中文说明38/44=86.36%。没有运行新GPU测试或训练，历史GPU验收仅引用原缓存修复记录。详细结论与限制见最终报告第7节。
+下一步：取消以1–2步冒烟或20–80步重训定位退化；正式训练前应保留同口径生成/actor概率、输入token与权重/缓存事件，过程门控先离线审查。缓存缺陷已修复但不能恢复旧权重；本轮不更改奖励、学习率或SFT任务。
+
+
+## 2026-10-06：复用算法的作答控制方案
+
+负责人Codex /root。本轮完成文献归纳及mx当前HEAD=28da7731b9f4b37bc5fa7007acfbac9101748876、已完成KV验收、奖励/筛选/生成源码静态核对。确认mixed_groups仅支持0/1、no_think_rl会直接raise，不能直接开启简化模板或接入负奖励。候选为Search-R1++无答案惩罚组件适配加共用工具来源检查；所有新功能/重评分待实现。新增训练0步、GPU调用0次；未运行新CPU代码测试，注释覆盖不适用。现有KV结果仅作为已有证据，不为新方案背书。方案、执行步骤和最终报告第8节已同步；下一步为零训练离线评分/CPU验收，不改独立SFT任务。
+
+
+## 2026-10-06T05:26:27.401818+00:00 过程检查实现验收开始
+
+负责人Codex /root；run_id=metax-process-checks-20261006-v1；分支data-difficulty-muxi；共用解析、程序工具账本、推理诊断与可选奖励门控部署，默认关闭。仅CPU验收尚未完成，新训练0步、GPU调用0次。详见运行记录；已有文档改动保留。
+
+
+## 2026-10-06 过程检查验收完成
+
+负责人Codex /root。run_id=metax-process-checks-20261006-v1；仓库/mnt/public/code/lyk/lzy/R1-vllm-metax，分支data-difficulty-muxi（此前确认的实际难度分支）；HEAD 28da7731b9f4b37bc5fa7007acfbac9101748876。修改在远程工作区，未提交。
+
+最终90项CPU测试全部通过，包括25项新过程检查测试。首次70项中1项失败：测试复制已生成批次后使用了未展开的旧批级统计；按真实流水线先筛选合并、再独立验证报告复制修正。中间89项和24项边界复验通过；失败及成功日志全部保留。部署编排转义错误未造成部分源码写入，随后已改为直接SSH修复。本机本轮暂存711327字节已删除。
+
+实际命令：`CUDA_VISIBLE_DEVICES="" bash env/metax/run.sh -m unittest tests.test_process_checks tests.test_generation_budget tests.test_reward_boundary tests.test_dynamic_filter tests.test_checkpoint_eval tests.test_difficulty_core -v`。AST与git diff --check通过。未启动实际RL/SFT训练、GPU调用或新检查点评价；测试训练循环使用CPU替代worker。真实模型/检索服务联调、长期稳定性与改善正确率效果未验证；历史KV验收不代替本模块GPU验收。
+
+验收时间2026-10-06T05:45:15.596608+00:00；注释接口64项全部通过，语义逻辑单元覆盖147/185=79.46%，关键漏项0。证据目录/mnt/public/code/lyk/lzy/runs/metax-process-checks-20261006-v1。
+实现和未验证边界见代码改动记录；下一步先审查真实来源账本，本轮无实际新训练。
+
+
+## 2026-10-06 静态审查开始
+
+负责人Codex /root；run_id=metax-process-checks-static-20261006-v1；仅静态及CPU检查，未启动实际训练；发现dynamic_rewards的整数转换和缩写撇号解析边界待复现。
+
+
+## 2026-10-06 静态检查与下一步计划完成
+
+负责人Codex /root；验收时间2026-10-06T14:22:00.765715+08:00；run_id=metax-process-checks-static-20261006-v1。
+
+本轮静态检查发现并修复两个会影响过程奖励的bug，均先由CPU用例复现失败：
+
+- P1：RayPPOTrainer.fit原来将除old_log_probs外的所有批次张量long化，dynamic_rewards中-0.1被截成0，随后.float()无法恢复。修复为保留old_log_probs和dynamic_rewards浮点值，仅沿用token/掩码整数转换；真实fit至GRPO优势及actor接口的CPU回归确认负奖励、小数概率和优势符号正确。
+- P1：protected_text把don't/What's/That's里的两个撇号识别为成对引用，跨越search/answer起始标签，导致合法动作丢失。单引号只在词边界外开闭，允许明确引用内部缩写及转义，保留代码/引用中的协议标签保护；覆盖单轮search即停和答案未消费尾部两种路径。
+
+修复后92项相关CPU回归全部通过（新增2项），以及最终2项针对性复验；11份相关Python源码AST解析通过，git diff --check通过。本轮代码变更仅protocol.py、ray_trainer.py和test_process_checks.py；其余此前代码/文档改动保留。分支data-difficulty-muxi，HEAD 28da773；未提交，默认新过程开关关闭。真实GPU/长期效果未验证，推理事实及多跳依然unknown，不能据本次CPU通过宣布消除所有捏造推理。
+
+证据目录/mnt/public/code/lyk/lzy/runs/metax-process-checks-static-20261006-v1；本轮4个函数中文@brief/逐参数@param/@return通过，逻辑单元覆盖10/14=71.43%，关键逻辑漏项0。
+下一步只计划真实来源零更新审计，默认step40、8题×8轨迹、总GPU墙钟上限20分钟；当前未执行。详细目的与验收见计划/步骤最新节。

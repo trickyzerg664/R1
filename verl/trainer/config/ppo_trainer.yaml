@@ -217,3 +217,9 @@ difficulty:
   retrieval_id: null # 必须填写固定的索引、语料、编码器版本或组合哈希
   lineage: null # 自动生成的父状态内容标识
   initial_model_id: null # 初始化时自动计算，不手工修改
+ # 来源与动作检查默认关闭；审计开启但reward_gate关闭时不改奖励。
+process_checks:
+  enabled: false
+  reward_gate: false
+  missing_answer_penalty: 0.0
+  audit_path: null

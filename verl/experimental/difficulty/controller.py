@@ -1,6 +1,7 @@
 """[data-difficulty] 实验策略组合层；不导入或持有 Ray trainer/worker。"""
 from collections import Counter, defaultdict
 import json
+import math
 from pathlib import Path
 import numpy as np
 from .sampling import DifficultyBatchSampler, load_labels, pool_hash, validate_labels
@@ -104,14 +105,23 @@ class DifficultyExperiment:
         return batch
 
     def metrics(self, batch):
-        """按一次抽题 uid 聚合训练实际 k，区分历史桶与当前模型能力。
-        有效组定义为 0<k<4；tokens 使用 info_mask 排除检索注入文字。
+        """
+        @brief 按原EM统计正确数组，过程实数奖励和有效方差另列。
+        @param batch 已完成评分的完整DataProto问题组。
+        @return 难度、生成成本及可选过程奖励统计字典。
+        @raises ValueError 不完整组、非法原EM或非有限奖励。
         """
         groups = defaultdict(list)
-        for uid, score in zip(batch.non_tensor_batch['uid'], batch.batch['token_level_scores'].sum(-1).tolist()):
-            if score not in (0., 1.):
-                raise ValueError('Difficulty experiment requires binary correctness rewards')
-            groups[str(uid)].append(score)
+        # 原正确率使用保存的原EM；负奖励和协议门控不能强转为正确数k。
+        reports = batch.non_tensor_batch.get('process_checks')
+        rewards = batch.batch['token_level_scores'].sum(-1).tolist()
+        correctness = [float(r['original_em']) for r in reports] if reports is not None else rewards
+        reward_groups = defaultdict(list)
+        for uid, em, reward in zip(batch.non_tensor_batch['uid'], correctness, rewards):
+            if em not in (0., 1.) or not math.isfinite(reward):
+                raise ValueError('Difficulty metrics require binary original EM and finite rewards')
+            groups[str(uid)].append(em)
+            reward_groups[str(uid)].append(reward)
         group_size = getattr(self, 'group_size', 4)
         if any(len(g) != group_size for g in groups.values()):
             raise ValueError('Difficulty trajectory group is incomplete')
@@ -119,6 +129,13 @@ class DifficultyExperiment:
         total = len(groups)
         metrics = {f'difficulty/k{k}': counts[k]/total for k in range(group_size+1)}
         metrics['difficulty/effective_fraction'] = sum(counts[k] for k in range(1,group_size))/total
+        # 过程奖励均值与组内方差有效率单独汇报，全同分负组仍不产生GRPO信号。
+        if reports is not None:
+            variances = [sum((v-sum(g)/len(g))**2 for v in g)/len(g) for g in reward_groups.values()]
+            metrics['process/reward_mean'] = sum(rewards)/len(rewards)
+            metrics['process/effective_fraction'] = sum(v > 1e-12 for v in variances)/total
+            metrics['process/protocol_valid_fraction'] = sum(r['protocol_valid'] for r in reports)/len(reports)
+            metrics['process/missing_answer_fraction'] = sum(r['missing_answer'] for r in reports)/len(reports)
         metrics.update(batch.meta_info.get('dynamic_metrics', {}))
         metrics['difficulty/unique_questions'] = int((self.sampler.exposures > 0).sum())
         metrics['difficulty/max_exposure'] = int(self.sampler.exposures.max())

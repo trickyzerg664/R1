@@ -475,8 +475,8 @@ class RayPPOTrainer(object):
 
     def _validate(self):
         """
-        The training loop of PPO with global metric computation.
-        Accumulates metrics across all batches before computing final statistics.
+        @brief 共用生成协议评价开发集，最终正确率保持原EM口径。
+        @return 汇总各来源及全开发集的评价指标字典。
         """
         import torch
         # 独立评价编号区分同一步的定期评价与训练结束评价。
@@ -500,6 +500,9 @@ class RayPPOTrainer(object):
             observation_truncation=self.config.data.get('observation_truncation', 'legacy'),
             context_policy=self.config.data.get('context_policy', 'legacy'),
             record_diagnostics=self.config.data.get('record_generation_diagnostics', False),
+            # 训练和评价传入同一来源检查配置；评价奖励入口另行保留原EM。
+            process_checks_enabled=self.config.get('process_checks', {}).get('enabled', False),
+            process_audit_path=self.config.get('process_checks', {}).get('audit_path'),
         )
 
         # Agent config preparation
@@ -738,9 +741,8 @@ class RayPPOTrainer(object):
 
     def fit(self):
         """
-        The training loop of PPO.
-        The driver process only need to call the compute functions of the worker group through RPC to construct the PPO dataflow.
-        The light-weight advantage computation is done on the driver process.
+        @brief 复用原PPO训练流程，显式传递可选过程检查配置。
+        @return 无。
         """
 
         logger = self.logger
@@ -789,6 +791,9 @@ class RayPPOTrainer(object):
             observation_truncation=self.config.data.get('observation_truncation', 'legacy'),
             context_policy=self.config.data.get('context_policy', 'legacy'),
             record_diagnostics=self.config.data.get('record_generation_diagnostics', False),
+            # 来源账本仅在显式开启时创建，默认路径保留既有生成行为。
+            process_checks_enabled=self.config.get('process_checks', {}).get('enabled', False),
+            process_audit_path=self.config.get('process_checks', {}).get('audit_path'),
         )
 
         generation_manager = LLMGenerationManager(
@@ -893,7 +898,8 @@ class RayPPOTrainer(object):
 
                     # batch.batch.apply(lambda x, key: x.long() if key != "old_log_probs" else x, inplace=True, key=True)
                     for key in batch.batch.keys():
-                        if key != 'old_log_probs':
+                        # 候选奖励和旧概率都必须保留浮点值；负小数一旦long截断无法靠float恢复。
+                        if key not in ('old_log_probs', 'dynamic_rewards'):
                             batch.batch[key] = batch.batch[key].long()
 
                     if self.use_reference_policy:

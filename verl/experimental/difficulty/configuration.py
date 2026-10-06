@@ -109,11 +109,14 @@ def prepare_config(config):
 
 
 def provenance(config):
-    # 屏蔽位置和预算等允许变化字段，保留模型内容、数据内容及会影响可比性的训练参数。
-    """生成续训可比较性元数据，绑定训练设置、数据内容及 reference。
-    允许改变输出位置、actor checkpoint 路径和总预算；禁止改变随机种子、后端或学习率设置。
-    检索地址可迁移，但 retrieval_id 必须仍指向同一套索引、语料与编码器。
     """
+    @brief 为模型、数据、检索和训练协议生成可比较的恢复指纹。
+    @param config 当前完整Hydra配置，默认关闭过程检查时保持历史指纹。
+    @return 包含模型身份、训练指纹及库版本的来源字典。
+    @raises ValueError 过程检查开关或惩罚配置无效。
+    @note 开启检查改变解析和奖励协议，不能当作仅改变采样配比恢复旧状态。
+    """
+    # 不把保存位置、审计文件或预算写入训练身份，保留历史恢复边界。
     c = OmegaConf.to_container(config, resolve=True)
     ar = c['actor_rollout_ref']
     ar['model'].pop('path')
@@ -130,6 +133,13 @@ def provenance(config):
     # 筛选改变候选消费及更新语义，纳入来源指纹；关闭时不改变历史指纹。
     if c['difficulty'].get('dynamic_filter', {}).get('enabled', False):
         c['algorithm']['dynamic_filter'] = c['difficulty']['dynamic_filter']
+    # 开启过程协议必须进入恢复指纹；审计路径仅影响保存位置，不能改变身份。
+    from verl.experimental.process_checks.reward import check_config
+    process = check_config(c.get('process_checks', {}))
+    if process['enabled']:
+        c['algorithm']['process_checks'] = dict(version='process_checks_v1',
+                                               reward_gate=process['reward_gate'],
+                                               missing_answer_penalty=process['missing_answer_penalty'])
     retriever = dict(c['retriever'])
     retriever.pop('url', None)
     return {'initial_model_id': c['difficulty']['initial_model_id'],

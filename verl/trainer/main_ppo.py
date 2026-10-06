@@ -21,6 +21,7 @@ from verl.utils.reward_score import qa_em
 from verl.trainer.ppo.ray_trainer import RayPPOTrainer
 import re
 import numpy as np
+from verl.experimental.process_checks.reward import check_config, process_score, append_reports
 
 def _select_rm_score_fn(data_source):
     if data_source in ['nq', 'triviaqa', 'popqa', 'hotpotqa', '2wikimultihopqa', 'musique', 'bamboogle']:
@@ -33,7 +34,20 @@ class RewardManager():
     """The reward manager.
     """
 
-    def __init__(self, tokenizer, num_examine, format_score=0., answer_mode='legacy', audit_path=None) -> None:
+    def __init__(self, tokenizer, num_examine, format_score=0., answer_mode='legacy', audit_path=None,
+                 process_checks=None, apply_process_reward=True) -> None:
+        """
+        @brief 初始化原答案评分及可选过程门控，开发评价保持原EM。
+        @param tokenizer 共用分词器。
+        @param num_examine 每来源打印示例上限。
+        @param format_score 原格式分，启用检查时必须为0。
+        @param answer_mode 原答案提取版本，检查要求response_only_v1。
+        @param audit_path 既有答案审计JSONL路径。
+        @param process_checks 可选过程检查配置映射，默认关闭。
+        @param apply_process_reward 是否将门控及惩罚写入训练奖励；验证为False。
+        @return 无。
+        @raises ValueError 过程开关或答案提取配置不一致。
+        """
         self.tokenizer = tokenizer
         self.num_examine = num_examine  # the number of batches of decoded responses to print to the console
         self.format_score = format_score
@@ -43,12 +57,27 @@ class RewardManager():
         self.answer_mode = answer_mode
         self.audit_path = audit_path
         self.audit_call = 0
+        # 默认关闭保持历史奖励；实数模式由同一奖励配置决定，不能猜测k的含义。
+        self.process_config = check_config(process_checks)
+        self.apply_process_reward = apply_process_reward
+        self.group_reward_mode = ('finite' if self.process_config['reward_gate'] and
+                                  self.process_config['missing_answer_penalty'] else 'binary')
+        if self.process_config['enabled'] and (answer_mode != 'response_only_v1' or format_score != 0.):
+            raise ValueError('Process checks require response_only_v1 and zero format score')
 
     def __call__(self, data: DataProto):
-        """We will expand this function gradually based on the available datasets"""
+        """
+        @brief 复用原EM规则，按真实接受动作计算可选过程奖励并保存分项。
+        @param data 完整响应DataProto，检查开启时要求同行来源报告及轨迹ID。
+        @return token级奖励矩阵；开发评价返回原EM，训练可返回门控/惩罚。
+        @raises ValueError 来源报告不可信、故障批次、空token负奖励或外部RM绕过检查。
+        """
 
         # If there is rm score, we directly return rm score. Otherwise, we compute via rm_score_fn
         if 'rm_scores' in data.batch.keys():
+            # 神经奖励不能绕过确定性协议检查；当前项目使用规则EM路径。
+            if self.process_config['enabled']:
+                raise ValueError('External RM scores cannot bypass process checks')
             return data.batch['rm_scores']
 
         reward_tensor = torch.zeros_like(data.batch['responses'], dtype=torch.float32)
@@ -56,6 +85,8 @@ class RewardManager():
         # all_scores = []
 
         already_print_data_sources = {}
+        # 原EM与候选过程分并列保存，禁止用修改后的奖励替代验证正确率。
+        process_rows = []
         # 只在开发评价启用文件记录；完整批次算完再追加，写入失败直接报错。
         audit_rows = []
         if self.audit_path:
@@ -95,16 +126,41 @@ class RewardManager():
 
             score = compute_score_fn(solution_str=scoring_text, ground_truth=ground_truth,
                                      format_score=self.format_score, answer_mode=self.answer_mode)
+            original_em = float(score)
+            if self.process_config['enabled']:
+                report = data_item.non_tensor_batch.get('process_checks')
+                uid = data_item.non_tensor_batch.get('process_trace_uid')
+                if not isinstance(report, dict) or not uid:
+                    raise ValueError('Process checks require row-bound generation reports')
+                # 查询或未执行尾部中的答案不能取得过程奖励；EM归一化继续复用原实现。
+                accepted_em = float(qa_em.em_check(report['answer'], ground_truth['target'])) if report['answered'] else 0.
+                candidate_score = process_score(report, uid, accepted_em,
+                                                self.process_config['missing_answer_penalty'])
+                record = dict(report, original_em=float(score), accepted_answer_em=accepted_em,
+                              protocol_reward=candidate_score, question_id=data_item.non_tensor_batch.get('question_id'),
+                              data_source=data_source)
+                process_rows.append(record)
+                # 审计模式与开发评价不改原EM；开启门控的训练才写入新奖励。
+                if self.apply_process_reward and self.process_config['reward_gate']:
+                    score = candidate_score
+                record['returned_reward'] = float(score)
+                data.non_tensor_batch['process_checks'][i] = record
             if self.audit_path:
                 from verl.utils.reward_score.answer_audit import make_record
                 audit_rows.append(make_record(
                     self.tokenizer.decode(valid_prompt_ids), model_response,
                     self.tokenizer.decode(valid_response_ids), ground_truth, data_source,
-                    score, self.answer_mode, data.meta_info.get('evaluation_step'), self.audit_call,
+                    original_em, self.answer_mode, data.meta_info.get('evaluation_step'), self.audit_call,
                     data_item.non_tensor_batch.get('question_id'), i))
                 audit_rows[-1]['evaluation_round'] = data.meta_info.get('evaluation_round')
+                # 既有答案审计的reward继续表示原EM，新分另列以免改变正确率统计。
+                if self.process_config['enabled']:
+                    audit_rows[-1].update(protocol_reward=candidate_score, returned_reward=float(score))
 
             # 空生成不得把奖励写到末尾padding位置。
+            # 完全空生成没有可承载负奖励的模型token，明确停止而不奖励padding。
+            if valid_response_length == 0 and score != 0:
+                raise ValueError('Cannot attach nonzero process reward to an empty model response')
             if valid_response_length > 0:
                 reward_tensor[i, valid_response_length - 1] = score
             # all_scores.append(score)
@@ -126,6 +182,10 @@ class RewardManager():
         if self.audit_path:
             from verl.utils.reward_score.answer_audit import append_records
             append_records(self.audit_path, audit_rows)
+        if process_rows:
+            append_reports(self.process_config['audit_path'], process_rows,
+                           data.meta_info.get('process_reward_phase',
+                                              'train' if self.apply_process_reward else 'validation'))
         return reward_tensor
 
 
@@ -172,6 +232,12 @@ def main(config):
 
 @ray.remote
 def main_task(config):
+    """
+    @brief 组装既有分布式训练资源与共用生成/奖励协议。
+    @param config 项目Hydra配置，过程检查默认关闭。
+    @return 无。
+    @raises ValueError 在非检索任务启用过程检查。
+    """
     from verl.utils.fs import copy_local_path_from_hdfs
     from transformers import AutoTokenizer
 
@@ -245,11 +311,17 @@ def main_task(config):
 
     # 新旧奖励显式分版本，训练和验证必须一致；逐题记录仅用于验证。
     answer_mode = config.reward_model.get('answer_mode', 'legacy')
-    reward_fn = RewardManager(tokenizer=tokenizer, num_examine=0, answer_mode=answer_mode)
+    # 训练与验证共用检查配置；验证仍按原EM报告任务表现。
+    process_config = check_config(config.get('process_checks', {}))
+    if process_config['enabled'] and not config.do_search:
+        raise ValueError('Process checks currently require search generation')
+    reward_fn = RewardManager(tokenizer=tokenizer, num_examine=0, answer_mode=answer_mode,
+                             process_checks=process_config)
 
     # Note that we always use function-based RM for validation
     val_reward_fn = RewardManager(tokenizer=tokenizer, num_examine=1, answer_mode=answer_mode,
-                                 audit_path=config.reward_model.get('validation_audit_path'))
+                                 audit_path=config.reward_model.get('validation_audit_path'),
+                                 process_checks=process_config, apply_process_reward=False)
 
     resource_pool_manager = ResourcePoolManager(resource_pool_spec=resource_pool_spec, mapping=mapping)
     trainer = RayPPOTrainer(config=config,
