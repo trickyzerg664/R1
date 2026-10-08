@@ -29,6 +29,9 @@ actor_rollout_ref:
     attn_implementation: flash_attention_2
     use_remove_padding: False
   actor:
+    # 仅搬移同精度反传张量，默认保留原GPU执行。
+    activation_offload: false
+    memory_diagnostics: false
     strategy: fsdp  # This is for backward-compatibility
     ppo_mini_batch_size: 256
     ppo_micro_batch_size: 64
@@ -61,6 +64,8 @@ actor_rollout_ref:
       optimizer_offload: False
       fsdp_size: -1
   ref:
+    # 只读阶段显存和形状，不改变参考概率。
+    memory_diagnostics: false
     # [data-difficulty] null 兼容原路径；实验会固定为初始模型。
     model_path: null
     fsdp_config:

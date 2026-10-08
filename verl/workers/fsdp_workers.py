@@ -20,6 +20,7 @@ import os
 import warnings
 
 import torch
+from verl.utils.debug.gpu_memory_trace import trace_gpu_memory
 import torch.distributed
 import verl.utils.hdfs_io as hdfs_io
 import verl.utils.torch_functional as verl_F
@@ -373,6 +374,13 @@ class ActorRolloutRefWorker(Worker):
 
     @register(dispatch_mode=Dispatch.DP_COMPUTE_PROTO)
     def update_actor(self, data: DataProto):
+        """@brief 执行原update_actor阶段并可选记录完整轨迹形状与显存。
+        @param data 本rank的完整DataProto，处理和卸载规则保持原值。
+        @return 原阶段的概率或训练指标DataProto。
+        @note 诊断默认关闭，既有权重状态切换与随机流保持原行为。
+        """
+        # 记录进入与返回边界，区分参考前向和actor反传峰值。
+        trace_gpu_memory('actor_update_begin', self.config.actor.get('memory_diagnostics', False), data.batch)
         data = data.to('cuda')
 
         assert self._is_actor
@@ -419,11 +427,18 @@ class ActorRolloutRefWorker(Worker):
         if self._is_rollout and hasattr(self.rollout_sharding_manager, 'invalidate_weights'):
             self.rollout_sharding_manager.invalidate_weights()
         torch.cuda.empty_cache()
+        trace_gpu_memory('actor_update_end', self.config.actor.get('memory_diagnostics', False), data.batch)
         return output
 
     @register(dispatch_mode=Dispatch.DP_COMPUTE_PROTO)
     def compute_log_prob(self, data: DataProto) -> DataProto:
-        """mostly copying from generate_sequences"""
+        """@brief 执行原compute_log_prob阶段并可选记录完整轨迹形状与显存。
+        @param data 本rank的完整DataProto，处理和卸载规则保持原值。
+        @return 原阶段的概率或训练指标DataProto。
+        @note 诊断默认关闭，既有权重状态切换与随机流保持原行为。
+        """
+        # 记录进入与返回边界，区分参考前向和actor反传峰值。
+        trace_gpu_memory('actor_log_prob_begin', self.config.actor.get('memory_diagnostics', False), data.batch)
         data = data.to('cuda')
 
         assert self._is_rollout
@@ -457,6 +472,7 @@ class ActorRolloutRefWorker(Worker):
         # clear kv cache
         torch.cuda.empty_cache()
         log_gpu_memory_usage('After recompute log prob', logger=logger)
+        trace_gpu_memory('actor_log_prob_end', self.config.actor.get('memory_diagnostics', False), data.batch)
         return output
         
     @register(dispatch_mode=Dispatch.DP_COMPUTE_PROTO)
@@ -509,6 +525,13 @@ class ActorRolloutRefWorker(Worker):
 
     @register(dispatch_mode=Dispatch.DP_COMPUTE_PROTO)
     def compute_ref_log_prob(self, data: DataProto):
+        """@brief 执行原compute_ref_log_prob阶段并可选记录完整轨迹形状与显存。
+        @param data 本rank的完整DataProto，处理和卸载规则保持原值。
+        @return 原阶段的概率或训练指标DataProto。
+        @note 诊断默认关闭，既有权重状态切换与随机流保持原行为。
+        """
+        # 记录进入与返回边界，区分参考前向和actor反传峰值。
+        trace_gpu_memory('ref_log_prob_begin', self.config.ref.get('memory_diagnostics', False), data.batch)
         assert self._is_ref
 
         data = data.to('cuda')
@@ -534,6 +557,7 @@ class ActorRolloutRefWorker(Worker):
         if self._is_offload_param:
             offload_fsdp_param_and_grad(module=self.ref_module_fsdp, offload_grad=self._is_offload_grad)
         torch.cuda.empty_cache()
+        trace_gpu_memory('ref_log_prob_end', self.config.ref.get('memory_diagnostics', False), data.batch)
         return output
 
     @register(dispatch_mode=Dispatch.ONE_TO_ALL)

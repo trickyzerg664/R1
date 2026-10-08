@@ -1,0 +1,218 @@
+{
+  "checked_utc": "2026-10-08T10:43:09.511640+00:00",
+  "status": "completed",
+  "kept_experiment_directories": [
+    "metax-checkpoint-curve-d256-20261005-v2",
+    "metax-dynamic-g8-20261002-v4",
+    "metax-dynamic-preparation-20261002-v4",
+    "metax-formal-preparation-20261001",
+    "metax-formal-stage1-20261001-v2",
+    "metax-gpu-memory-repair-20261008-v1",
+    "metax-gpu-retrieval-migration-20261008-v1",
+    "metax-process-r1-100-b32-20261008-v1",
+    "metax-process-r1-100-b32-gpu-20261008-v2",
+    "metax-process-r1-40-20261006-v1"
+  ],
+  "protected_paths": [
+    "/mnt/public/code/lyk/lzy/runs/metax-formal-stage1-20261001-v2/checkpoints/step_100",
+    "/mnt/public/code/lyk/lzy/runs/metax-formal-preparation-20261001",
+    "/mnt/public/code/lyk/lzy/runs/metax-dynamic-g8-20261002-v4/checkpoints/step_40",
+    "/mnt/public/code/lyk/lzy/runs/metax-dynamic-g8-20261002-v4/checkpoints/step_100",
+    "/mnt/public/code/lyk/lzy/runs/metax-dynamic-preparation-20261002-v4",
+    "/mnt/public/code/lyk/lzy/runs/metax-process-r1-40-20261006-v1/checkpoints/step_30",
+    "/mnt/public/code/lyk/lzy/runs/metax-process-r1-40-20261006-v1/checkpoints/step_40"
+  ],
+  "frozen_files_verified": 230,
+  "deleted": [
+    {
+      "path": "/mnt/public/code/lyk/lzy/runs/metax-checkpoint-curve-d256-20261005-v1",
+      "allocated_bytes": 7655424,
+      "file_count": 45,
+      "deleted": true
+    },
+    {
+      "path": "/mnt/public/code/lyk/lzy/runs/metax-collate-fix-20261002",
+      "allocated_bytes": 16384,
+      "file_count": 8,
+      "deleted": true
+    },
+    {
+      "path": "/mnt/public/code/lyk/lzy/runs/metax-dynamic-g8-20261002-v1",
+      "allocated_bytes": 364032,
+      "file_count": 6,
+      "deleted": true
+    },
+    {
+      "path": "/mnt/public/code/lyk/lzy/runs/metax-dynamic-g8-20261002-v3",
+      "allocated_bytes": 433152,
+      "file_count": 6,
+      "deleted": true
+    },
+    {
+      "path": "/mnt/public/code/lyk/lzy/runs/metax-dynamic-memory-fix-20261002",
+      "allocated_bytes": 27136,
+      "file_count": 5,
+      "deleted": true
+    },
+    {
+      "path": "/mnt/public/code/lyk/lzy/runs/metax-dynamic-preparation-20261002",
+      "allocated_bytes": 947712,
+      "file_count": 43,
+      "deleted": true
+    },
+    {
+      "path": "/mnt/public/code/lyk/lzy/runs/metax-dynamic-preparation-20261002-v3",
+      "allocated_bytes": 712704,
+      "file_count": 20,
+      "deleted": true
+    },
+    {
+      "path": "/mnt/public/code/lyk/lzy/runs/metax-gpu-retrieval-bench-20261008-v1",
+      "allocated_bytes": 919552,
+      "file_count": 28,
+      "deleted": true
+    },
+    {
+      "path": "/mnt/public/code/lyk/lzy/runs/metax-gradient-cause-audit-20261002",
+      "allocated_bytes": 2560,
+      "file_count": 3,
+      "deleted": true
+    },
+    {
+      "path": "/mnt/public/code/lyk/lzy/runs/metax-grpo-static-audit-20261002",
+      "allocated_bytes": 5632,
+      "file_count": 2,
+      "deleted": true
+    },
+    {
+      "path": "/mnt/public/code/lyk/lzy/runs/metax-grpo-static-audit-20261002-a2",
+      "allocated_bytes": 19456,
+      "file_count": 5,
+      "deleted": true
+    },
+    {
+      "path": "/mnt/public/code/lyk/lzy/runs/metax-prefix-cache-fix-20261005-v1",
+      "allocated_bytes": 183808,
+      "file_count": 17,
+      "deleted": true
+    },
+    {
+      "path": "/mnt/public/code/lyk/lzy/runs/metax-process-checks-20261006-v1",
+      "allocated_bytes": 436736,
+      "file_count": 28,
+      "deleted": true
+    },
+    {
+      "path": "/mnt/public/code/lyk/lzy/runs/metax-process-checks-static-20261006-v1",
+      "allocated_bytes": 262144,
+      "file_count": 14,
+      "deleted": true
+    },
+    {
+      "path": "/mnt/public/code/lyk/lzy/runs/metax-process-preflight-20261006-v1",
+      "allocated_bytes": 3647488,
+      "file_count": 41,
+      "deleted": true
+    },
+    {
+      "path": "/mnt/public/code/lyk/lzy/runs/metax-process-r1-100-b32-gpu-20261008-v1",
+      "allocated_bytes": 153170432,
+      "file_count": 31,
+      "deleted": true
+    },
+    {
+      "path": "/mnt/public/code/lyk/lzy/runs/metax-process-selection-d256-20261007-v1",
+      "allocated_bytes": 46797824,
+      "file_count": 58,
+      "deleted": true
+    },
+    {
+      "path": "/mnt/public/code/lyk/lzy/runs/metax-readable-logs-20261006-v1",
+      "allocated_bytes": 277504,
+      "file_count": 21,
+      "deleted": true
+    },
+    {
+      "path": "/mnt/public/code/lyk/lzy/runs/metax-formal-stage1-20261001-v2/checkpoints/step_20",
+      "allocated_bytes": 91403686400,
+      "file_count": 28,
+      "deleted": true
+    },
+    {
+      "path": "/mnt/public/code/lyk/lzy/runs/metax-formal-stage1-20261001-v2/checkpoints/step_40",
+      "allocated_bytes": 91403686400,
+      "file_count": 28,
+      "deleted": true
+    },
+    {
+      "path": "/mnt/public/code/lyk/lzy/runs/metax-formal-stage1-20261001-v2/checkpoints/step_60",
+      "allocated_bytes": 91403686400,
+      "file_count": 28,
+      "deleted": true
+    },
+    {
+      "path": "/mnt/public/code/lyk/lzy/runs/metax-formal-stage1-20261001-v2/checkpoints/step_80",
+      "allocated_bytes": 91403686400,
+      "file_count": 28,
+      "deleted": true
+    },
+    {
+      "path": "/mnt/public/code/lyk/lzy/runs/metax-dynamic-g8-20261002-v4/checkpoints/step_20",
+      "allocated_bytes": 91403698176,
+      "file_count": 28,
+      "deleted": true
+    },
+    {
+      "path": "/mnt/public/code/lyk/lzy/runs/metax-dynamic-g8-20261002-v4/checkpoints/step_60",
+      "allocated_bytes": 91403721728,
+      "file_count": 28,
+      "deleted": true
+    },
+    {
+      "path": "/mnt/public/code/lyk/lzy/runs/metax-dynamic-g8-20261002-v4/checkpoints/step_80",
+      "allocated_bytes": 91403733504,
+      "file_count": 28,
+      "deleted": true
+    },
+    {
+      "path": "/mnt/public/code/lyk/lzy/runs/metax-process-r1-40-20261006-v1/checkpoints/step_10",
+      "allocated_bytes": 91403692544,
+      "file_count": 28,
+      "deleted": true
+    },
+    {
+      "path": "/mnt/public/code/lyk/lzy/runs/metax-process-r1-40-20261006-v1/checkpoints/step_20",
+      "allocated_bytes": 91403698176,
+      "file_count": 28,
+      "deleted": true
+    }
+  ],
+  "policy": "用户要求无用单次实验整目录删除，不留旧配置日志或权重备份；保留审批要求的历史最终和父模型及准备目录",
+  "completed_utc": "2026-10-08T10:43:51.962491+00:00",
+  "released_allocated_bytes": 822849169408,
+  "post_cleanup_frozen_files_verified": 230,
+  "latest_user_constraint": "仅清理因各种原因没有正常结束训练的单次实验；此补充到达时原清理命令已完成，尝试中止返回completed，之后未再删除",
+  "scope_mismatch": "已执行的18个目录删除中包含已完成的评估目录；9个中间checkpoint属于已完成训练，超出最新补充范围；没有备份，不能通过Git恢复",
+  "preserved_checkpoint_file_presence_verified": [
+    "/mnt/public/code/lyk/lzy/runs/metax-formal-stage1-20261001-v2/checkpoints/step_100",
+    "/mnt/public/code/lyk/lzy/runs/metax-dynamic-g8-20261002-v4/checkpoints/step_40",
+    "/mnt/public/code/lyk/lzy/runs/metax-dynamic-g8-20261002-v4/checkpoints/step_100",
+    "/mnt/public/code/lyk/lzy/runs/metax-process-r1-40-20261006-v1/checkpoints/step_30",
+    "/mnt/public/code/lyk/lzy/runs/metax-process-r1-40-20261006-v1/checkpoints/step_40"
+  ],
+  "retriever_health": {
+    "ready": true,
+    "search_backend": "torch_gpu",
+    "vectors": 21015324,
+    "devices": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7
+    ]
+  }
+}

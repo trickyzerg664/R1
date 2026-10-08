@@ -1,0 +1,134 @@
+{
+  "parsed_files": [
+    "search_r1/search/retrieval_server.py",
+    "verl/third_party/vllm/metax_v_0_11_0/llm.py",
+    "verl/third_party/vllm/metax_v_0_11_0/worker.py",
+    "verl/workers/actor/dp_actor.py",
+    "verl/workers/fsdp_workers.py",
+    "verl/workers/rollout/vllm_rollout/vllm_rollout.py",
+    "search_r1/search/gpu_flat_index.py",
+    "verl/utils/activation_offload.py",
+    "verl/utils/debug/gpu_memory_trace.py"
+  ],
+  "changed_functions": [
+    {
+      "file": "search_r1/search/retrieval_server.py",
+      "function": "health_endpoint"
+    },
+    {
+      "file": "search_r1/search/retrieval_server.py",
+      "function": "retrieve_endpoint"
+    },
+    {
+      "file": "search_r1/search/retrieval_server.py",
+      "function": "_retrieve_endpoint_unlocked"
+    },
+    {
+      "file": "search_r1/search/retrieval_server.py",
+      "function": "Config.__init__"
+    },
+    {
+      "file": "search_r1/search/retrieval_server.py",
+      "function": "DenseRetriever.__init__"
+    },
+    {
+      "file": "search_r1/search/retrieval_server.py",
+      "function": "Encoder.encode"
+    },
+    {
+      "file": "verl/third_party/vllm/metax_v_0_11_0/llm.py",
+      "function": "LLM.generate"
+    },
+    {
+      "file": "verl/third_party/vllm/metax_v_0_11_0/llm.py",
+      "function": "LLM.sync_model_weights"
+    },
+    {
+      "file": "verl/third_party/vllm/metax_v_0_11_0/llm.py",
+      "function": "LLM._restore_cpu_weights"
+    },
+    {
+      "file": "verl/third_party/vllm/metax_v_0_11_0/llm.py",
+      "function": "LLM.offload_model_weights"
+    },
+    {
+      "file": "verl/third_party/vllm/metax_v_0_11_0/llm.py",
+      "function": "LLM.__init__"
+    },
+    {
+      "file": "verl/third_party/vllm/metax_v_0_11_0/worker.py",
+      "function": "MetaxWeightUpdateExtension.restore_weights_from_cpu"
+    },
+    {
+      "file": "verl/third_party/vllm/metax_v_0_11_0/worker.py",
+      "function": "MetaxWeightUpdateExtension.offload_weights_to_cpu"
+    },
+    {
+      "file": "verl/workers/actor/dp_actor.py",
+      "function": "DataParallelPPOActor.update_policy"
+    },
+    {
+      "file": "verl/workers/actor/dp_actor.py",
+      "function": "DataParallelPPOActor._optimizer_step"
+    },
+    {
+      "file": "verl/workers/fsdp_workers.py",
+      "function": "ActorRolloutRefWorker.compute_ref_log_prob"
+    },
+    {
+      "file": "verl/workers/fsdp_workers.py",
+      "function": "ActorRolloutRefWorker.compute_log_prob"
+    },
+    {
+      "file": "verl/workers/fsdp_workers.py",
+      "function": "ActorRolloutRefWorker.update_actor"
+    },
+    {
+      "file": "verl/workers/rollout/vllm_rollout/vllm_rollout.py",
+      "function": "vLLMRollout.__init__"
+    },
+    {
+      "file": "search_r1/search/gpu_flat_index.py",
+      "function": "TorchGPUFlatIP.search"
+    },
+    {
+      "file": "search_r1/search/gpu_flat_index.py",
+      "function": "TorchGPUFlatIP._search_shard"
+    },
+    {
+      "file": "search_r1/search/gpu_flat_index.py",
+      "function": "TorchGPUFlatIP.__init__"
+    },
+    {
+      "file": "search_r1/search/gpu_flat_index.py",
+      "function": "merge_topk"
+    },
+    {
+      "file": "verl/utils/activation_offload.py",
+      "function": "cpu_activation_offload"
+    },
+    {
+      "file": "verl/utils/activation_offload.py",
+      "function": "cpu_activation_offload.unpack"
+    },
+    {
+      "file": "verl/utils/activation_offload.py",
+      "function": "cpu_activation_offload.pack"
+    },
+    {
+      "file": "verl/utils/debug/gpu_memory_trace.py",
+      "function": "trace_gpu_memory"
+    }
+  ],
+  "function_tag_omissions": [],
+  "check": "相对HEAD的完整作用域AST比较；既有未改动函数不在范围内",
+  "whitespace_exception": {
+    "files": [
+      "search_r1/search/gpu_flat_index.py",
+      "verl/utils/activation_offload.py",
+      "verl/utils/debug/gpu_memory_trace.py"
+    ],
+    "reason": "末尾CRLF空行不影响语法；当前运行的源码字节冻结，保留已验证原字节",
+    "standard_cached_check_passed": false
+  }
+}

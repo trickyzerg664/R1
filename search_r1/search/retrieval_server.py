@@ -3,6 +3,7 @@ import os
 import warnings
 from typing import List, Dict, Optional
 import argparse
+import threading
 
 import faiss
 import torch
@@ -74,6 +75,12 @@ class Encoder:
 
     @torch.no_grad()
     def encode(self, query_list: List[str], is_query=True) -> np.ndarray:
+        """@brief 按既有E5前缀和池化规则编码，输入跟随模型设备。
+        @param query_list 字符串或字符串列表。
+        @param is_query 是否使用查询前缀；False时使用文档前缀。
+        @return 连续FP32查询向量数组。
+        @note 编码精度、归一化及截断规则沿用原实现。
+        """
         # processing query for different encoders
         if isinstance(query_list, str):
             query_list = [query_list]
@@ -94,7 +101,9 @@ class Encoder:
                                 truncation=True,
                                 return_tensors="pt"
                                 )
-        inputs = {k: v.cuda() for k, v in inputs.items()}
+        # 服务线程的默认设备可能不同；输入必须跟随已加载的E5模型设备。
+        device = next(self.model.parameters()).device
+        inputs = {k: v.to(device) for k, v in inputs.items()}
 
         if "T5" in type(self.model).__name__:
             # T5-based retrieval model
@@ -206,7 +215,16 @@ class BM25Retriever(BaseRetriever):
 
 class DenseRetriever(BaseRetriever):
     def __init__(self, config):
+        """@brief 保留既有编码与文档读取，按显式后端选择CPU或GPU精确搜索。
+        @param config 检索配置，GPU只支持FP32 FlatIP且设备/显存预算必须有效。
+        @return 无。
+        @raises ValueError 后端配置、索引类型或设备无效时抛出。
+        @note GPU索引初始化后常驻，串行请求限制临时显存；默认CPU流程不变。
+        """
         super().__init__(config)
+        self.request_lock = threading.RLock()
+        # 语料缓存先于CUDA初始化加载，避免缓存重建时fork继承GPU上下文。
+        self.corpus = load_corpus(self.corpus_path)
         self.index = faiss.read_index(self.index_path)
         if config.faiss_gpu:
             co = faiss.GpuMultipleClonerOptions()
@@ -214,7 +232,22 @@ class DenseRetriever(BaseRetriever):
             co.shard = True
             self.index = faiss.index_cpu_to_all_gpus(self.index, co=co)
 
-        self.corpus = load_corpus(self.corpus_path)
+        if config.search_backend == "torch_gpu":
+            if config.faiss_gpu:
+                raise ValueError("torch_gpu cannot combine with faiss_gpu")
+            from search_r1.search.gpu_flat_index import TorchGPUFlatIP
+            devices = ([int(x) for x in config.gpu_device_ids.split(",")]
+                       if config.gpu_device_ids else list(range(torch.cuda.device_count())))
+            # 检索进程每卡最多申请18%显存；并发请求由锁串行，不挤占训练预算。
+            if not 0 < config.gpu_memory_fraction < 1:
+                raise ValueError("Invalid GPU memory fraction")
+            for device in devices:
+                torch.cuda.set_per_process_memory_fraction(config.gpu_memory_fraction, device)
+            self.index = TorchGPUFlatIP(self.index, devices, config.gpu_chunk_rows, config.gpu_query_batch_size)
+            # E5沿用单卡编码，放在最后一张可见卡；搜索分片仍覆盖全部设备。
+            torch.cuda.set_device(devices[-1])
+        elif config.search_backend != "cpu":
+            raise ValueError("Unknown search backend")
         self.encoder = Encoder(
             model_name = self.retrieval_method,
             model_path = config.retrieval_model_path,
@@ -299,8 +332,33 @@ class Config:
         retrieval_pooling_method: str = "mean",
         retrieval_query_max_length: int = 256,
         retrieval_use_fp16: bool = False,
-        retrieval_batch_size: int = 128
+        retrieval_batch_size: int = 128,
+        search_backend: str = "cpu",
+        gpu_device_ids: str = "",
+        gpu_chunk_rows: int = 262144,
+        gpu_query_batch_size: int = 256,
+        gpu_memory_fraction: float = 0.18
     ):
+        """@brief 保存CPU或GPU检索配置，默认CPU行为兼容。
+        @param retrieval_method 检索名称，e5等稠密编码或bm25。
+        @param retrieval_topk 默认返回文档数，正整数。
+        @param index_path 既有FAISS或BM25索引路径。
+        @param corpus_path 原语料JSONL路径，文档顺序不得改变。
+        @param dataset_path 兼容既有数据集目录字段。
+        @param data_split 兼容既有数据集分割名称。
+        @param faiss_gpu 旧FAISS GPU开关，不可与torch_gpu组合。
+        @param retrieval_model_path 既有查询编码模型目录。
+        @param retrieval_pooling_method 原池化方法，e5使用mean。
+        @param retrieval_query_max_length 编码查询截断长度，正整数。
+        @param retrieval_use_fp16 编码器是否半精度，搜索索引仍FP32。
+        @param retrieval_batch_size 查询编码分批数，正整数，不减少总查询。
+        @param search_backend cpu默认兼容，torch_gpu显式启用FP32分片。
+        @param gpu_device_ids 可见GPU编号的逗号列表，空字符串使用全部可见卡。
+        @param gpu_chunk_rows 每块向量数，正整数；验证选定262144。
+        @param gpu_query_batch_size 每次GPU计算查询数，正整数；全部查询分批完成。
+        @param gpu_memory_fraction 检索进程每卡PyTorch预算比例，必须在0和1之间。
+        @return 无。
+        """
         self.retrieval_method = retrieval_method
         self.retrieval_topk = retrieval_topk
         self.index_path = index_path
@@ -313,6 +371,12 @@ class Config:
         self.retrieval_query_max_length = retrieval_query_max_length
         self.retrieval_use_fp16 = retrieval_use_fp16
         self.retrieval_batch_size = retrieval_batch_size
+        # 新后端显式启用，默认CPU与原启动参数兼容。
+        self.search_backend = search_backend
+        self.gpu_device_ids = gpu_device_ids
+        self.gpu_chunk_rows = gpu_chunk_rows
+        self.gpu_query_batch_size = gpu_query_batch_size
+        self.gpu_memory_fraction = gpu_memory_fraction
 
 
 class QueryRequest(BaseModel):
@@ -323,9 +387,11 @@ class QueryRequest(BaseModel):
 
 app = FastAPI()
 
-@app.post("/retrieve")
-def retrieve_endpoint(request: QueryRequest):
-    """
+def _retrieve_endpoint_unlocked(request: QueryRequest):
+    """@brief 复用原批量检索、文档内容及可选分数响应。
+    @param request 原queries/topk/return_scores请求对象。
+    @return 原result格式字典。
+    @note 不改变语料、E5向量或客户端响应结构。
     Endpoint that accepts queries and performs retrieval.
     Input format:
     {
@@ -363,6 +429,38 @@ def retrieve_endpoint(request: QueryRequest):
     return {"result": resp}
 
 
+@app.post("/retrieve")
+def retrieve_endpoint(request: QueryRequest):
+    """@brief 复用原检索响应格式，GPU请求串行以限制编码和搜索临时显存。
+    @param request 含queries、topk及return_scores的原请求对象。
+    @return 原结构的result字典，不增加客户端必需字段。
+    @note CPU默认后端仍直接执行；不缓存或减少查询。
+    """
+    if config.search_backend == "torch_gpu":
+        with retriever.request_lock:
+            return _retrieve_endpoint_unlocked(request)
+    return _retrieve_endpoint_unlocked(request)
+
+
+@app.get("/health")
+def health_endpoint():
+    """@brief 返回后端、完整索引数量和GPU进程显存统计供验收。
+    @return 健康状态字典，CPU不触发GPU查询。
+    @note 进程显存不等于驱动总占用，联合验证使用mx-smi。
+    """
+    result = {"ready": True, "search_backend": config.search_backend,
+              "vectors": getattr(getattr(retriever, "index", None), "ntotal", None)}
+    if config.search_backend == "torch_gpu":
+        result["devices"] = retriever.index.devices
+        result["chunk_rows"] = retriever.index.chunk_rows
+        result["memory"] = [{"device": i,
+                            "allocated_GiB": torch.cuda.memory_allocated(i)/1024**3,
+                            "peak_allocated_GiB": torch.cuda.max_memory_allocated(i)/1024**3,
+                            "reserved_GiB": torch.cuda.memory_reserved(i)/1024**3}
+                           for i in retriever.index.devices]
+    return result
+
+
 if __name__ == "__main__":
     
     parser = argparse.ArgumentParser(description="Launch the local faiss retriever.")
@@ -373,6 +471,14 @@ if __name__ == "__main__":
     parser.add_argument("--retriever_model", type=str, default="intfloat/e5-base-v2", help="Path of the retriever model.")
     parser.add_argument('--faiss_gpu', action='store_true', help='Use GPU for computation')
 
+    # CPU默认值兼容既有启动；GPU方案必须显式选择，端口支持先候选验证后切换。
+    parser.add_argument("--search_backend", choices=["cpu", "torch_gpu"], default="cpu")
+    parser.add_argument("--gpu_device_ids", default="")
+    parser.add_argument("--gpu_chunk_rows", type=int, default=262144)
+    parser.add_argument("--gpu_query_batch_size", type=int, default=256)
+    parser.add_argument("--gpu_memory_fraction", type=float, default=0.18)
+    parser.add_argument("--port", type=int, default=8000)
+    parser.add_argument("--host", default="0.0.0.0")
     args = parser.parse_args()
     
     # 1) Build a config (could also parse from arguments).
@@ -388,10 +494,15 @@ if __name__ == "__main__":
         retrieval_query_max_length=256,
         retrieval_use_fp16=True,
         retrieval_batch_size=512,
+        search_backend=args.search_backend,
+        gpu_device_ids=args.gpu_device_ids,
+        gpu_chunk_rows=args.gpu_chunk_rows,
+        gpu_query_batch_size=args.gpu_query_batch_size,
+        gpu_memory_fraction=args.gpu_memory_fraction,
     )
 
     # 2) Instantiate a global retriever so it is loaded once and reused.
     retriever = get_retriever(config)
     
     # 3) Launch the server. By default, it listens on http://127.0.0.1:8000
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    uvicorn.run(app, host=args.host, port=args.port)

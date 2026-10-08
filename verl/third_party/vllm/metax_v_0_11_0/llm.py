@@ -15,7 +15,8 @@ class LLM:
     def __init__(self, actor_module, tokenizer, model_hf_config,
                  tensor_parallel_size, dtype, enforce_eager,
                  gpu_memory_utilization, skip_tokenizer_init,
-                 max_model_len, load_format):
+                 max_model_len, load_format, max_num_batched_tokens=None,
+                 max_num_seqs=None, offload_weights_to_cpu=False):
         """
         @brief 初始化单卡推理引擎并登记初始权重可用于生成。
         @param actor_module 旧接口传入的训练模型，初始推理权重由本地目录加载。
@@ -28,8 +29,11 @@ class LLM:
         @param skip_tokenizer_init 是否跳过引擎内分词器初始化。
         @param max_model_len 引擎最大上下文长度。
         @param load_format 保留的旧加载接口参数。
+        @param max_num_batched_tokens 每次调度的 token 上限，None 保留原生默认。
+        @param max_num_seqs 同时调度的序列数上限，None 保留原生默认。
+        @param offload_weights_to_cpu 生成调用间是否卸载推理权重到CPU，默认关闭。
         @return 无。
-        @raises ValueError 并行数、本地路径或休眠配置无效时抛出。
+        @raises ValueError 并行数、本地路径、休眠配置或调度预算无效时抛出。
         @note 后续权重同步和缓存失效均完成后才恢复生成资格。
         """
         # 当前实现按每个 rank 单卡运行，禁止悄悄采用不支持的并行路径。
@@ -45,6 +49,19 @@ class LLM:
         if sleep_mode not in ('0', '1'):
             raise ValueError('VERL_METAX_ENABLE_SLEEP_MODE must be 0 or 1')
         self._sleep_enabled = sleep_mode == '1'
+        # 两种卸载机制不能混用，缺省仍保持历史常驻行为。
+        if not isinstance(offload_weights_to_cpu, bool) or (self._sleep_enabled and offload_weights_to_cpu):
+            raise ValueError('CPU weight offload requires a boolean option and disabled sleep mode')
+        self._cpu_offload_enabled = offload_weights_to_cpu
+        self._cpu_offloaded = False
+        # 限制执行时并发，不裁剪排队请求；未配置时保持原生默认行为。
+        scheduler_kwargs = {}
+        for key, value in (('max_num_batched_tokens', max_num_batched_tokens),
+                           ('max_num_seqs', max_num_seqs)):
+            if value is not None:
+                if isinstance(value, bool) or not isinstance(value, int) or value <= 0:
+                    raise ValueError(f'{key} must be a positive integer')
+                scheduler_kwargs[key] = value
         self.engine = NativeLLM(
             model=model_path,
             tokenizer=model_path,
@@ -56,18 +73,49 @@ class LLM:
             max_model_len=max_model_len,
             enable_sleep_mode=self._sleep_enabled,
             worker_extension_cls='verl.third_party.vllm.metax_v_0_11_0.worker.MetaxWeightUpdateExtension',
+            **scheduler_kwargs,
         )
         self._sleeping = False
         # 冷加载的权重和缓存一致；同步期间置为无效，任何失败都禁止继续生成。
         self._weights_ready = True
 
     def offload_model_weights(self):
-        """支持休眠时释放推理显存；无休眠路径保留常驻权重。"""
+        """@brief 按显式配置卸载推理权重，为概率重算和训练释放GPU空间。
+        @return 无。
+        @raises RuntimeError 仍有未完成请求或CPU卸载RPC未全部成功时抛出。
+        @note 默认不卸载；CPU模式保留同权重的KV缓存，禁止与sleep混用。
+        """
+        if self._cpu_offload_enabled:
+            # 无请求时才搬移；重复退出不反复复制已经在CPU的权重。
+            if not self._cpu_offloaded:
+                if self.engine.llm_engine.has_unfinished_requests():
+                    raise RuntimeError('Cannot offload weights with unfinished requests')
+                result = self.engine.collective_rpc('offload_weights_to_cpu')
+                if not result or any(item is not True for item in result):
+                    self._weights_ready = False
+                    raise RuntimeError('CPU weight offload RPC failed')
+                self._cpu_offloaded = True
+            return
         if not self._sleep_enabled:
             return
+        # 历史sleep路径仅在已有显式环境开关下执行，保持旧行为。
         if not self._sleeping:
             self.engine.sleep(level=2)
             self._sleeping = True
+
+    def _restore_cpu_weights(self):
+        """@brief 在生成或同步之前恢复CPU上的推理权重并校验全部worker。
+        @return 无。
+        @raises RuntimeError 恢复RPC失败时抛出，并禁止继续生成。
+        @note 同版本恢复不重置前缀缓存；失败状态只能通过完整同步解除。
+        """
+        if self._cpu_offloaded:
+            result = self.engine.collective_rpc('restore_weights_from_cpu')
+            # 仅全部成功才宣布GPU权重可用，部分恢复失败不得继续生成。
+            if not result or any(item is not True for item in result):
+                self._weights_ready = False
+                raise RuntimeError('CPU weight restore RPC failed')
+            self._cpu_offloaded = False
 
     def sync_model_weights(self, params, load_format='hf'):
         """
@@ -103,6 +151,8 @@ class LLM:
             del tensors
             if self._sleeping:
                 self.engine.wake_up(tags=['weights'])
+            # CPU卸载后先恢复设备，再加载新版本；之后沿用原缓存失效保护。
+            self._restore_cpu_weights()
             result = self.engine.collective_rpc('load_weights_from_safetensors', args=(weight_path,))
             # 加载失败时保留不可生成状态，不能把缓存重置误作完整同步成功。
             if not result or any(item['loaded'] == 0 for item in result):
@@ -139,6 +189,8 @@ class LLM:
         # 同步中断或缓存失败后拒绝旧/混合状态，不能依赖调用方一定退出。
         if not self._weights_ready:
             raise RuntimeError('MetaX vLLM weights and prefix cache are not ready; sync actor weights first')
+        # 同版本设备恢复只搬移权重，不复用旧版本或重置已验证一致的KV。
+        self._restore_cpu_weights()
         requests = [{'prompt_token_ids': ids} for ids in prompt_token_ids]
         outputs = self.engine.generate(requests, sampling_params=sampling_params, use_tqdm=use_tqdm)
         token_rows = []

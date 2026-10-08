@@ -57,17 +57,20 @@ def _pre_process_inputs(pad_token_id, prompt_token_ids: torch.Tensor) -> List[in
 class vLLMRollout(BaseRollout):
 
     def __init__(self, actor_module: nn.Module, config: DictConfig, tokenizer, model_hf_config, **kwargs):
-        """A vLLM rollout. It requires the module is supported by the vllm.
-
-        Args:
-            module: module here follows huggingface APIs
-            config: DictConfig
-            tokenizer: the task/model tokenizer
-            model_hf_config: the huggingface config to initiallize the generating model in vllm
-            **kwargs: train_tp, for Megatron Backend to initialize hybrid engine (zero redundancy) process group
+        """
+        @brief 构建复用训练模型的生成器，并把显式调度预算传入 MetaX 引擎。
+        @param actor_module 支持 vLLM 的训练模型实例。
+        @param config 生成、采样及执行资源配置，不减少待生成请求数。
+        @param tokenizer 模型分词器及 pad/eos 标识。
+        @param model_hf_config 模型上下文长度及加载配置。
+        @param kwargs 可选 train_tp 等并行初始化参数。
+        @return 无。
+        @raises AssertionError 缓存模式、并行数或上下文长度不满足约束时抛出。
+        @note 仅 MetaX 0.11 路径接收新调度预算，其余版本保留已有参数行为。
         """
         super().__init__()
         self.config = config
+        # 缓存释放与图捕获不兼容，初始化时拒绝无效组合。
         assert not (not config.enforce_eager and config.free_cache_engine), \
             "disable CUDA graph (enforce_eager = False) if free cache engine"
 
@@ -75,6 +78,7 @@ class vLLMRollout(BaseRollout):
         assert tensor_parallel_size <= torch.distributed.get_world_size(), \
             "tensor parallel size should be less than or equal to the world size"
 
+        # Megatron 仍复用原并行状态初始化；调度预算不改变进程拓扑。
         if kwargs.get('train_tp', None) is not None:
             # deployed with megatron
             import os
@@ -86,8 +90,15 @@ class vLLMRollout(BaseRollout):
                 vllm_ps.initialize_parallel_state(tensor_model_parallel_size=tensor_parallel_size,
                                                   num_tp_per_train_tp=num_tp_per_train_tp)
 
+        # 完整提示加响应长度必须受模型支持，不能为显存验证缩短上下文。
         assert model_hf_config.max_position_embeddings >= config.prompt_length + config.response_length, \
             "model context length should be greater than total sequence length"
+        # 仅接通已验证支持此接口的 MetaX 路径；缺省值仍交给原生引擎。
+        scheduler_kwargs = {}
+        if vllm_version == '0.11.0':
+            for key in ('max_num_batched_tokens', 'max_num_seqs', 'offload_weights_to_cpu'):
+                if config.get(key) is not None:
+                    scheduler_kwargs[key] = config.get(key)
         self.inference_engine = LLM(actor_module,
                                     tokenizer=tokenizer,
                                     model_hf_config=model_hf_config,
@@ -97,7 +108,8 @@ class vLLMRollout(BaseRollout):
                                     gpu_memory_utilization=config.gpu_memory_utilization,
                                     skip_tokenizer_init=False,
                                     max_model_len=config.prompt_length + config.response_length,
-                                    load_format=config.load_format)
+                                    load_format=config.load_format,
+                                    **scheduler_kwargs)
 
         # Offload vllm model to reduce peak memory usage
         self.inference_engine.offload_model_weights()
@@ -114,6 +126,7 @@ class vLLMRollout(BaseRollout):
             kwargs['detokenize'] = False
 
         # supporting adding any sampling params from the config file
+        # 仅采样器支持的键用于采样，调度预算不会改变温度或回答条数。
         for k in config.keys():
             if hasattr(SamplingParams(), str(k)):
                 kwargs[k] = config.get(k)

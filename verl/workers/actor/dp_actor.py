@@ -16,6 +16,8 @@ Single Process Actor
 """
 
 import itertools
+from contextlib import nullcontext
+from verl.utils.activation_offload import cpu_activation_offload
 import math
 from typing import Iterable, Tuple
 
@@ -28,6 +30,7 @@ from torch.distributed.fsdp.sharded_grad_scaler import ShardedGradScaler
 from verl import DataProto
 from verl.utils.torch_dtypes import PrecisionType
 from verl.utils.fsdp_utils import load_fsdp_optimizer, offload_fsdp_optimizer
+from verl.utils.debug.gpu_memory_trace import trace_gpu_memory
 from verl.trainer.ppo import core_algos
 from verl.workers.actor import BasePPOActor
 from verl.utils.py_functional import append_to_dict
@@ -203,6 +206,12 @@ class DataParallelPPOActor(BasePPOActor):
             return entropy, log_probs
 
     def _optimizer_step(self):
+        """@brief 按原精度裁剪梯度并更新Adam，可选记录状态显存。
+        @return 梯度范数及是否实际完成更新的布尔值。
+        @note 反传后才装入Adam状态，finally卸回CPU，保留溢出跳步语义。
+        """
+        trace_gpu_memory('optimizer_before_load', self.config.get('memory_diagnostics', False),
+                         optimizer=self.actor_optimizer)
         assert self.config.grad_clip is not None
         self.grad_scaler.unscale_(self.actor_optimizer)
 
@@ -216,6 +225,8 @@ class DataParallelPPOActor(BasePPOActor):
             torch.cuda.empty_cache()
             load_fsdp_optimizer(optimizer=self.actor_optimizer, device_id=torch.cuda.current_device())
             optimizer_loaded = True
+        trace_gpu_memory('optimizer_before_step', self.config.get('memory_diagnostics', False),
+                         optimizer=self.actor_optimizer)
         try:
             # GradScaler 在溢出时静默跳过 optimizer.step；缩放值回退是本 mini-batch 跳步的判据。
             previous_scale = self.grad_scaler.get_scale() if self.grad_scaler.is_enabled() else None
@@ -226,6 +237,8 @@ class DataParallelPPOActor(BasePPOActor):
         finally:
             if optimizer_loaded:
                 offload_fsdp_optimizer(optimizer=self.actor_optimizer)
+            trace_gpu_memory('optimizer_after_offload', self.config.get('memory_diagnostics', False),
+                             optimizer=self.actor_optimizer)
 
     def compute_log_prob(self, data: DataProto) -> torch.Tensor:
         """Compute the log probability of the responses given input_ids, attention_mask and position_ids
@@ -278,6 +291,12 @@ class DataParallelPPOActor(BasePPOActor):
         return log_probs
 
     def update_policy(self, data: DataProto):
+        """@brief 原批次及梯度累积更新策略，可选将反传保存的同精度激活搬至CPU。
+        @param data 完整DataProto，含完整上下文、回答、掩码、优势、旧及参考概率。
+        @return 原微批损失、梯度及优化器更新指标映射。
+        @raises FloatingPointError 损失非有限时拒绝反传。
+        @note activation_offload默认关闭；开启不裁剪token或改变损失计算顺序。
+        """
         # make sure we are in training mode
         self.actor_module.train()
 
@@ -309,7 +328,7 @@ class DataParallelPPOActor(BasePPOActor):
 
             self.actor_optimizer.zero_grad()
 
-            for data in micro_batches:
+            for micro_index, data in enumerate(micro_batches):
                 data = data.cuda()  # actor device is cpu when using offload
                 responses = data['responses']
                 response_length = responses.size(1)
@@ -323,45 +342,55 @@ class DataParallelPPOActor(BasePPOActor):
                 clip_ratio = self.config.clip_ratio
                 entropy_coeff = self.config.entropy_coeff
 
-                # all return: (bsz, response_length)
-                entropy, log_prob = self._forward_micro_batch(micro_batch=data, temperature=temperature)
+                # 不改dtype或完整轨迹，仅搬移浮点反传张量；整数索引保留原设备和stride。
+                # checkpoint重算和微批梯度累积顺序保持不变，关闭走旧路径。
+                activation_context = (cpu_activation_offload(True)
+                                      if self.config.get('activation_offload', False) else nullcontext())
+                if micro_index in (0, len(micro_batches) - 1):
+                    trace_gpu_memory('actor_micro_before', self.config.get('memory_diagnostics', False), data)
+                with activation_context:
+                    # all return: (bsz, response_length)
+                    entropy, log_prob = self._forward_micro_batch(micro_batch=data, temperature=temperature)
 
-                safe_loss = self.config.get('loss_numerics', 'legacy') == 'safe_v1'
-                if safe_loss:
-                    from verl.experimental.difficulty.loss_safety import policy_loss, kl_loss as safe_kl_loss, entropy_loss as safe_entropy_loss
-                    pg_loss, pg_clipfrac, ppo_kl, safety_metrics = policy_loss(old_log_prob, log_prob, advantages, response_mask, clip_ratio)
-                    append_to_dict(metrics, safety_metrics)
-                else:
-                    pg_loss, pg_clipfrac, ppo_kl = core_algos.compute_policy_loss(old_log_prob=old_log_prob,
-                                                                              log_prob=log_prob,
-                                                                              advantages=advantages,
-                                                                              eos_mask=response_mask,
-                                                                              cliprange=clip_ratio)
-                # compute entropy loss from entropy
-                entropy_loss = safe_entropy_loss(entropy, response_mask) if safe_loss else verl_F.masked_mean(entropy, response_mask)
-
-                # compute policy loss
-                policy_loss = pg_loss - entropy_loss * entropy_coeff
-
-                if self.config.use_kl_loss:
-                    ref_log_prob = data['ref_log_prob']
-                    # compute kl loss
+                    safe_loss = self.config.get('loss_numerics', 'legacy') == 'safe_v1'
                     if safe_loss:
-                        kl_loss, safety_metrics = safe_kl_loss(log_prob, ref_log_prob, response_mask)
+                        from verl.experimental.difficulty.loss_safety import policy_loss, kl_loss as safe_kl_loss, entropy_loss as safe_entropy_loss
+                        pg_loss, pg_clipfrac, ppo_kl, safety_metrics = policy_loss(old_log_prob, log_prob, advantages, response_mask, clip_ratio)
                         append_to_dict(metrics, safety_metrics)
                     else:
-                        kld = core_algos.kl_penalty(logprob=log_prob, ref_logprob=ref_log_prob,
-                                                  kl_penalty=self.config.kl_loss_type)
-                        kl_loss = masked_mean(kld, response_mask)
+                        pg_loss, pg_clipfrac, ppo_kl = core_algos.compute_policy_loss(old_log_prob=old_log_prob,
+                                                                                  log_prob=log_prob,
+                                                                                  advantages=advantages,
+                                                                                  eos_mask=response_mask,
+                                                                                  cliprange=clip_ratio)
+                    # compute entropy loss from entropy
+                    entropy_loss = safe_entropy_loss(entropy, response_mask) if safe_loss else verl_F.masked_mean(entropy, response_mask)
 
-                    policy_loss = policy_loss + kl_loss * self.config.kl_loss_coef
-                    # 保存全部微批，避免均值只有最后一条轨迹；不改变旧模式的实际损失。
-                    append_to_dict(metrics, {'actor/kl_loss': kl_loss.detach().item(), 'actor/kl_coef': self.config.kl_loss_coef})
+                    # compute policy loss
+                    policy_loss = pg_loss - entropy_loss * entropy_coeff
 
-                loss = policy_loss / self.gradient_accumulation
-                if safe_loss and not torch.isfinite(loss).all():
-                    raise FloatingPointError('Nonfinite policy loss before backward')
-                self.grad_scaler.scale(loss).backward()
+                    if self.config.use_kl_loss:
+                        ref_log_prob = data['ref_log_prob']
+                        # compute kl loss
+                        if safe_loss:
+                            kl_loss, safety_metrics = safe_kl_loss(log_prob, ref_log_prob, response_mask)
+                            append_to_dict(metrics, safety_metrics)
+                        else:
+                            kld = core_algos.kl_penalty(logprob=log_prob, ref_logprob=ref_log_prob,
+                                                      kl_penalty=self.config.kl_loss_type)
+                            kl_loss = masked_mean(kld, response_mask)
+
+                        policy_loss = policy_loss + kl_loss * self.config.kl_loss_coef
+                        # 保存全部微批，避免均值只有最后一条轨迹；不改变旧模式的实际损失。
+                        append_to_dict(metrics, {'actor/kl_loss': kl_loss.detach().item(), 'actor/kl_coef': self.config.kl_loss_coef})
+
+                    loss = policy_loss / self.gradient_accumulation
+                    if safe_loss and not torch.isfinite(loss).all():
+                        raise FloatingPointError('Nonfinite policy loss before backward')
+                    self.grad_scaler.scale(loss).backward()
+
+                if micro_index in (0, len(micro_batches) - 1):
+                    trace_gpu_memory('actor_micro_after_backward', self.config.get('memory_diagnostics', False), data)
 
                 data = {
                     'actor/entropy_loss': entropy_loss.detach().item(),
