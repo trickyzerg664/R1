@@ -28,6 +28,7 @@ from typing import List
 from contextlib import contextmanager
 from omegaconf import DictConfig
 import torch
+import numpy as np
 import torch.distributed
 from tensordict import TensorDict
 from torch import nn
@@ -155,6 +156,13 @@ class vLLMRollout(BaseRollout):
 
     @torch.no_grad()
     def generate_sequences(self, prompts: DataProto, **kwargs) -> DataProto:
+        """@brief 复用原生成流程，可选传递 MetaX 原生终止元数据。
+        @param prompts 原提示、mask、生成参数及可选只读审计开关。
+        @param kwargs 原采样参数覆盖。
+        @return 原生成 DataProto；开启且后端支持时含逐行终止信息。
+        @raises ValueError 原生元数据数量与真实候选数量不匹配。
+        @note 默认返回结构和采样参数不变，其他后端不伪造终止原因。
+        """
         # rebuild vllm cache engine
         if self.config.free_cache_engine:
             self.inference_engine.init_cache_engine()
@@ -191,11 +199,15 @@ class vLLMRollout(BaseRollout):
             from verl.experimental.difficulty.generation import request_sampling_params
             sampling_params = request_sampling_params(self.sampling_params, prompts.non_tensor_batch.get('rollout_seed'),
                                                        prompts.meta_info.get('sampling_round', 0), len(idx_list))
+            # 审计选项属于适配层，不传入 SamplingParams；仅已支持的 MetaX 接口接收。
+            metadata_options = ({'return_metadata': True}
+                                if prompts.meta_info.get('record_rollout_metadata', False)
+                                and vllm_version == '0.11.0' else {})
             output = self.inference_engine.generate(
                 prompts=None,  # because we have already convert it to prompt token id
                 sampling_params=sampling_params,
                 prompt_token_ids=idx_list,
-                use_tqdm=False)
+                use_tqdm=False, **metadata_options)
 
         # TODO(sgm): disable logprob when recompute_log_prob is enable
         # if n = 1: (bs, response_length) ; if n > 1: (bs * n, response_length)
@@ -242,4 +254,12 @@ class vLLMRollout(BaseRollout):
         if self.config.free_cache_engine:
             self.inference_engine.free_cache_engine()
 
-        return DataProto(batch=batch)
+        non_tensors = {}
+        if len(output) > 2:
+            if len(output[2]) != batch_size:
+                raise ValueError('Rollout metadata candidate count differs')
+            # 随行对象数组由 DataProto 分片/还原，避免批级元信息丢失候选身份。
+            metadata = np.empty(batch_size, dtype=object)
+            metadata[:] = output[2]
+            non_tensors['rollout_metadata'] = metadata
+        return DataProto(batch=batch, non_tensor_batch=non_tensors)

@@ -1,7 +1,7 @@
 """FP16 动态缩放回退必须标记被跳过的 optimizer 更新。"""
 
 import unittest
-from types import SimpleNamespace
+from omegaconf import OmegaConf
 from unittest.mock import patch
 
 import torch
@@ -35,10 +35,15 @@ class FakeScaler:
 
 class ScalerStepTest(unittest.TestCase):
     def make_actor(self, next_scale):
+        """@brief 构造具有真实配置接口的 CPU 缩放回退测试演员。
+        @param next_scale 下一次更新后的模拟 scale。
+        @return 仅有 CPU 小参数的 actor 夹具。
+        """
         actor = object.__new__(DataParallelPPOActor)
         actor.actor_module = torch.nn.Linear(2, 1)
         actor.actor_optimizer = torch.optim.SGD(actor.actor_module.parameters(), lr=0.1)
-        actor.config = SimpleNamespace(grad_clip=1.0)
+        # 使用真实配置接口，避免夹具在执行被测逻辑前因 .get 不存在而失败。
+        actor.config = OmegaConf.create({'grad_clip': 1.0})
         actor.grad_scaler = FakeScaler(next_scale)
         actor.actor_module.weight.grad = torch.ones_like(actor.actor_module.weight)
         return actor

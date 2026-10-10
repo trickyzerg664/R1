@@ -34,6 +34,8 @@ class GenerationConfig:
     observation_truncation: str = 'legacy'
     context_policy: str = 'legacy'
     record_diagnostics: bool = False
+    # 原始 token/原生终止审计独立开关，关闭时不增加大体积逐轮记录。
+    record_token_diagnostics: bool = False
     # 默认关闭；开启后使用共用解析及程序来源账本，审计路径由实验配置提供。
     process_checks_enabled: bool = False
     process_audit_path: str = None
@@ -244,6 +246,32 @@ class LLMGenerationManager:
                 diagnostics[i]['generation_calls'] += 1
                 diagnostics[i]['generation_limit_hits'] += int(count >= self.config.max_response_length)
 
+    def _record_token_alignment(self, output, processed, active_mask, diagnostics):
+        """@brief 将原始及消费 token 审计映射回真实活动轨迹。
+        @param output 已移除 GPU 复制行的生成 DataProto。
+        @param processed 活动行后处理 token 矩阵。
+        @param active_mask 完整批次活动掩码。
+        @param diagnostics 完整批次诊断列表。
+        @return 无。
+        @raises ValueError 活动行、输出或诊断数量不一致。
+        @note 不改重分词、终止或奖励；关闭开关不解码或保留 token。
+        """
+        if not self.config.record_token_diagnostics:
+            return
+        from verl.experimental.stability.generation_audit import token_alignment_report
+        indices = active_mask.nonzero().flatten().tolist()
+        # 对应关系错误会污染整个训练审计，必须在任何逐行写入前失败。
+        if diagnostics is None or len(indices) != len(output) or len(processed) != len(indices):
+            raise ValueError('Token audit row alignment differs')
+        native = output.non_tensor_batch.get('rollout_metadata')
+        # 只记录活动行，继承原补齐工具的身份还原；各轮保持原始 token 顺序。
+        for row, index in enumerate(indices):
+            report = token_alignment_report(output.batch['responses'][row].cpu().tolist(),
+                                            processed[row].cpu().tolist(), self.tokenizer,
+                                            self.config.max_response_length,
+                                            None if native is None else native[row])
+            diagnostics[index].setdefault('token_turns', []).append(report)
+
     def _generate_with_gpu_padding(self, active_batch: DataProto) -> DataProto:
         """
             Wrapper for generation that handles multi-GPU padding requirements.
@@ -266,7 +294,8 @@ class LLMGenerationManager:
         @param gen_batch 原始真实轨迹DataProto，GPU补齐在活动生成内部处理。
         @param initial_input_ids 初始输入token矩阵。
         @return 完整响应与逐行过程报告组成的DataProto。
-        @raises ValueError 预算、来源或工具返回对应关系错误。
+        @raises ValueError 预算、来源、工具返回或 token 审计行对应关系错误。
+        @note token 审计默认关闭；启用只追加来源证据，不修补特定输出。
         """
         # 账本只属于本次调用，禁止挂在共享worker或训练器状态上。
         checks = TraceLedger(len(gen_batch)) if self.config.process_checks_enabled else None
@@ -293,7 +322,8 @@ class LLMGenerationManager:
                   if self.config.context_policy == 'bounded' else None)
         diagnostics = ([dict(observation_truncations=0, max_raw_observation_tokens=0,
                              generation_calls=0, generation_limit_hits=0, forced_final=0)
-                        for _ in range(len(gen_batch))] if self.config.record_diagnostics else None)
+                        for _ in range(len(gen_batch))]
+                       if self.config.record_diagnostics or self.config.record_token_diagnostics else None)
         answered = torch.zeros(len(gen_batch), dtype=torch.bool)
 
         # Main generation loop
@@ -320,11 +350,14 @@ class LLMGenerationManager:
                 meta_info=rollings.meta_info.copy())
             # [data-difficulty] 同一轨迹的各轮使用独立、可重现的生成种子。
             rollings_active.meta_info['sampling_round'] = len(active_num_list) - 1
+            if self.config.record_token_diagnostics:
+                rollings_active.meta_info['record_rollout_metadata'] = True
             gen_output = self._generate_with_gpu_padding(rollings_active)
             self._record_generation_limits(gen_output, active_mask, diagnostics)
 
             meta_info = gen_output.meta_info            
             responses_ids, responses_str = self._postprocess_responses(gen_output.batch['responses'])
+            self._record_token_alignment(gen_output, responses_ids, active_mask, diagnostics)
             responses_ids, responses_str = self.tensor_fn._example_level_pad(responses_ids, responses_str, active_mask)
 
             # Execute in environment and process observations
@@ -390,11 +423,14 @@ class LLMGenerationManager:
                 meta_info=rollings.meta_info.copy())
             # [data-difficulty] 同一轨迹的各轮使用独立、可重现的生成种子。
             rollings_active.meta_info['sampling_round'] = len(active_num_list) - 1
+            if self.config.record_token_diagnostics:
+                rollings_active.meta_info['record_rollout_metadata'] = True
             gen_output = self._generate_with_gpu_padding(rollings_active)
             self._record_generation_limits(gen_output, active_mask, diagnostics)
 
             meta_info = gen_output.meta_info            
             responses_ids, responses_str = self._postprocess_responses(gen_output.batch['responses'])
+            self._record_token_alignment(gen_output, responses_ids, active_mask, diagnostics)
             responses_ids, responses_str = self.tensor_fn._example_level_pad(responses_ids, responses_str, active_mask)
 
             # # Execute in environment and process observations
@@ -441,6 +477,10 @@ class LLMGenerationManager:
         if checks is not None:
             # non_tensor_batch随行筛选/重排/补齐，避免用批级meta_info导致报告串行。
             reports = checks.reports()
+            if self.config.record_token_diagnostics:
+                # 报告随行保存到既有账本，动态筛选和 GPU 补齐不会串用轨迹身份。
+                for report, diagnostic in zip(reports, diagnostics):
+                    report['token_diagnostics'] = diagnostic.get('token_turns', [])
             report_array = np.empty(len(reports), dtype=object)
             report_array[:] = reports
             output.non_tensor_batch['process_checks'] = report_array

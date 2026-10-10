@@ -525,3 +525,26 @@ GPU原8000服务PID2137145 ready，21015324向量/8卡，训练后256真实查�
 ## 2026-10-08T18:47:40.826169+08:00 运行资产维护限制
 
 当前100步实验配置、32题×8 rollout、模型、奖励、学习率、种子及精度保持已冻结版本。本次仅提交代码并维护runs；后续清理仅限未正常结束的训练，先核查依赖，保留已完成实验及完整checkpoint。实际清理及最新范围补充到达前已完成的删除详见reports/runs-cleanup-20261008.json及进度台账，不把历史已删除目录视作仍可用恢复点。
+
+
+## GRPO 稳定性修复的阶段一验收更新
+
+对应 [运行记录](runs/metax-grpo-phase1-20261010-v1.md)。实现与 CPU 回归完成：170 项通过，38 项新增；纯评价保证独立返回、指标极值保真、非有限梯度拒绝更新、当前 Qwen2 LM head 截断生效。保持 GRPO，奖励、优势归一化和超参数不变。
+
+默认 actor.stability_diagnostics.enabled=false、probe_after_update=false，data.record_token_diagnostics=false。诊断能力已接入，GPU/FSDP 验收待执行，不能直接用于长训练结论。启用轨迹概率探针要求模块/attention dropout 为零。
+
+后续依次验收：
+1. MetaX 小模型真实 FP16/融合算子/FSDP 数值、跳步和卸载；回答段 LM head 梯度/更新与原路径对照。
+2. 固定 checkpoint 的零更新独立评价与原始/消费 token、mask、后端终止信息一致性。
+3. 奖励/优势分开对照，优先全错组正优势与异常前缀信用分配；再做学习率、KL、长度/标准差及 LLDS/DAPO 消融。
+当前仅执行前述 CPU 项，未启动任何真实训练或模型生成。
+
+
+检查 UTC：2026-10-10T11:06:58.832389+00:00；证据：`/mnt/public/code/lyk/lzy/runs/metax-grpo-phase1-20261010-v1`。
+
+
+## 2026-10-10T11:40:06.978470+00:00 Phase1 submission verification
+
+阶段一提交前 CPU 复验通过；GPU/FSDP 仍未验证。下一阶段先离线核对任务成功标签和组资格，再单变量修改动态筛选。真实训练前完成 GPU 前提验收。
+
+Evidence: /mnt/public/code/lyk/lzy/runs/metax-grpo-phase1-20261010-v1/submission-verification/; agent: /root.

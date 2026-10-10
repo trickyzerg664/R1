@@ -1,4 +1,6 @@
 data:
+  # 原始 token/终止审计默认关闭；不改变生成及奖励协议。
+  record_token_diagnostics: false
   tokenizer: null
   train_files: ~/data/rlhf/gsm8k/train.parquet
   val_files: ~/data/rlhf/gsm8k/test.parquet
@@ -32,6 +34,11 @@ actor_rollout_ref:
     # 仅搬移同精度反传张量，默认保留原GPU执行。
     activation_offload: false
     memory_diagnostics: false
+    # 只读诊断默认关闭；固定轨迹探针会增加一次前向，GPU/FSDP 联调另行验收。
+    stability_diagnostics:
+      enabled: false
+      probe_after_update: false
+      parameter_sample_size: 256
     strategy: fsdp  # This is for backward-compatibility
     ppo_mini_batch_size: 256
     ppo_micro_batch_size: 64

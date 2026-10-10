@@ -122,7 +122,10 @@ def provenance(config):
     ar['model'].pop('path')
     ar['ref'].pop('model_path')
     ar['actor']['optim'].pop('total_training_steps', None)
+    # 只读稳定性记录不改变训练身份，关闭新开关仍兼容原 checkpoint。
+    ar['actor'].pop('stability_diagnostics', None)
     data = c['data']
+    data.pop('record_token_diagnostics', None)
     for key in ('train_files', 'val_files'):
         paths = data[key] if isinstance(data[key], list) else [data[key]]
         data[key] = [file_hash(Path(p).expanduser()) for p in paths]

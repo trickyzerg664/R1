@@ -173,14 +173,15 @@ class LLM:
     def free_cache_engine(self):
         """旧 rollout 的此调用无需操作；外层 manager 按配置处理休眠。"""
 
-    def generate(self, prompts, sampling_params, prompt_token_ids, use_tqdm=False):
+    def generate(self, prompts, sampling_params, prompt_token_ids, use_tqdm=False, return_metadata=False):
         """
         @brief 仅使用已同步且缓存一致的权重生成旧接口的 token 和概率张量。
         @param prompts 旧接口保留的文本提示；实际使用 token 输入。
         @param sampling_params 原生引擎采样参数。
         @param prompt_token_ids 每条请求的非 padding token 列表。
         @param use_tqdm 是否显示原生生成进度。
-        @return 二元组：右补齐的 token 整数张量及对应 logprob 浮点张量。
+        @param return_metadata 是否追加原生终止及概率来源信息，默认关闭。
+        @return 默认 token/logprob 二元组；开启诊断时追加逐候选元数据列表。
         @raises RuntimeError 引擎休眠、同步未完成或未返回生成结果时抛出。
         @note 同一权重版本内不清空前缀缓存，不改变采样和补齐语义。
         """
@@ -195,6 +196,7 @@ class LLM:
         outputs = self.engine.generate(requests, sampling_params=sampling_params, use_tqdm=use_tqdm)
         token_rows = []
         logprob_rows = []
+        metadata = []
         # 按原请求/候选顺序展开输出；缺少原生 logprob 时保持旧接口的零值回退。
         for request in outputs:
             for completion in request.outputs:
@@ -206,6 +208,14 @@ class LLM:
                     if i < len(steps) and token_id in steps[i] else 0.0
                     for i, token_id in enumerate(token_ids)
                 ])
+                if return_metadata:
+                    # 概率缺失时旧接口仍回退零值，但审计明确区分真实原生概率和回退。
+                    available = len(steps) == len(token_ids) and all(
+                        token_id in steps[i] for i, token_id in enumerate(token_ids))
+                    metadata.append(dict(finish_reason=getattr(completion, 'finish_reason', None),
+                                         stop_reason=getattr(completion, 'stop_reason', None),
+                                         raw_token_count=len(token_ids), logprobs_available=available,
+                                         sampled_token_logprobs=logprob_rows[-1] if available else None))
         if not token_rows:
             raise RuntimeError('MetaX vLLM returned no completions')
         width = max(map(len, token_rows))
@@ -215,4 +225,4 @@ class LLM:
         for row, (tokens, probs) in enumerate(zip(token_rows, logprob_rows)):
             responses[row, :len(tokens)] = torch.tensor(tokens, dtype=torch.long)
             logprobs[row, :len(probs)] = torch.tensor(probs, dtype=torch.float32)
-        return responses, logprobs
+        return (responses, logprobs, metadata) if return_metadata else (responses, logprobs)

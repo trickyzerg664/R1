@@ -1287,3 +1287,172 @@ GPU原8000服务PID2137145 ready，21015324向量/8卡，训练后256真实查�
 
 
 提交前补充：普通git diff --check只覆盖已跟踪修改并通过；完整git diff --cached --check发现gpu_flat_index.py、activation_offload.py、gpu_memory_trace.py末尾已有CRLF空行（无逻辑问题）。当前运行冻结源码字节，未为格式问题改动运行中的文件。采用core.whitespace=blank-at-eol,space-before-tab,cr-at-eol,-blank-at-eof核查其余空白项；语法9文件及函数27项检查仍通过。该例外仅为已冻结的末尾格式，未重跑GPU回归。
+
+
+## 2026-10-10T10:12:56.476668+00:00 GRPO stability phase1 started
+
+User authorized phase1 CPU verification and minimal repairs; agent /root. Baseline backup and manifest: /mnt/public/code/lyk/lzy/runs/metax-grpo-phase1-20261010-v1. No GPU generation/training started. Existing test_actor_scaler_step.py: 3 errors caused by SimpleNamespace lacking config.get; production behavior not yet exercised. Evaluation-only control flow and max-metric aggregation confirmed defects; repairs and CPU regression pending. Historical run artifacts/checkpoints remain unchanged.
+
+
+## Phase1 initial patch installed
+
+Evaluation-only entry, nonfinite-gradient guard, max aggregation repaired. Default-off bounded actor diagnostics and token/native termination audit added. Existing scaler fixture uses actual OmegaConf interface. Syntax validated before writes; CPU tests pending; no GPU generation/training. Payload replacement scope was corrected before any source write; a premature discovery found zero tests and is not accepted. Evidence /mnt/public/code/lyk/lzy/runs/metax-grpo-phase1-20261010-v1/repair-manifest.initial.json.
+
+
+Phase1 verification update: initial 26 CPU regressions passed (phase1-tests.initial.log); restore fingerprint and complete generation-loop regressions added, pending rerun. Native adapter test now uses existing import-isolated CPU fixture. No GPU generation/training.
+
+
+CPU rollout-adapter regressions added for metadata toggles, multiple candidates, malformed rows and unsupported backends. Full CPU suite running with GPU hidden; no GPU training/generation. Results pending at /mnt/public/code/lyk/lzy/runs/metax-grpo-phase1-20261010-v1/cpu-regression.final.json.
+
+
+Full CPU attempt1: 164 tests, 1 failure and 11 errors. Historical fixtures lacked global_steps and current optional execution/observation arguments; two new assertions iterated TensorDict rows instead of keys. Fixed fixture compatibility and assertions. Confirmed Qwen2 current interface logits_to_keep; existing num_logits_to_keep was ignored despite enabled configuration. Actual-signature adapter now supports both explicit interfaces, pending rerun and GPU equality. Logs retained as cpu-regression.attempt1.*; no GPU training/generation.
+
+
+CPU verification expanded to explicit old/new LM-head signatures, FSDP public-module signature path (CPU mock only), token-statistics chunk/recompute equality, and optimizer-state finally cleanup on step exception. Verification pending; GPU equality remains untested.
+
+
+Full CPU attempt2: 169 tests, only new chunk test failed by calling GPU-only flash-attn on CPU. Test now uses the existing CPU reference-backend pattern, preserving production chunk/checkpoint/entropy; GPU kernel equality still pending. Added actual per-rank optimizer attempt/update/skip counts and two-turn search/observation mask audit. No real training or model generation; CPU rerun started.
+
+
+Final diagnostic review: fixed-trajectory probe now rejects nonzero module/attention dropout before update, preventing stochastic train/eval differences from being misread as likelihood displacement. One new CPU regression added; previous 169-pass results preserved, final rerun pending. No GPU workload started.
+
+
+## 2026-10-10T11:06:58.832389+00:00 GRPO 阶段一实现验收
+
+- 负责人 /root；全量 CPU 170 项通过，新增 38 项；GPU 未联调。完整行为和边界见 [运行记录](runs/metax-grpo-phase1-20261010-v1.md)。
+- 基础算法不导入 Ray 或 worker；共用入口只作适配，原奖励/生成/检索复用；无生产 monkey patch、无循环依赖。生成和训练诊断默认关闭。
+- 已实现并 CPU 验证：评价入口、安全边界、准确统计、LM head 截断、有界诊断、token 和终止审计。未完成：完整参数分量梯度、合法动作概率归因、LLDS/DAPO/Dr. GRPO 消融及八卡验收。
+- 证据：`/mnt/public/code/lyk/lzy/runs/metax-grpo-phase1-20261010-v1/source-audit.json`、cpu-regression.final.json、tokenizer-config-evidence.json、final-manifest.json。
+
+### 独立函数职责单元
+
+| 序号 | 文件/函数/行 | 中文职责说明 |
+| --- | --- | --- |
+| 1 | `verl/trainer/ppo/ray_trainer.py:176 reduce_metrics` | 保留旧均值口径，并正确汇总显式极值和诊断计数。 |
+| 2 | `verl/trainer/ppo/ray_trainer.py:483 RayPPOTrainer._validate` | 共用生成协议评价开发集，最终正确率保持原EM口径。 |
+| 3 | `verl/trainer/ppo/ray_trainer.py:750 RayPPOTrainer.fit` | 复用 GRPO 更新流程；独立评价入口保证不进入训练循环。 |
+| 4 | `verl/workers/actor/dp_actor.py:47 forward_response_logits` | 提取回答 logits，显式省显存时使用模型实际支持的 LM head 截断参数。 |
+| 5 | `verl/workers/actor/dp_actor.py:223 DataParallelPPOActor._optimizer_step` | 按原精度裁剪梯度并更新Adam，可选记录状态显存。 |
+| 6 | `verl/workers/actor/dp_actor.py:318 DataParallelPPOActor.update_policy` | 原批次及梯度累积更新策略，可选将反传保存的同精度激活搬至CPU。 |
+| 7 | `verl/experimental/difficulty/configuration.py:111 provenance` | 为模型、数据、检索和训练协议生成可比较的恢复指纹。 |
+| 8 | `verl/experimental/difficulty/loss_safety.py:6 valid_values` | 只取有效模型 token，并以 FP32 验证数值。 |
+| 9 | `verl/experimental/difficulty/loss_safety.py:27 policy_loss` | 计算原 GRPO 裁剪损失，并保护极端概率比。 |
+| 10 | `verl/experimental/difficulty/loss_safety.py:61 kl_loss` | 计算安全参考 KL 估计，指数高端沿用切线延续。 |
+| 11 | `verl/experimental/difficulty/loss_safety.py:89 entropy_loss` | 计算有效模型 token 的原熵均值。 |
+| 12 | `search_r1/llm_agent/generation.py:249 LLMGenerationManager._record_token_alignment` | 将原始及消费 token 审计映射回真实活动轨迹。 |
+| 13 | `search_r1/llm_agent/generation.py:291 LLMGenerationManager.run_llm_loop` | 执行原检索循环，启用时随轨迹保存独立来源报告。 |
+| 14 | `verl/third_party/vllm/metax_v_0_11_0/llm.py:176 LLM.generate` | 仅使用已同步且缓存一致的权重生成旧接口的 token 和概率张量。 |
+| 15 | `verl/workers/rollout/vllm_rollout/vllm_rollout.py:158 vLLMRollout.generate_sequences` | 复用原生成流程，可选传递 MetaX 原生终止元数据。 |
+| 16 | `verl/experimental/stability/diagnostics.py:8 reduce_metric` | 聚合真实极值及可加计数，旧损失指标沿用均值。 |
+| 17 | `verl/experimental/stability/diagnostics.py:25 token_diagnostics` | 记录有效模型 token 的概率比、优势和样本权重。 |
+| 18 | `verl/experimental/stability/diagnostics.py:63 score_gradient_diagnostics` | 计算已加权损失在概率和熵输出端的梯度范数。 |
+| 19 | `verl/experimental/stability/diagnostics.py:83 sample_parameter_values` | 以固定遍历顺序复制少量本地参数作更新前后探针。 |
+| 20 | `verl/experimental/stability/diagnostics.py:106 parameter_update_diagnostics` | 比较相同本地参数样本的实际变化。 |
+| 21 | `verl/experimental/stability/diagnostics.py:125 likelihood_change_diagnostics` | 对更新前后相同固定轨迹报告 token 对数概率变化。 |
+| 22 | `verl/experimental/stability/generation_audit.py:4 token_alignment_report` | 对比实际生成和进入训练的 token 前缀及终止证据。 |
+| 23 | `tests/test_actor_scaler_step.py:37 ScalerStepTest.make_actor` | 构造具有真实配置接口的 CPU 缩放回退测试演员。 |
+| 24 | `tests/test_grpo_difficulty.py:115 DifficultyTests.test_validation_scores_every_row_including_tail` | 两种评价路径都完整计分尾批，夹具包含正式入口已初始化的步数。 |
+| 25 | `tests/test_grpo_difficulty.py:147 DifficultyTests.test_multiturn_evaluation_preserves_sampling_flags` | 活动行缩减及补齐后保留评价参数、种子和轮次，夹具兼容当前窄接口。 |
+| 26 | `tests/test_grpo_difficulty.py:165 DifficultyTests.test_multiturn_evaluation_preserves_sampling_flags.Manager._process_next_obs` | 返回空环境观察，接受当前共用预算和诊断参数。 |
+| 27 | `tests/test_grpo_difficulty.py:173 DifficultyTests.test_multiturn_evaluation_preserves_sampling_flags.Manager.execute_predictions` | 用确定性答案/搜索动作模拟当前执行器接口。 |
+| 28 | `tests/test_stability_phase1.py:25 EvaluationEntryTests.trainer` | 创建只允许评价、禁止生成管理器及训练更新的入口夹具。 |
+| 29 | `tests/test_stability_phase1.py:46 EvaluationEntryTests.test_val_only_independent_of_before_flag` | 两种训练前评价开关都必须评价一次并保持零训练更新。 |
+| 30 | `tests/test_stability_phase1.py:62 EvaluationEntryTests.test_resumed_val_only_preserves_completed_step` | 恢复状态不能绕过独立评价，也不能递增 global step。 |
+| 31 | `tests/test_stability_phase1.py:75 EvaluationEntryTests.test_missing_reward_fails_without_updates` | 评价缺少奖励函数必须失败，不能静默进入训练。 |
+| 32 | `tests/test_stability_phase1.py:85 EvaluationEntryTests.test_score_mode_conflict_fails_without_updates` | 同时请求评分和评价必须明确报错。 |
+| 33 | `tests/test_stability_phase1.py:96 NumericalTests.actor` | 创建可检查真实 SGD 参数与缩放状态的 CPU actor。 |
+| 34 | `tests/test_stability_phase1.py:108 NumericalTests.test_nonfinite_without_scaler_refuses_step` | 非缩放路径的 NaN 和 inf 梯度不得污染参数。 |
+| 35 | `tests/test_stability_phase1.py:124 NumericalTests.test_optimizer_step_failure_offloads_loaded_state` | 更新异常仍卸回已加载的优化器状态，防止异常路径占据 GPU 显存。 |
+| 36 | `tests/test_stability_phase1.py:140 NumericalTests.test_scaled_nonfinite_skips_then_recovers` | 缩放路径跳过异常更新、回退 scale，并允许下一次有限梯度恢复。 |
+| 37 | `tests/test_stability_phase1.py:157 NumericalTests.test_finite_elements_with_overflowed_norm_skip` | 范数求和溢出也必须跳步，不能依赖逐元素 inf 检查。 |
+| 38 | `tests/test_stability_phase1.py:170 NumericalTests.test_masked_nan_is_excluded_from_gradient` | 无效环境位置的 NaN 不得进入损失或参数梯度。 |
+| 39 | `tests/test_stability_phase1.py:190 NumericalTests.test_extreme_ratios_and_zero_advantage_remain_finite` | 极端概率比、正负及零优势的损失和梯度应保持有限。 |
+| 40 | `tests/test_stability_phase1.py:201 NumericalTests.test_kl_cutoff_values_and_derivatives` | KL 切换点两侧应沿用原值、原导数及连续切线。 |
+| 41 | `tests/test_stability_phase1.py:217 NumericalTests.test_finite_input_subtraction_overflow_rejected` | 单个输入有限而概率差溢出时应在指数前失败。 |
+| 42 | `tests/test_stability_phase1.py:228 NumericalTests.test_invalid_masks_and_bounds_rejected` | 空掩码、非二值、错误形状和错误边界应明确报错。 |
+| 43 | `tests/test_stability_phase1.py:248 NumericalTests.test_fp16_input_uses_fp32_losses` | FP16 输入应在 FP32 计算损失，并保留有限反传。 |
+| 44 | `tests/test_stability_phase1.py:261 DiagnosticTests.test_extrema_and_counts_aggregate_correctly` | 跨微批和 worker 的极值取 max，计数取 sum，旧损失取均值。 |
+| 45 | `tests/test_stability_phase1.py:276 DiagnosticTests.test_token_statistics_mask_and_advantage_groups` | 诊断必须排除环境 NaN，并保留正负零优势的真实 token 数。 |
+| 46 | `tests/test_stability_phase1.py:289 DiagnosticTests.test_score_diagnostics_do_not_change_backward` | 分量输出端梯度诊断不得提前写入 .grad 或改变正式反传。 |
+| 47 | `tests/test_stability_phase1.py:306 DiagnosticTests.test_bounded_parameter_samples` | 参数探针有硬上限、独立存储，并报告真实样本变化。 |
+| 48 | `tests/test_stability_phase1.py:327 DiagnosticTests.test_fixed_trajectory_probe_excludes_environment` | 固定轨迹概率探针只比较模型 token，忽略环境 NaN。 |
+| 49 | `tests/test_stability_phase1.py:337 DiagnosticTests.test_diagnostic_invalid_inputs` | 诊断错误形状、掩码和非有限值必须失败，避免写出误导指标。 |
+| 50 | `tests/test_stability_phase1.py:349 DiagnosticTests.run_actor_update` | 通过真实 update_policy 验证可选诊断对 CPU 小模型更新的兼容性。 |
+| 51 | `tests/test_stability_phase1.py:394 DiagnosticTests.test_fixed_probe_rejects_stochastic_dropout` | 随机 dropout 不能被误记为策略概率变化，必须在任何更新前拒绝探针。 |
+| 52 | `tests/test_stability_phase1.py:402 DiagnosticTests.test_diagnostics_keep_restore_fingerprint` | 默认关闭及开启只读诊断都兼容原 checkpoint 来源指纹。 |
+| 53 | `tests/test_stability_phase1.py:424 DiagnosticTests.test_real_update_diagnostics_disabled_enabled_equal` | 诊断开关不改变小模型参数更新；只有显式探针增加前向。 |
+| 54 | `tests/test_stability_phase1.py:450 ForwardInterfaceTests.test_explicit_legacy_signature_supported` | 明确提供旧参数的模型继续兼容，不依赖 Transformers 版本猜测。 |
+| 55 | `tests/test_stability_phase1.py:469 ForwardInterfaceTests.test_fsdp_public_module_signature_path` | FSDP 公开 module 分支使用实际模型签名，CPU 替身不初始化分布式。 |
+| 56 | `tests/test_stability_phase1.py:498 ForwardInterfaceTests.test_unknown_signature_fails_before_forward` | 不支持接口时明确拒绝，避免优化选项被静默吞掉。 |
+| 57 | `tests/test_stability_phase1.py:513 ForwardInterfaceTests.test_chunked_statistics_values_and_gradients_equal` | CPU 参考后端验证分块和重算的概率、熵及梯度保持一致。 |
+| 58 | `tests/test_stability_phase1.py:543 TokenAuditTests.test_consumed_prefix_is_allowed` | 删掉合法动作之后的未消费尾部不能误报重分词。 |
+| 59 | `tests/test_stability_phase1.py:554 TokenAuditTests.test_native_finish_and_eos_preserved_in_report` | 原生长度处理 pad 等于 EOS 情况，并保留真实 stop 信息。 |
+| 60 | `tests/test_stability_phase1.py:569 TokenAuditTests.test_noncanonical_tokens_detected_without_rewrite` | 同文本不同 token 前缀必须记录，不在审计中修补。 |
+| 61 | `tests/test_stability_phase1.py:582 TokenAuditTests.test_active_rows_and_padding_keep_identity` | token 审计随活动行还原，不把补齐行或非活动行计入。 |
+| 62 | `tests/test_stability_phase1.py:602 TokenAuditTests.test_disabled_audit_does_not_decode` | 默认关闭的审计不得访问 token 或引入额外记录。 |
+| 63 | `tests/test_stability_phase1.py:609 TokenAuditTests.test_full_loop_audit_keeps_model_and_environment_masks` | 完整共用生成循环的审计开关不改变 token、来源 mask 或动作消费。 |
+| 64 | `tests/test_stability_phase1.py:656 TokenAuditTests.test_metax_metadata_opt_in_preserves_tokens_and_probabilities` | 使用原生完成对象夹具验证元数据开关保持旧 token 和概率逐元素一致。 |
+| 65 | `tests/test_stability_phase1.py:370 DiagnosticTests.run_actor_update.forward` | 用 CPU 线性层替代 GPU 前向，保留可求导概率及熵。 |
+| 66 | `tests/test_stability_phase1.py:518 ForwardInterfaceTests.test_chunked_statistics_values_and_gradients_equal.cpu_log_probs` | 复用原公式提供 GPU 融合算子的 CPU 参考。 |
+| 67 | `tests/test_stability_phase1.py:455 ForwardInterfaceTests.test_explicit_legacy_signature_supported.LegacyModel.forward` | 使用显式旧接口裁 LM head 输入的 CPU 替身。 |
+| 68 | `tests/test_stability_phase1.py:474 ForwardInterfaceTests.test_fsdp_public_module_signature_path.Model.forward` | 当前截断接口的 CPU 替身。 |
+| 69 | `tests/test_stability_phase1.py:482 ForwardInterfaceTests.test_fsdp_public_module_signature_path.Wrapper.__init__` | 模拟 FSDP 的公开包装接口。 |
+| 70 | `tests/test_stability_phase1.py:488 ForwardInterfaceTests.test_fsdp_public_module_signature_path.Wrapper.forward` | 原参数委托到实际模型，不裁上下文。 |
+| 71 | `tests/test_stability_phase1.py:503 ForwardInterfaceTests.test_unknown_signature_fails_before_forward.Unknown.forward` | 不声明截断选项的模型替身。 |
+| 72 | `tests/test_stability_phase1.py:616 TokenAuditTests.test_full_loop_audit_keeps_model_and_environment_masks.Worker.__init__` | 每次生成调用使用独立轮次，先搜索后回答。 |
+| 73 | `tests/test_stability_phase1.py:621 TokenAuditTests.test_full_loop_audit_keeps_model_and_environment_masks.Worker.generate_sequences` | 返回固定完整答案，仍执行真实 GPU 行补齐与还原。 |
+| 74 | `tests/test_stability_rollout.py:14 RolloutMetadataTests.rollout` | 隔离原生 GPU 导入并构造可执行真实生成适配的 CPU 夹具。 |
+| 75 | `tests/test_stability_rollout.py:52 RolloutMetadataTests.prompts` | 构造两个真实提示并显式声明 EOS 和审计开关。 |
+| 76 | `tests/test_stability_rollout.py:62 RolloutMetadataTests.test_default_and_audited_outputs_equal` | 元数据开关不改变实际 rollout token、概率掩码或位置编码。 |
+| 77 | `tests/test_stability_rollout.py:77 RolloutMetadataTests.test_multiple_candidates_preserve_metadata_order` | 多候选展开后的元数据必须对应真实候选数量和顺序。 |
+| 78 | `tests/test_stability_rollout.py:87 RolloutMetadataTests.test_malformed_metadata_rejected` | 元数据数量错误时失败，防止污染后续轨迹身份。 |
+| 79 | `tests/test_stability_rollout.py:95 RolloutMetadataTests.test_unsupported_backend_keeps_legacy_interface` | 未支持的后端不接收新参数或伪造原生终止原因。 |
+| 80 | `tests/test_stability_rollout.py:35 RolloutMetadataTests.rollout.generate` | 返回可核对候选顺序的原生 token、概率及可选元数据。 |
+
+### 关键内部逻辑单元
+
+1. 极值指标跨微批和 worker 取 max。
+2. 可加计数及概率总量取 sum。
+3. 旧均值保留及微批分位数口径。
+4. 诊断形状一致与二值掩码。
+5. 先筛选模型 token 排除环境 NaN。
+6. 空有效集及非有限诊断中间量失败。
+7. 正负零优势分组的 token 计数和总量。
+8. 加权损失输出端梯度停止回溯到模型参数。
+9. 常数或不可导分量不额外构图。
+10. 参数样本正整数预算。
+11. 参数样本硬上限及独立 CPU 存储。
+12. 参数样本前后位置一致及零范数保护。
+13. 固定概率探针拒绝非零 dropout。
+14. 首微批只复制一条固定轨迹。
+15. 同轨迹同温度更新后探针及模式 finally 恢复。
+16. val_only 独立于 val_before_train。
+17. 纯评价无奖励或评分冲突时失败。
+18. 恢复后评价保留完成步数并返回。
+19. 非有限全局梯度范数在 Adam 状态装入前拦截。
+20. 异常梯度清空避免下一次更新污染。
+21. 启用 GradScaler 的回退及跳步。
+22. 关闭 GradScaler 的非有限失败。
+23. 更新尝试成功跳步计数与每 rank 口径。
+24. FSDP 公开 module 的真实 forward 签名。
+25. 明确新旧 LM head 接口选择及未知接口拒绝。
+26. 保留完整因果上下文及首 token 预测位置。
+27. 损失形状与二值掩码检查。
+28. 有效损失位置 FP32 转换、非空及有限验证。
+29. PG 边界合法性及相减溢出拒绝。
+30. KL 边界、参考差及原切线连续公式。
+31. 只读开关默认关闭及恢复指纹排除。
+32. 原生概率缺失明确标记并保持旧回退。
+33. 元数据选项隔离采样配置及后端支持边界。
+34. 候选元数据数量及顺序与 DataProto 随行身份。
+35. 原始 token 原生长度、EOS 与消费前缀审计。
+36. 审计开关、活动行还原和既有来源账本保存。
+
+注释逻辑单元：函数 80 项+关键逻辑 36 项=116 项；有效中文说明 116/116=100%。函数标签逐作用域 AST 核查，关键逻辑核查就近说明，无遗漏项；不将该比例解释为注释行数比例。
+
+
+## 2026-10-10T11:40:06.978470+00:00 Phase1 submission verification
+
+提交前重新执行全量 CPU 回归：170 项通过、失败/错误/跳过均为 0；日志独立保存，不覆盖历史结果。全部 20 项交付文件哈希与 final-manifest.json 一致，其中 15 项为源码/配置/测试。未进行真实 GPU/FSDP 验收，真实模型生成与训练更新为 0。源码未再次修改；原注释审计 80 函数、116/116 逻辑单元因源码哈希一致继续适用，本次记录修改的注释覆盖率不适用。仅暂存阶段一代码与文档新增段落，原有报告与台账修改保留。提交身份使用 Codex <codex@localhost>，不更改仓库身份配置。提交哈希在下一阶段计划台账补记。
+
+Evidence: /mnt/public/code/lyk/lzy/runs/metax-grpo-phase1-20261010-v1/submission-verification/; agent: /root.

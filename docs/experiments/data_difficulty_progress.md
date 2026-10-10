@@ -1437,3 +1437,50 @@ v1完成2/100步、64题/512保留轨迹；第3步候选已筛完但无完整tra
 
 
 提交前补充：普通git diff --check只覆盖已跟踪修改并通过；完整git diff --cached --check发现gpu_flat_index.py、activation_offload.py、gpu_memory_trace.py末尾已有CRLF空行（无逻辑问题）。当前运行冻结源码字节，未为格式问题改动运行中的文件。采用core.whitespace=blank-at-eol,space-before-tab,cr-at-eol,-blank-at-eof核查其余空白项；语法9文件及函数27项检查仍通过。该例外仅为已冻结的末尾格式，未重跑GPU回归。
+
+
+## 2026-10-10T10:12:56.476668+00:00 GRPO stability phase1 started
+
+User authorized phase1 CPU verification and minimal repairs; agent /root. Baseline backup and manifest: /mnt/public/code/lyk/lzy/runs/metax-grpo-phase1-20261010-v1. No GPU generation/training started. Existing test_actor_scaler_step.py: 3 errors caused by SimpleNamespace lacking config.get; production behavior not yet exercised. Evaluation-only control flow and max-metric aggregation confirmed defects; repairs and CPU regression pending. Historical run artifacts/checkpoints remain unchanged.
+
+
+## Phase1 initial patch installed
+
+Evaluation-only entry, nonfinite-gradient guard, max aggregation repaired. Default-off bounded actor diagnostics and token/native termination audit added. Existing scaler fixture uses actual OmegaConf interface. Syntax validated before writes; CPU tests pending; no GPU generation/training. Payload replacement scope was corrected before any source write; a premature discovery found zero tests and is not accepted. Evidence /mnt/public/code/lyk/lzy/runs/metax-grpo-phase1-20261010-v1/repair-manifest.initial.json.
+
+
+Phase1 verification update: initial 26 CPU regressions passed (phase1-tests.initial.log); restore fingerprint and complete generation-loop regressions added, pending rerun. Native adapter test now uses existing import-isolated CPU fixture. No GPU generation/training.
+
+
+CPU rollout-adapter regressions added for metadata toggles, multiple candidates, malformed rows and unsupported backends. Full CPU suite running with GPU hidden; no GPU training/generation. Results pending at /mnt/public/code/lyk/lzy/runs/metax-grpo-phase1-20261010-v1/cpu-regression.final.json.
+
+
+Full CPU attempt1: 164 tests, 1 failure and 11 errors. Historical fixtures lacked global_steps and current optional execution/observation arguments; two new assertions iterated TensorDict rows instead of keys. Fixed fixture compatibility and assertions. Confirmed Qwen2 current interface logits_to_keep; existing num_logits_to_keep was ignored despite enabled configuration. Actual-signature adapter now supports both explicit interfaces, pending rerun and GPU equality. Logs retained as cpu-regression.attempt1.*; no GPU training/generation.
+
+
+CPU verification expanded to explicit old/new LM-head signatures, FSDP public-module signature path (CPU mock only), token-statistics chunk/recompute equality, and optimizer-state finally cleanup on step exception. Verification pending; GPU equality remains untested.
+
+
+Full CPU attempt2: 169 tests, only new chunk test failed by calling GPU-only flash-attn on CPU. Test now uses the existing CPU reference-backend pattern, preserving production chunk/checkpoint/entropy; GPU kernel equality still pending. Added actual per-rank optimizer attempt/update/skip counts and two-turn search/observation mask audit. No real training or model generation; CPU rerun started.
+
+
+Final diagnostic review: fixed-trajectory probe now rejects nonzero module/attention dropout before update, preventing stochastic train/eval differences from being misread as likelihood displacement. One new CPU regression added; previous 169-pass results preserved, final rerun pending. No GPU workload started.
+
+
+## GRPO 稳定性修复阶段一：实现与 CPU 验证完成
+
+负责人 /root；远端 mx；本次真实训练步数 0、真实模型生成/评分题数 0，未创建 checkpoint。全量 CPU 170/170 通过，新增 38 项；GPU test_fp16.py 未执行。修复纯评价入口、真实 max 归约、非有限梯度更新保护及 Qwen2 实际 LM head 接口，增加每 rank 更新计数与默认关闭的有界诊断。原奖励/优势/学习率/KL/采样参数保持原值。
+
+实际 tokenizer 验证说明 EOS 会被后处理删除、同文本存在重分词歧义；历史 raw token 缺失，不能认定其为退化根因。合法动作概率和完整参数梯度归因仍未完成。MetaX 八卡、真实 FP16 融合算子、修复后的零更新 GPU 评价及长期效果尚未验收。
+
+对应记录：[阶段一运行记录](runs/metax-grpo-phase1-20261010-v1.md)。下一步先完成 GPU 数值/同步与纯评价验收，再进入奖励/优势单变量对照；不直接开始长训练。原有未提交文档、旧训练日志和 checkpoint 保留，未提交/推送代码。
+
+
+检查 UTC：2026-10-10T11:06:58.832389+00:00；证据：`/mnt/public/code/lyk/lzy/runs/metax-grpo-phase1-20261010-v1`。
+
+
+## 2026-10-10T11:40:06.978470+00:00 Phase1 submission verification
+
+阶段一提交准备：170 项 CPU 复验通过，交付哈希一致；未启动真实生成/训练。准备仅提交阶段一修复，保留此前无关工作区修改。GPU/FSDP 尚未验证，后续不得据 CPU 结果宣称长期稳定性已修复。
+
+Evidence: /mnt/public/code/lyk/lzy/runs/metax-grpo-phase1-20261010-v1/submission-verification/; agent: /root.

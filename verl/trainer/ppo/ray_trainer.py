@@ -174,8 +174,15 @@ def compute_advantage(data: DataProto, adv_estimator, gamma=1.0, lam=1.0, num_re
 
 
 def reduce_metrics(metrics: dict):
+    """@brief 保留旧均值口径，并正确汇总显式极值和诊断计数。
+    @param metrics worker 返回的指标列表字典。
+    @return 原地聚合后的指标字典。
+    @note 分位数只汇总微批分位数，不冒充全局分位数。
+    """
+    from verl.experimental.stability.diagnostics import reduce_metric
+    # 原 max 指标曾被取均值；跨 worker 与微批均必须保留真实最大值。
     for key, val in metrics.items():
-        metrics[key] = np.mean(val)
+        metrics[key] = reduce_metric(key, val)
     return metrics
 
 
@@ -500,6 +507,7 @@ class RayPPOTrainer(object):
             observation_truncation=self.config.data.get('observation_truncation', 'legacy'),
             context_policy=self.config.data.get('context_policy', 'legacy'),
             record_diagnostics=self.config.data.get('record_generation_diagnostics', False),
+            record_token_diagnostics=self.config.data.get('record_token_diagnostics', False),
             # 训练和评价传入同一来源检查配置；评价奖励入口另行保留原EM。
             process_checks_enabled=self.config.get('process_checks', {}).get('enabled', False),
             process_audit_path=self.config.get('process_checks', {}).get('audit_path'),
@@ -741,8 +749,10 @@ class RayPPOTrainer(object):
 
     def fit(self):
         """
-        @brief 复用原PPO训练流程，显式传递可选过程检查配置。
+        @brief 复用 GRPO 更新流程；独立评价入口保证不进入训练循环。
         @return 无。
+        @raises ValueError 评价缺少奖励函数、与评分冲突或恢复来源不匹配。
+        @note val_only 与 val_before_train 无依赖；恢复后评价保留已完成步数。
         """
 
         logger = self.logger
@@ -761,6 +771,15 @@ class RayPPOTrainer(object):
                                             compatible_provenance=state['provenance'])
             self.actor_rollout_wg.load_training_checkpoint(str(Path(self.config.difficulty.resume) / 'actor'))
             self.global_steps = self.difficulty.completed_step
+        # val_only 是独立入口；恢复状态后仍须评价并返回，不依赖训练前评价开关。
+        if self.config.trainer.get('val_only', False):
+            if self.val_reward_fn is None:
+                raise ValueError('val_only requires val_reward_fn')
+            if self.difficulty and self.config.difficulty.mode == 'score':
+                raise ValueError('val_only conflicts with difficulty score mode')
+            val_metrics = self._validate()
+            logger.log(data=val_metrics, step=self.global_steps)
+            return
         # perform validation before training
         # currently, we only support validation using the reward_function.
         if (self.val_reward_fn is not None and self.config.trainer.get('val_before_train', True)
@@ -768,8 +787,6 @@ class RayPPOTrainer(object):
             val_metrics = self._validate()
             pprint(f'Initial validation metrics: {val_metrics}')
             logger.log(data=val_metrics, step=self.global_steps)
-            if self.config.trainer.get('val_only', False):
-                return
 
         # we start from step 1
         self.global_steps += 1
@@ -791,6 +808,7 @@ class RayPPOTrainer(object):
             observation_truncation=self.config.data.get('observation_truncation', 'legacy'),
             context_policy=self.config.data.get('context_policy', 'legacy'),
             record_diagnostics=self.config.data.get('record_generation_diagnostics', False),
+            record_token_diagnostics=self.config.data.get('record_token_diagnostics', False),
             # 来源账本仅在显式开启时创建，默认路径保留既有生成行为。
             process_checks_enabled=self.config.get('process_checks', {}).get('enabled', False),
             process_audit_path=self.config.get('process_checks', {}).get('audit_path'),

@@ -113,10 +113,15 @@ class DifficultyTests(unittest.TestCase):
 
     # [data-difficulty] 检索/非检索两条评价路径均逐一核对题目顺序，避免只查总数而漏掉重复计分。
     def test_validation_scores_every_row_including_tail(self):
+        """@brief 两种评价路径都完整计分尾批，夹具包含正式入口已初始化的步数。
+        @return 无。
+        """
         for do_search in (False, True):
             for size in (1,3,5,9):
                 with self.subTest(do_search=do_search, size=size):
                     trainer = object.__new__(RayPPOTrainer)
+                    # 正式 fit 已初始化步数，独立评价夹具必须同样具备该字段。
+                    trainer.global_steps = 0
                     trainer.config = OmegaConf.load(ROOT/'verl/trainer/config/ppo_trainer.yaml')
                     trainer.config.data.train_files = '4'
                     trainer.config.data.val_files = str(size)
@@ -140,6 +145,9 @@ class DifficultyTests(unittest.TestCase):
 
     # [data-difficulty] 活动轨迹从 3→2→1→0，覆盖正常轮、补齐轮及最后一轮的参数传递。
     def test_multiturn_evaluation_preserves_sampling_flags(self):
+        """@brief 活动行缩减及补齐后保留评价参数、种子和轮次，夹具兼容当前窄接口。
+        @return 无。
+        """
         class Tokenizer:
             pad_token_id = 0
             pad_token = '<pad>'
@@ -154,9 +162,23 @@ class DifficultyTests(unittest.TestCase):
         class Manager(LLMGenerationManager):
             def _postprocess_responses(self, responses):
                 return responses, ['answer' if v == 11 else 'search' for v in responses[:,0].tolist()]
-            def _process_next_obs(self, observations):
+            def _process_next_obs(self, observations, limits=None, diagnostics=None):
+                """@brief 返回空环境观察，接受当前共用预算和诊断参数。
+                @param observations 各轨迹观察字符串。
+                @param limits 可选观察预算，本测试使用旧协议无预算。
+                @param diagnostics 可选诊断，本测试关闭。
+                @return 整数空观察矩阵。
+                """
                 return torch.zeros((len(observations), 1), dtype=torch.long)
-            def execute_predictions(self, predictions, pad_token, active_mask=None, do_search=True):
+            def execute_predictions(self, predictions, pad_token, active_mask=None, do_search=True, **kwargs):
+                """@brief 用确定性答案/搜索动作模拟当前执行器接口。
+                @param predictions 活动及非活动行预测。
+                @param pad_token 原补齐 token。
+                @param active_mask 完整批次活动掩码。
+                @param do_search 是否允许搜索，本测试使用固定动作。
+                @param kwargs 当前接口的 final_mask、checks、turn 和 raw_predictions，本旧协议测试无工具。
+                @return 观察、结束、动作和搜索标记。
+                """
                 done = [not bool(active) or answer == 'answer' for answer, active in zip(predictions, active_mask)]
                 search = [int(bool(active) and answer == 'search') for answer, active in zip(predictions, active_mask)]
                 return ['']*len(predictions), done, [1]*len(predictions), search

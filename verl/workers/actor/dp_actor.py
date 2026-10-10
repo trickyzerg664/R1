@@ -45,10 +45,25 @@ __all__ = ['DataParallelPPOActor']
 
 
 def forward_response_logits(model, response_length, response_logits_only=False, **model_inputs):
-    """返回回答 token 的 logits；Qwen2 开关只裁 LM head 输入，不裁因果上下文。"""
-    # [data-difficulty] 多保留一个位置，用于预测回答的首个 token。
+    """@brief 提取回答 logits，显式省显存时使用模型实际支持的 LM head 截断参数。
+    @param model 因果模型或 FSDP 包装，不能截断其输入上下文。
+    @param response_length 回答 token 长度。
+    @param response_logits_only 是否只计算回答加前一位置的 LM head。
+    @param model_inputs 原始完整上下文、attention mask、position ids 等模型参数。
+    @return 批次乘回答长度乘词表的 logits。
+    @raises ValueError 显式开启优化但模型不支持已知截断接口。
+    @note FSDP 使用公开 module 检查实际签名；默认关闭时不检查或改变调用。
+    """
     if response_logits_only:
-        model_inputs['num_logits_to_keep'] = response_length + 1
+        # 新版 Qwen2 使用 logits_to_keep；旧拼写可能被 **kwargs 吞掉，显存优化静默失效。
+        import inspect
+        forward_model = model.module if isinstance(model, FSDP) else model
+        parameters = inspect.signature(forward_model.forward).parameters
+        key = next((name for name in ('logits_to_keep', 'num_logits_to_keep') if name in parameters), None)
+        if key is None:
+            raise ValueError('Model does not explicitly support response-only logits')
+        # 多保留一个预测位置，但仍传入完整因果上下文。
+        model_inputs[key] = response_length + 1
     return model(**model_inputs).logits[:, -response_length - 1:-1]
 
 
@@ -208,7 +223,8 @@ class DataParallelPPOActor(BasePPOActor):
     def _optimizer_step(self):
         """@brief 按原精度裁剪梯度并更新Adam，可选记录状态显存。
         @return 梯度范数及是否实际完成更新的布尔值。
-        @note 反传后才装入Adam状态，finally卸回CPU，保留溢出跳步语义。
+        @raises FloatingPointError 未启用缩放时梯度范数非有限，拒绝更新。
+        @note 反传后才装入Adam状态，finally卸回CPU；全局非有限范数触发一致跳步。
         """
         trace_gpu_memory('optimizer_before_load', self.config.get('memory_diagnostics', False),
                          optimizer=self.actor_optimizer)
@@ -219,6 +235,15 @@ class DataParallelPPOActor(BasePPOActor):
             grad_norm = self.actor_module.clip_grad_norm_(max_norm=self.config.grad_clip)
         else:
             grad_norm = torch.nn.utils.clip_grad_norm_(self.actor_module.parameters(), max_norm=self.config.grad_clip)
+        # 非有限全局范数不得进入 Adam；FSDP 各 rank 使用相同全局范数作决定。
+        # 即便单个梯度有限，范数求和也可能溢出，不能只依赖 GradScaler 的逐元素检查。
+        if not torch.isfinite(grad_norm).item():
+            self.actor_optimizer.zero_grad(set_to_none=True)
+            if self.grad_scaler.is_enabled():
+                # 公开 update API 同时回退缩放并清理本轮缓存，完全不调用 optimizer.step。
+                self.grad_scaler.update(new_scale=self.grad_scaler.get_scale() * self.grad_scaler.get_backoff_factor())
+                return grad_norm, False
+            raise FloatingPointError('Nonfinite gradient norm; optimizer step refused')
         # 优化器状态只在反传完成后搬入 GPU，避免 Adam 状态与激活同时占用显存。
         optimizer_loaded = False
         if getattr(self, 'optimizer_offload', False) and torch.isfinite(grad_norm).item():
@@ -293,8 +318,10 @@ class DataParallelPPOActor(BasePPOActor):
     def update_policy(self, data: DataProto):
         """@brief 原批次及梯度累积更新策略，可选将反传保存的同精度激活搬至CPU。
         @param data 完整DataProto，含完整上下文、回答、掩码、优势、旧及参考概率。
-        @return 原微批损失、梯度及优化器更新指标映射。
+        @return 原指标及显式开启的只读稳定性诊断映射。
+        @note 输出端分量梯度不代表完整参数梯度；固定轨迹探针额外前向，默认关闭。
         @raises FloatingPointError 损失非有限时拒绝反传。
+        @raises ValueError 固定概率探针遇到非零 dropout 时拒绝执行。
         @note activation_offload默认关闭；开启不裁剪token或改变损失计算顺序。
         """
         # make sure we are in training mode
@@ -315,8 +342,23 @@ class DataParallelPPOActor(BasePPOActor):
         # See PPO paper for details. https://arxiv.org/abs/1707.06347
         dataloader = batch.split(self.config.ppo_mini_batch_size)
 
+        from verl.experimental.stability.diagnostics import (
+            token_diagnostics, score_gradient_diagnostics, sample_parameter_values,
+            parameter_update_diagnostics, likelihood_change_diagnostics)
+        diagnostics_config = self.config.get('stability_diagnostics', {})
+        diagnostics_enabled = bool(diagnostics_config.get('enabled', False))
+        probe_enabled = diagnostics_enabled and bool(diagnostics_config.get('probe_after_update', False))
+        if probe_enabled:
+            # 前值来自训练前向、后值在 eval 读取；非零 dropout 会混入随机差异，不能作为概率位移证据。
+            dropout_present = any(
+                (isinstance(module, nn.Dropout) and module.p > 0)
+                or float(getattr(module, 'attention_dropout', 0.) or 0.) > 0
+                for module in self.actor_module.modules())
+            if dropout_present:
+                raise ValueError('Fixed likelihood probe requires zero dropout')
         metrics = {}
         for batch_idx, data in enumerate(dataloader):
+            probe = None
             # split batch into micro_batches
             mini_batch = data
             if self.config.use_dynamic_bsz:
@@ -384,6 +426,20 @@ class DataParallelPPOActor(BasePPOActor):
                         # 保存全部微批，避免均值只有最后一条轨迹；不改变旧模式的实际损失。
                         append_to_dict(metrics, {'actor/kl_loss': kl_loss.detach().item(), 'actor/kl_coef': self.config.kl_loss_coef})
 
+                    # 诊断默认关闭，开启时只观察原损失；分量梯度仅在每个 mini 的首微批计算。
+                    if diagnostics_enabled:
+                        append_to_dict(metrics, token_diagnostics(log_prob, old_log_prob, advantages, response_mask))
+                        if micro_index == 0:
+                            components = {'pg': pg_loss / self.gradient_accumulation,
+                                          'entropy': -entropy_coeff * entropy_loss / self.gradient_accumulation}
+                            if self.config.use_kl_loss:
+                                components['kl'] = self.config.kl_loss_coef * kl_loss / self.gradient_accumulation
+                            append_to_dict(metrics, score_gradient_diagnostics(components, log_prob, entropy))
+                            if probe_enabled:
+                                # 硬限制一条固定轨迹，复制以免后续微批释放或改写其存储。
+                                probe = ({key: data[key][:1].detach().clone()
+                                          for key in ('responses', 'input_ids', 'attention_mask', 'position_ids')},
+                                         log_prob[:1].detach().clone(), response_mask[:1].detach().clone())
                     loss = policy_loss / self.gradient_accumulation
                     if safe_loss and not torch.isfinite(loss).all():
                         raise FloatingPointError('Nonfinite policy loss before backward')
@@ -400,10 +456,33 @@ class DataParallelPPOActor(BasePPOActor):
                 }
                 append_to_dict(metrics, data)
 
+            # 参数变化是固定少量本地样本；禁止为诊断复制完整参数。
+            sample_limit = diagnostics_config.get('parameter_sample_size', 256)
+            before_parameters = (sample_parameter_values(self.actor_module.parameters(), sample_limit)
+                                 if diagnostics_enabled else None)
             grad_norm, updated = self._optimizer_step()
+            if diagnostics_enabled:
+                after_parameters = sample_parameter_values(self.actor_module.parameters(), sample_limit)
+                append_to_dict(metrics, parameter_update_diagnostics(before_parameters, after_parameters))
+            if probe is not None and updated:
+                # 更新后使用相同 token、上下文和温度；暂时 eval 防止 dropout 给探针引入随机变化。
+                was_training = self.actor_module.training
+                try:
+                    self.actor_module.eval()
+                    with torch.no_grad():
+                        _, after_log_prob = self._forward_micro_batch(probe[0], temperature)
+                    append_to_dict(metrics, likelihood_change_diagnostics(probe[1], after_log_prob, probe[2]))
+                finally:
+                    self.actor_module.train(was_training)
             data = {'actor/grad_norm': grad_norm.detach().item(),
                     'actor/optimizer_step': int(updated),
                     'actor/grad_scaler_scale': self.grad_scaler.get_scale()}
             append_to_dict(metrics, data)
+        # 旧 optimizer_step 是更新成功比例，不是更新次数；新增每 rank 的实际计数避免误读。
+        attempts = len(metrics.get('actor/optimizer_step', []))
+        updates = sum(metrics.get('actor/optimizer_step', []))
+        append_to_dict(metrics, {'actor/optimizer_attempts_per_rank': attempts,
+                                 'actor/optimizer_updates_per_rank': updates,
+                                 'actor/optimizer_skips_per_rank': attempts - updates})
         self.actor_optimizer.zero_grad()
         return metrics
