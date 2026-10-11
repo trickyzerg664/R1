@@ -440,6 +440,9 @@ class DataParallelPPOActor(BasePPOActor):
                                 probe = ({key: data[key][:1].detach().clone()
                                           for key in ('responses', 'input_ids', 'attention_mask', 'position_ids')},
                                          log_prob[:1].detach().clone(), response_mask[:1].detach().clone())
+                    # 原总Loss在反传前只读记录；不改变优化目标、mask或梯度累积。
+                    from verl.experimental.stability.loss_observations import loss_observations
+                    append_to_dict(metrics, loss_observations(policy_loss, entropy, response_mask))
                     loss = policy_loss / self.gradient_accumulation
                     if safe_loss and not torch.isfinite(loss).all():
                         raise FloatingPointError('Nonfinite policy loss before backward')

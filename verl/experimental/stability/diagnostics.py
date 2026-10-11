@@ -16,7 +16,7 @@ def reduce_metric(key, values):
     if key in MAX_METRICS or (key.startswith('actor/stability/') and key.endswith('_max')):
         return np.max(values)
     # 新计数和对数概率总量可跨微批相加，后续均值须使用对应 token 总数。
-    if key.startswith('actor/stability/') and key.endswith('_sum'):
+    if key.startswith(('actor/stability/', 'actor/observations/')) and key.endswith('_sum'):
         return np.sum(values)
     # 其他旧指标和微批分位数继续取均值，不冒充全局分位数。
     return np.mean(values)

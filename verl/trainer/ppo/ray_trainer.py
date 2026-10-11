@@ -183,6 +183,10 @@ def reduce_metrics(metrics: dict):
     # 原 max 指标曾被取均值；跨 worker 与微批均必须保留真实最大值。
     for key, val in metrics.items():
         metrics[key] = reduce_metric(key, val)
+    # 全局先汇总分子分母，再计算token加权熵，不能平均微批/各rank的比值。
+    count = metrics.get('actor/observations/model_tokens_sum', 0)
+    if count:
+        metrics['actor/entropy_token_weighted'] = metrics['actor/observations/entropy_sum'] / count
     return metrics
 
 
