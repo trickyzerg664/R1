@@ -1,4 +1,4 @@
-"""顺序运行已冻结的父评价/B/T验证；默认只检查，不复制训练或评分算法。"""
+"""顺序运行冻结评价与训练阶段；默认只检查，支持两臂短试验及单组历史对照。"""
 import argparse,datetime,fcntl,hashlib,json,math,os,re,signal,subprocess,time
 from pathlib import Path
 
@@ -151,6 +151,52 @@ def cleanup_owned(ray_directory):
         except (OSError,ProcessLookupError):pass
     return len(owned)
 
+def training_completion(directory, phase):
+    """@brief 按阶段声明的目标验收训练与完整检查点，旧方案默认20步。
+    @param directory 训练产物Path。
+    @param phase 阶段映射，target_steps为正整数，省略时为20。
+    @return 已验收的真实训练汇总。
+    @raises RuntimeError 目标非法、实际步数或检查点不符。
+    @note 复用既有逐文件校验，不降低完整性要求。
+    """
+    target = phase.get('target_steps', 20)
+    # 拒绝非整数和布尔目标，避免目录名与实际训练预算错配。
+    if type(target) is not int or target < 1:
+        raise RuntimeError('Invalid training target')
+    summary = training_summary(directory)
+    # 计划预算不能替代实测训练事件，提前退出一律视为未完成。
+    if summary['trained_step'] != target:
+        raise RuntimeError('Training did not reach target '+str(target))
+    # 冷评价必须加载本阶段最终完整检查点，包含所有rank状态的哈希验收。
+    from verl.experimental.difficulty.checkpoint import read_checkpoint
+    metadata = read_checkpoint(directory/'checkpoints'/('step_'+str(target)))
+    # 文件完整还须核对元数据步数，拒绝目录名与真实状态不符。
+    if metadata['step'] != target:
+        raise RuntimeError('Checkpoint step differs')
+    return summary
+
+def select_phases(plan, parent):
+    """@brief 按冻结设计选择后续阶段，单组历史对照禁止悄悄回退旧奖励。
+    @param plan 冻结计划；design可省略为paired_first20或设historical_comparison。
+    @param parent 完整父评价汇总，含缺答案及原生终止覆盖。
+    @return (阶段列表,新奖励终止元数据是否通过验收)。
+    @raises RuntimeError 父模型不健康、新奖励证据不足或单组设计非法。
+    """
+    # 沿用预先固定的父模型健康门限；不依据新结果临时挑更好父模型。
+    if parent['missing'] > 12:
+        raise RuntimeError('Parent generation failed health gate')
+    bounded = parent['native_coverage'] >= .95 and parent['stop_events'] > 0
+    if plan.get('design', 'paired_first20') == 'historical_comparison':
+        phases = plan['phases']
+        # 历史运行复用既有结果；只允许父评价、一个新训练和一个冷评价。
+        if len(phases) != 3 or [p['kind'] for p in phases] != ['eval', 'train', 'eval']:
+            raise RuntimeError('Historical comparison requires one training phase')
+        if not bounded:
+            raise RuntimeError('New reward requires native termination coverage')
+        return phases[1:], bounded
+    # 旧两臂试验的默认选择和元数据不足时的回退行为保持兼容。
+    return plan['phases'][1:3]+(plan['phases'][3:5] if bounded else plan['fallback_phases']), bounded
+
 def run_phase(run, phase, plan, deadline):
     """@brief 启动冻结阶段并持续核验真实进度、显存和总时间，异常保留现场。
     @param run 本次产物根Path。
@@ -185,12 +231,7 @@ def run_phase(run, phase, plan, deadline):
             time.sleep(10)
         if child.wait()!=0:raise RuntimeError('Stage failed: '+phase['name']+' exit='+str(child.returncode))
         if phase['kind']=='train':
-            summary=training_summary(directory)
-            if summary['trained_step']!=20:raise RuntimeError('Training did not reach20')
-            # 冷评价前复用原完整checkpoint逐文件校验，包括所有rank状态。
-            from verl.experimental.difficulty.checkpoint import read_checkpoint
-            metadata=read_checkpoint(directory/'checkpoints/step_20')
-            if metadata['step']!=20:raise RuntimeError('Checkpoint step differs')
+            summary=training_completion(directory,phase)
         else:summary=evaluation_summary(directory,256)
         save(directory/'summary.json',summary);return summary
     finally:
@@ -229,10 +270,10 @@ def parent_evaluation(run, plan, deadline):
     return summary
 
 def main():
-    """@brief 默认检查冻结计划；显式--launch才顺序执行父评价和两组20步。
+    """@brief 默认检查冻结计划；显式--launch才执行预声明的评价和训练阶段。
     @return 无。
     @raises RuntimeError 已有训练、重复运行或阶段验收失败。
-    @note 持有八卡独占锁；20步结果完成后留待分析，不自动扩展40/60步。
+    @note 持有八卡独占锁；按声明预算完成，不自动增加实验组或训练步数。
     """
     parser=argparse.ArgumentParser();parser.add_argument('--run-directory',required=True);parser.add_argument('--launch',action='store_true')
     args=parser.parse_args();run=Path(args.run_directory).resolve();plan=json.loads((run/'plan.json').read_text());verify(plan)
@@ -252,18 +293,23 @@ def main():
         save(run/'supervisor-process.json',dict(pid=os.getpid(),started_utc=now()))
         signal.signal(signal.SIGTERM,interrupt);signal.signal(signal.SIGINT,interrupt)
         try:
-            # 显式缓存先重验，随后仍按同一健康/终止门限选择两臂。
+            # 显式缓存先重验；两种设计随后共用原健康及终止覆盖门限。
             parent=parent_evaluation(run,plan,deadline)
-            # 健康验收预先固定：缺答案不超过5%，父评价无更新；未通过便停止锁定新父模型。
-            if parent['missing']>12:raise RuntimeError('Parent generation failed health gate')
-            bounded=parent['native_coverage']>=.95 and parent['stop_events']>0
-            selected=plan['phases'][1:3]+(plan['phases'][3:5] if bounded else plan['fallback_phases'])
+            selected,bounded=select_phases(plan,parent)
             save(run/'selected-design.json',dict(bounded_reward_enabled=bounded,reason='native termination coverage gate',parent=parent))
             for phase in selected:run_phase(run,phase,plan,deadline)
-            publish(run,dict(status='completed_first20',phase='analysis_pending',bounded_reward_enabled=bounded,
-                             B=json.loads((run/'B-eval/summary.json').read_text()),
-                             T=json.loads((run/('T-eval' if bounded else 'T-LK-eval')/'summary.json').read_text()),
-                             next='Compare paired D256 and rollout evidence before extending to40/60'))
+            # 单训练组与历史结果比较；记录真实步数及冷评价，不复制历史训练。
+            if plan.get('design') == 'historical_comparison':
+                publish(run,dict(status='completed_historical_comparison',phase='analysis_pending',
+                                 bounded_reward_enabled=bounded,historical_baseline=plan['historical_baseline'],
+                                 **training_summary(Path(selected[0]['directory'])),
+                                 evaluation=json.loads((Path(selected[-1]['directory'])/'summary.json').read_text()),
+                                 next='Compare matched20/40/60/80/100 D256 and generation behavior'))
+            else:
+                publish(run,dict(status='completed_first20',phase='analysis_pending',bounded_reward_enabled=bounded,
+                                 B=json.loads((run/'B-eval/summary.json').read_text()),
+                                 T=json.loads((run/('T-eval' if bounded else 'T-LK-eval')/'summary.json').read_text()),
+                                 next='Compare paired D256 and rollout evidence before extending to40/60'))
         except Exception as exc:
             publish(run,dict(status='failed',phase='stopped',error=str(exc)));raise
 

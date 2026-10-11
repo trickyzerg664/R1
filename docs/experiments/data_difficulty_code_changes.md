@@ -1788,3 +1788,30 @@ bounded_invalid_v1接入独立纯模块，复用已校验门控/成功标签；�
 ## 2026-10-11T08:34:34.549052+00:00
 
 CPU230项全部通过，失败/错误/跳过0；新增跨rank4项及父复用2项。修复前4项失败复现、首次CPU夹具1error及最终通过均保留；尚无修复后八卡实际更新证据。最后只补中文注释，未改变已测行为。注释审计按同名concat曾误选未修改DataProtoFuture.concat，已改为精确选取DataProto类。10函数标签完整，24/24语义逻辑单元均有有效中文说明，100%；此前17项清单由本完整清单补足，细目见本次source-audit.json。指标修复e6f4cbc、父评价复用4bf5ff9已提交，未推送。负责人/root。
+
+
+## 修复后首步真实八卡验收
+
+UTC 2026-10-11T08:54:40.402062+00:00 修复后真实八卡首步验收通过：B已完成1/20、T0/20，本次完整checkpoint0。实际micro_batches_sum=256，model_tokens_sum=110232，与state_tokens/total=110232一致；每rankoptimizer_updates=2、step=1、skip=0。total_loss=-0.00126550335、KL=.3570661245、grad_norm=2.025775254、token加权熵=5.304382329全部有限。监督器status=running/phase=B/step1，已通过原先32!=256报错位置并继续运行，原数值/更新/显存门限保留。B第1步日志lr=1e-7为原10步warmup调度后的值，参数样本delta0与初始预热相容；本验收证明完整接线和监督，不宣称长期退化改善。证据 first-step-verification.json、B/metrics.jsonl、status.json。父D256复用122/256缺答案0、终止779/779；本次新增父评分0，T保持预定lr5e-7/KL.002/bounded_invalid_v1待后续运行。源/配置仍冻结092d63e，源码未改，CPU230通过；下一步按同一运行观察2–5步更新和两组20步冷D256结果，未自动扩展40/60。原失败v1全部保留、无checkpoint所以从同父重训；总预算仍原起点。负责人/root。
+
+
+## 原初始权重与调度选择
+
+用户主动停止已确认（UTC 2026-10-11T10:53:39.957215+00:00）：原v2训练监督及所属八卡worker均退出，独立检索PID2137145保留；B实际完成8步、T0步，无COMPLETE checkpoint。原status因通用SIGTERM处理记failed，现据user-stop-request/进程检查另记stopped_by_user，保留原异常快照供审计。下一轮必须使用原100步训练初始权重metax-process-r1-40-20261006-v1/checkpoints/step_40/actor，从global_step0新建优化器/调度器/scaler和seed42，不恢复旧step60或v2状态。用户最新纠正：新奖励应使用；若保留B/T，新bounded_invalid_v1在两组共同启用，才评估lr与KL组合，不能将奖励同时变化归因到lr/KL。当前代码实际是10个完整GRPO周期线性warmup后恒定学习率，Actor KL由actor.kl_loss_coef直接读取且固定；algorithm.kl_ctrl在use_kl_loss=true时未接入直接Actor KL。建议本轮沿用已测日程，目标峰值lr5e-7、β=.002，保持β固定，实测KL仍变化；后期衰减/自适应KL另作独立对照，不能临场改参数混淆结果。此为对用户调度问题的建议，尚未冻结或启动新实验，未修改训练源码或新配置、未重跑CPU/GPU；之前230项/八卡指标验收仅适用已有修复。原初始HF Actor完整性与新健康评价尚待执行。负责人/root。
+
+
+## 2026-10-11T11:04:53.582944+00:00 奖励改进的历史100步对照
+
+用户最新要求：KL保持历史.001，学习率沿用1e-6及10步预热后常数；只运行一个新100步训练，复用历史100步结果。初始actor使用历史真正的step40/actor，优化器和调度从0新建，数据、8卡、batch32、8轨迹、上下文、采样、每20步保存/评价均保持。保留已授权task_success_mixed筛选修复，新奖励bounded_invalid_v1；额外原生终止元数据、连续轨迹与全rank指标仅用于奖励判断和记录。故本轮检验奖励+筛选组合，非奖励单因素归因；历史rank0日志不能直接与新全rank标量均值比较。prepare_config实际会把experiment_seed设42并seed_all42，历史入口也使用该行为；无需改随机流代码。旧v2已停止8步，无checkpoint，未恢复。
+
+监督器只扩展阶段目标及单组流程，复用训练/检索/评分/完整checkpoint校验；默认两臂20步兼容，新奖励元数据不足必须停而不回退。新增4项CPU回归待本次执行；尚未启动新训练。负责人/root。
+
+
+## 2026-10-11T11:10:10.523400+00:00 本次单组100步监督变更注释审计
+
+范围：scripts/difficulty/stability_trial.py中新training_completion/select_phases及修改run_phase/main；tests/test_trial_supervisor.py新增4测试。逻辑单元：completion职责、目标缺省20及正整数拒绝、训练实际步数必须达标、目标检查点全文件验收、检查点元数据步数必须一致、阶段选择职责、父模型健康门限、原生终止覆盖门限、单组三阶段结构、新奖励证据不足拒绝回退、旧两臂/回退兼容、run_phase按声明目标验收、main声明预算与独占约束、main共用健康阶段路由、main历史完成记录实际训练与冷评价、main保留旧两臂完成状态、100步检查点测试职责/真实接口、20步兼容测试职责、声明100步拒绝20步结果、布尔目标拒绝、单组选择测试职责/只训练一次、多个训练组拒绝、原生终止不足拒绝、旧模式兼容测试职责、旧模式正常阶段顺序、旧模式回退阶段、两种设计共用健康拒绝。27/27有效中文说明，100%；8函数逐项核对@brief/所有显式参数@param/@return，关键分支/目标/checkpoint/兼容/异常/对照限制无遗漏。产物脚本parent_verify.py/freeze_preflight.py/eval_entry.py按父验证读声明初始路径、父HF哈希流式读取及失败拒绝、权重分片完整检查、冻结脚本职责/CPU禁止GPU、实际入口身份和种子一致、奖励/筛选指纹不同及参数不变断言、叶子字段遍历与白名单拒绝、源码已提交检查及文档冻结例外、来源及全部资产哈希、父HF文件大小mtime记录、快照与实际命令落盘、评价入口函数职责与零更新约束、历史冷评价相同随机流另列13/13，100%。eval_entry函数标签齐全，顶层脚本重要循环/断言有就近中文注释，无新增核心训练算法。完整细目source-audit.json。CPU回归仍在执行，不能把未完成写为通过。
+
+
+## 2026-10-11T11:11:04.576143+00:00 CPU与父模型验收
+
+本轮234项CPU回归全部通过，失败/错误/跳过0；新增4项覆盖声明100步检查点、旧20步兼容、单训练组及新奖励禁止回退。初始HF Actor17文件全部SHA256匹配COMPLETE；检索健康ready，GPU仅独立检索PID2137145，无其他训练。配置/源码冻结仍待执行，GPU尚未启动。测试使用CUDA_VISIBLE_DEVICES='' bash env/metax/run.sh <run>/cpu_verify.py；证据cpu-regression.final.json/log、parent-actor-verification.json。本次最后仅补目标/元数据分支中文说明，无行为变更，234结果仍适用；真实八卡新实验及后期退化改善尚未验证。

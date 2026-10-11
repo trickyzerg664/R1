@@ -116,3 +116,56 @@ class TrialSupervisorTests(unittest.TestCase):
             check.assert_called_once_with(cached,256)
             self.assertEqual(result['count'],256)
             self.assertTrue((root/'new/reused-evaluation.json').exists())
+
+    def test_training_completion_matches_configured100_checkpoint(self):
+        """@brief 100步阶段须验收step_100全量检查点，不能仍验收step_20。
+        @return 无。
+        """
+        # 模拟真实训练进度与完整性接口；只替换文件校验，不启动GPU。
+        with patch.object(trial, 'training_summary', return_value={'trained_step':100}), \
+             patch('verl.experimental.difficulty.checkpoint.read_checkpoint', return_value={'step':100}) as check:
+            result = trial.training_completion(Path('/tmp/training'), {'target_steps':100})
+        check.assert_called_once_with(Path('/tmp/training/checkpoints/step_100'))
+        self.assertEqual(result['trained_step'], 100)
+
+    def test_training_completion_preserves20_and_rejects_incomplete100(self):
+        """@brief 旧默认20步仍兼容，100步缺失不能伪称完成。
+        @return 无。
+        """
+        # 同一20步结果在旧设计合法，在声明100步的新设计必须拒绝。
+        with patch.object(trial, 'training_summary', return_value={'trained_step':20}), \
+             patch('verl.experimental.difficulty.checkpoint.read_checkpoint', return_value={'step':20}):
+            self.assertEqual(trial.training_completion(Path('/tmp/training'), {})['trained_step'], 20)
+            with self.assertRaisesRegex(RuntimeError, 'reach target 100'):
+                trial.training_completion(Path('/tmp/training'), {'target_steps':100})
+        with self.assertRaisesRegex(RuntimeError, 'Invalid training target'):
+            trial.training_completion(Path('/tmp/training'), {'target_steps':True})
+
+    def test_history_design_only_one_train_and_requires_new_reward(self):
+        """@brief 单组历史对照只训练一次，缺少原生终止证据必须停止而非回退旧奖励。
+        @return 无。
+        """
+        phases = [{'kind':'eval'}, {'kind':'train'}, {'kind':'eval'}]
+        plan = dict(design='historical_comparison', phases=phases)
+        parent = dict(missing=0, native_coverage=1., stop_events=10)
+        self.assertEqual(trial.select_phases(plan, parent), (phases[1:], True))
+        # 两个训练组或元数据不足都会破坏声明的对照设计。
+        with self.assertRaisesRegex(RuntimeError, 'one training phase'):
+            trial.select_phases(dict(plan, phases=phases+[{'kind':'train'}]), parent)
+        with self.assertRaisesRegex(RuntimeError, 'requires native'):
+            trial.select_phases(plan, dict(parent, native_coverage=0.))
+
+    def test_old_design_keeps_native_gate_and_fallback(self):
+        """@brief 既有两臂阶段和旧奖励回退保持原行为，父健康检查继续生效。
+        @return 无。
+        """
+        phases = [{'name':str(i)} for i in range(5)]
+        fallback = [{'name':'fallback'}]
+        plan = dict(phases=phases, fallback_phases=fallback)
+        parent = dict(missing=0, native_coverage=1., stop_events=1)
+        self.assertEqual(trial.select_phases(plan, parent), (phases[1:], True))
+        self.assertEqual(trial.select_phases(plan, dict(parent, native_coverage=0.)),
+                         (phases[1:3]+fallback, False))
+        # 两种设计共用相同健康门限，不因更换预算而放宽。
+        with self.assertRaisesRegex(RuntimeError, 'health gate'):
+            trial.select_phases(plan, dict(parent, missing=13))
