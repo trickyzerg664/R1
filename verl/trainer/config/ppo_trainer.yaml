@@ -216,6 +216,8 @@ difficulty:
   dynamic_filter:
     enabled: false
     max_rounds: 8
+    # 默认保持原奖励方差规则；新模式要求门控后任务成功与失败同时存在。
+    eligibility: reward_variance # 可选 task_success_mixed
   score_trace_chars: 0 # 诊断时保存回答末尾字符；正式评分保持 0
   output_dir: outputs/difficulty/run
   labels: null

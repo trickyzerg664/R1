@@ -1,57 +1,84 @@
 """在线筛选完整问题组：先生成评分，再补齐有效问题，不持有训练器或worker。"""
-from collections import defaultdict
+from collections import Counter, defaultdict
 import copy
 import math
 import time
 import numpy as np
 import torch
 import torch.nn.functional as F
+from .eligibility import TASK_MIXED_VERSION, task_success_labels
 
 
-def mixed_groups(batch, group_size, seen=None, reward_mode='binary', variance_epsilon=1e-12):
+def mixed_groups(batch, group_size, seen=None, reward_mode='binary', variance_epsilon=1e-12,
+                 eligibility='reward_variance'):
+    """@brief 保留完整同题组；可选要求门控后任务成功与失败同时存在。
+    @param batch 含 dynamic_rewards、uid、question_id 和可选成功报告的 DataProto。
+    @param group_size 每个问题的完整轨迹数，必须为正整数。
+    @param seen 已接受的问题 ID 集合，可为空，入选后原地更新。
+    @param reward_mode binary 沿用零一奖励规则；finite 允许有限实数。
+    @param variance_epsilon finite 模式的非负有限奖励方差容差。
+    @param eligibility reward_variance 保持原规则；task_success_mixed 使用显式成功标签。
+    @return 完整入选行索引组和含成功数、奖励方差及排除原因的组记录。
+    @raises ValueError 配置、奖励、身份、完整性或成功标签不满足约束。
     """
-    @brief 保留完整、有奖励差异且未重复的问题组，原二值模式保持默认。
-    @param batch 含dynamic_rewards、uid和question_id的DataProto。
-    @param group_size 每问题完整轨迹数。
-    @param seen 已接受的问题ID集合，可为空。
-    @param reward_mode binary沿用0/1正确数组规则；finite允许有限实数奖励。
-    @param variance_epsilon 非负有限的组奖励方差容差。
-    @return 接受行索引组及每个候选组的分项记录。
-    @raises ValueError 模式/容差错误、组不完整、奖励非法或组身份不一致。
-    """
-    # 模式显式决定筛选，避免实数奖励被强转为历史正确数k。
+    # 先校验模式，避免误拼写或缺少标签时退回奖励方差。
     if not isinstance(group_size, int) or group_size <= 0:
         raise ValueError('Group size must be a positive integer')
     if reward_mode not in ('binary', 'finite') or not math.isfinite(variance_epsilon) or variance_epsilon < 0:
         raise ValueError('Invalid group reward mode/variance threshold')
-    # uid区分抽题实例；question_id阻止同一更新批内重复问题，组内轨迹不能拆分。
-    scores=batch.batch['dynamic_rewards'].sum(-1).tolist()
-    groups=defaultdict(list)
-    for i,uid in enumerate(batch.non_tensor_batch['uid']): groups[str(uid)].append(i)
-    accepted=[]; records=[]; seen=set() if seen is None else seen
-    for uid,indices in groups.items():
-        values=[scores[i] for i in indices]
-        # 残组和非有限数不能参与筛选；二值模式继续拒绝负奖励和非0/1数。
-        if len(indices)!=group_size or any(not math.isfinite(v) for v in values):
+    if eligibility not in ('reward_variance', 'task_success_mixed'):
+        raise ValueError('Unknown dynamic eligibility mode')
+    scores = batch.batch['dynamic_rewards'].sum(-1).tolist()
+    reports = batch.non_tensor_batch.get('process_checks')
+    success = (task_success_labels(reports, batch.non_tensor_batch.get('process_trace_uid'), len(scores))
+               if eligibility == 'task_success_mixed' else None)
+    # uid 区分一次抽题实例；同题八条完整保留，question_id 控制重复曝光。
+    groups = defaultdict(list)
+    for i, uid in enumerate(batch.non_tensor_batch['uid']):
+        groups[str(uid)].append(i)
+    accepted, records = [], []
+    seen = set() if seen is None else seen
+    # 逐组先验证完整性和身份，再决定资格；排除组也保留可追溯原因。
+    for uid, indices in groups.items():
+        values = [scores[i] for i in indices]
+        if len(indices) != group_size or any(not math.isfinite(v) for v in values):
             raise ValueError('Filtering requires complete groups and finite rewards')
-        if reward_mode == 'binary' and any(v not in (0.,1.) for v in values):
+        if reward_mode == 'binary' and any(v not in (0., 1.) for v in values):
             raise ValueError('Binary filtering requires 0/1 rewards')
-        q=str(batch.non_tensor_batch['question_id'][indices[0]])
-        if any(str(batch.non_tensor_batch['question_id'][i])!=q for i in indices):
+        q = str(batch.non_tensor_batch['question_id'][indices[0]])
+        if any(str(batch.non_tensor_batch['question_id'][i]) != q for i in indices):
             raise ValueError('Question identities differ inside group')
-        # finite模式依组内方差筛选；同分组仍无GRPO信号，不能因均值为负强行入选。
-        mean=sum(values)/group_size; variance=sum((v-mean)**2 for v in values)/group_size
-        k=int(sum(values)) if reward_mode == 'binary' else None
-        valid=(0<k<group_size if reward_mode == 'binary' else variance>variance_epsilon) and q not in seen
-        source=str(batch.non_tensor_batch['data_source'][indices[0]]) if 'data_source' in batch.non_tensor_batch else 'unknown'
-        # 原EM正确数与新训练奖励分别保存；缺原EM报告时不伪造正确数。
-        reports=batch.non_tensor_batch.get('process_checks')
-        em_k=sum(float(reports[i]['original_em']) for i in indices) if reports is not None else k
-        records.append(dict(question_id=q,uid=uid,k=k,em_k=em_k,eligible=valid,source=source,
-                            reward_mode=reward_mode,reward_mean=mean,reward_variance=variance))
+        # 资格筛选不改奖励值和优势公式；同分组仍保留原来的零信号排除条件。
+        mean = sum(values) / group_size
+        variance = sum((v - mean) ** 2 for v in values) / group_size
+        k = int(sum(values)) if reward_mode == 'binary' else None
+        reward_mixed = 0 < k < group_size if reward_mode == 'binary' else variance > variance_epsilon
+        success_k = None if success is None else sum(success[i] for i in indices)
+        reasons = []
+        if not reward_mixed:
+            reasons.append('no_reward_variance')
+        if success_k == 0:
+            reasons.append('no_task_success')
+        elif success_k == group_size:
+            reasons.append('all_task_success')
+        if q in seen:
+            reasons.append('duplicate_question')
+        valid = not reasons
+        source = str(batch.non_tensor_batch['data_source'][indices[0]]) if 'data_source' in batch.non_tensor_batch else 'unknown'
+        # 原文本 EM 与执行器接受 EM 分开；旧报告缺分项时只记录未知。
+        em_k = sum(float(reports[i]['original_em']) for i in indices) if reports is not None else k
+        accepted_em_k = (sum(float(reports[i]['accepted_answer_em']) for i in indices)
+                         if success is not None else None)
+        records.append(dict(question_id=q, uid=uid, k=k, em_k=em_k, eligible=valid, source=source,
+                            reward_mode=reward_mode, reward_mean=mean, reward_variance=variance,
+                            eligibility=eligibility,
+                            eligibility_version=TASK_MIXED_VERSION if success is not None else None,
+                            task_success_k=success_k, accepted_answer_em_k=accepted_em_k,
+                            rejection_reasons=reasons))
         if valid:
-            accepted.append(indices); seen.add(q)
-    return accepted,records
+            accepted.append(indices)
+            seen.add(q)
+    return accepted, records
 
 
 def take_rows(batch,indices):
@@ -95,11 +122,11 @@ def merge_groups(parts,pad_id):
 
 def training_batches(loader,controller,manager,reward_fn,repeat_fn,worker,pad_id,total_steps,max_rounds):
     """
-    @brief 复用原补抽流程，按同一奖励入口选择二值或实数组筛选。
+    @brief 复用完整组补抽流程，按显式资格模式筛选，不改奖励或优势。
     @param loader 原问题DataLoader。
-    @param controller 难度实验状态控制器。
+    @param controller 提供组大小、资格模式、采样器及记录接口的实验控制器。
     @param manager 共用检索生成管理器。
-    @param reward_fn 奖励入口，可显式提供group_reward_mode。
+    @param reward_fn 共用奖励入口；新模式要求 task_success_enabled 为真。
     @param repeat_fn 原问题轨迹展开函数。
     @param worker 原actor概率计算worker。
     @param pad_id 原补齐token。
@@ -111,11 +138,16 @@ def training_batches(loader,controller,manager,reward_fn,repeat_fn,worker,pad_id
     """
     # 只有凑齐完整有效批才yield并更新参数；候选消费与训练步数分别保存，禁止小批降级。
     from verl import DataProto
+    # 新模式在生成前检查标签能力，评价或旧奖励入口不能静默退回原筛选。
+    eligibility = getattr(controller, 'dynamic_eligibility', 'reward_variance')
+    if eligibility == 'task_success_mixed' and getattr(reward_fn, 'task_success_enabled', False) is not True:
+        raise ValueError('task_success_mixed requires gated training reward with success labels')
     iterator=iter(loader); target=controller.sampler.batch_size; group_size=controller.group_size
     while controller.completed_step<total_steps:
         # 本段已训练问题不再入选，保证100步覆盖800个不同的有效问题。
         step=controller.completed_step+1; parts=[]; seen=set(controller.accepted_question_ids); candidates=0; started=time.monotonic()
         candidate_tokens=0; candidate_searches=0
+        rejection_counts = Counter()
         for round_index in range(max_rounds):
             candidate=DataProto.from_single_dict(next(iterator))
             candidate=repeat_fn(candidate,group_size)
@@ -132,10 +164,15 @@ def training_batches(loader,controller,manager,reward_fn,repeat_fn,worker,pad_id
             candidate.batch['dynamic_rewards']=reward_fn(candidate)
             # 关闭过程功能的原奖励函数不提供模式属性，继续沿用binary。
             accepted,records=mixed_groups(candidate,group_size,seen,
-                                          reward_mode=getattr(reward_fn,'group_reward_mode','binary'))
+                                          reward_mode=getattr(reward_fn,'group_reward_mode','binary'),
+                                          eligibility=eligibility)
+            # 排除原因按候选组记录，可同时命中多个原因，不冒充互斥比例。
+            for record in records:
+                rejection_counts.update(record['rejection_reasons'])
             candidates+=len(records)
             controller.record({'event':'filter_candidates','step':step,'round':round_index,'groups':records,
-                               'accepted_so_far':len(parts),'candidate_groups_so_far':candidates})
+                               'accepted_so_far':len(parts),'candidate_groups_so_far':candidates,
+                               'eligibility':eligibility})
             print(f'[动态筛选] step={step} round={round_index+1}/{max_rounds} candidates={candidates} mixed={len(accepted)} retained={min(target,len(parts)+len(accepted))}/{target}',flush=True)
             for indices in accepted:
                 if len(parts)<target:parts.append(take_rows(candidate,indices))
@@ -153,6 +190,8 @@ def training_batches(loader,controller,manager,reward_fn,repeat_fn,worker,pad_id
             'dynamic/retained_fraction':target/candidates,'dynamic/rounds':round_index+1,
             'dynamic/candidate_trajectories':candidates*group_size,'dynamic/retained_trajectories':target*group_size,
             'dynamic/candidate_generated_tokens':candidate_tokens,'dynamic/candidate_search_queries':candidate_searches}
+        for reason, count in rejection_counts.items():
+            batch.meta_info['dynamic_metrics']['dynamic/rejected_' + reason + '_groups'] = count
         for source in set(batch.non_tensor_batch['data_source']):
             batch.meta_info['dynamic_metrics']['dynamic/retained_source/'+str(source)]=sum(batch.non_tensor_batch['data_source']==source)/group_size
         yield batch

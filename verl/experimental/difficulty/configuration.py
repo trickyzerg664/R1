@@ -4,6 +4,7 @@ from importlib.metadata import version
 from omegaconf import OmegaConf, open_dict
 from .checkpoint import read_checkpoint
 from .state import model_identity, seed_all, fingerprint, file_hash
+from .eligibility import normalize_dynamic_filter
 
 
 def provenance_matches(config, parent):
@@ -19,14 +20,21 @@ def provenance_matches(config, parent):
 
 
 def prepare_config(config):
-    # 在 tokenizer/worker 构建前恢复 actor 路径，reference 固定为初始模型。
-    """实验入口前置检查及恢复路径解析；关闭实验时不修改原配置。
-    恢复只替换 actor 路径，reference 保留原始内容并验证指纹。
-    追加预算转换为父 step 加 additional_steps，worker 初始化前拒绝不兼容参数。
+    """@brief 校验实验和组资格配置，并在 worker 构建前恢复模型位置。
+    @param config 完整 Hydra 配置；关闭实验时保留原配置行为。
+    @return 无；合法动态模式补充组大小，恢复时写入模型与预算元数据。
+    @raises ValueError 实验组合、批量、成功奖励前提或恢复指纹非法。
+    @note 新资格模式改变训练语义；旧缺省字段规范化后保持历史身份。
     """
+    # 资格开关必须真正接入动态训练，拒绝配置写了新模式却未开启实验。
+    dynamic_settings = normalize_dynamic_filter(config.get('difficulty', {}).get('dynamic_filter', {}))
+    eligibility = dynamic_settings.get('eligibility', 'reward_variance')
     if not config.get('difficulty', {}).get('enabled', False):
+        if eligibility == 'task_success_mixed':
+            raise ValueError('task_success_mixed requires difficulty enabled')
         return
     d, ar = config.difficulty, config.actor_rollout_ref
+    # 入口和恢复类型必须显式；搜索 GRPO 与轨迹数约束继续沿用。
     if d.mode not in ('train', 'score') or d.resume_mode not in ('continue', 'branch'):
         raise ValueError('Invalid difficulty mode or resume_mode')
     dynamic = d.get('dynamic_filter', {}).get('enabled', False)
@@ -35,7 +43,13 @@ def prepare_config(config):
         raise ValueError('Difficulty requires search GRPO and n=1')
     if group_size != 4 and not (dynamic and group_size == 8):
         raise ValueError('Eight trajectories require dynamic filtering; legacy scoring remains four')
+    # 在线补抽不与旧离线标签配比或刷新混用，候选上限不随修复增加。
     if dynamic:
+        if eligibility == 'task_success_mixed':
+            from verl.experimental.process_checks.reward import check_config
+            process = check_config(config.get('process_checks', {}))
+            if not process['enabled'] or not process['reward_gate'] or config.reward_model.answer_mode != 'response_only_v1':
+                raise ValueError('task_success_mixed requires enabled gated response_only_v1 rewards')
         if d.mode != 'train' or d.labels is not None or d.ratios is not None or d.refresh_steps or d.refresh_every:
             raise ValueError('Dynamic filtering is online training only; no legacy labels or refresh')
         if not 1 <= d.dynamic_filter.max_rounds <= 32:
@@ -44,6 +58,7 @@ def prepare_config(config):
             raise ValueError('Dynamic filtering must retain at least eight questions per update')
         with open_dict(config):
             d.group_size = group_size
+    # 损失版本、执行后端和独立 KL 限制保持，资格筛选不改变算法框架。
     if ar.actor.get('loss_numerics', 'legacy') not in ('legacy', 'safe_v1'):
         raise ValueError('Unknown loss numerical version')
     if ar.actor.strategy != 'fsdp' or ar.rollout.name != 'vllm' or config.reward_model.enable or not ar.actor.use_kl_loss:
@@ -59,15 +74,18 @@ def prepare_config(config):
         if (mini < dp_size or micro < dp_size or mini % dp_size or micro % dp_size
                 or mini % micro):
             raise ValueError('Actor mini/micro batch must be positive multiples of data-parallel GPU count')
+    # 回答段 logits 只接在完整 padding 路径，不能无效启用。
     if ar.actor.get('response_logits_only', False) and ar.model.use_remove_padding:
         raise ValueError('response_logits_only requires use_remove_padding=false')
     # [data-difficulty] token 重算目前接在非去 padding 的 actor 分支，提前拒绝无效组合。
     if ar.actor.get('checkpoint_token_statistics', False) and ar.model.use_remove_padding:
         raise ValueError('checkpoint_token_statistics requires use_remove_padding=false')
+    # 持久化边界要求单机本地 checkpoint 和绝对 warmup 设置。
     if config.trainer.nnodes != 1 or config.trainer.default_hdfs_dir is not None:
         raise ValueError('Core checkpoint implementation requires one node and local storage (default_hdfs_dir=null)')
     if config.trainer.critic_warmup != 0 or ar.actor.optim.warmup_steps is None:
         raise ValueError('Set critic_warmup=0 and absolute actor.optim.warmup_steps')
+    # 检索身份、刷新频率和固定数据清单必须可验证。
     if not d.retrieval_id:
         raise ValueError('Pin difficulty.retrieval_id to encoder/corpus/index versions')
     if d.refresh_every < 0 or any(s <= 0 for s in d.refresh_steps):
@@ -77,8 +95,10 @@ def prepare_config(config):
         raise ValueError('score_trace_chars must be within 0..2000')
     if config.data.train_data_num is not None or config.data.val_data_num is not None:
         raise ValueError('Use frozen train/dev files, not implicit data_num subsampling')
+    # 随机生成前提保留；资格变化不允许改成确定性采样。
     if ar.rollout.temperature <= 0 or not ar.rollout.do_sample:
         raise ValueError('Difficulty scoring requires stochastic sampling')
+    # 恢复只替换 actor，reference 固定；没有父状态的分支请求必须失败。
     with open_dict(config):
         ar.experiment_seed = d.seed
         if not ar.ref.model_path:
@@ -103,6 +123,7 @@ def prepare_config(config):
             d.lineage = d.initial_model_id
         if config.trainer.total_training_steps is None or config.trainer.total_training_steps < 1:
             raise ValueError('Set explicit absolute trainer.total_training_steps')
+    # 先拒绝不兼容恢复，再设置随机流，防止不同策略被冒称为旧状态续训。
     if d.resume and not provenance_matches(config, meta['provenance']):
         raise ValueError('Parent reference/model/training/retrieval provenance differs')
     seed_all(d.seed)
@@ -114,7 +135,7 @@ def provenance(config):
     @param config 当前完整Hydra配置，默认关闭过程检查时保持历史指纹。
     @return 包含模型身份、训练指纹及库版本的来源字典。
     @raises ValueError 过程检查开关或惩罚配置无效。
-    @note 开启检查改变解析和奖励协议，不能当作仅改变采样配比恢复旧状态。
+    @note 新资格模式包含版本；旧 reward_variance 缺省移除新字段以兼容历史来源。
     """
     # 不把保存位置、审计文件或预算写入训练身份，保留历史恢复边界。
     c = OmegaConf.to_container(config, resolve=True)
@@ -135,7 +156,7 @@ def provenance(config):
         c['algorithm']['answer_mode'] = answer_mode
     # 筛选改变候选消费及更新语义，纳入来源指纹；关闭时不改变历史指纹。
     if c['difficulty'].get('dynamic_filter', {}).get('enabled', False):
-        c['algorithm']['dynamic_filter'] = c['difficulty']['dynamic_filter']
+        c['algorithm']['dynamic_filter'] = normalize_dynamic_filter(c['difficulty']['dynamic_filter'])
     # 开启过程协议必须进入恢复指纹；审计路径仅影响保存位置，不能改变身份。
     from verl.experimental.process_checks.reward import check_config
     process = check_config(c.get('process_checks', {}))

@@ -4,6 +4,8 @@ import math
 from pathlib import Path
 from .protocol import HARD_CODES, parse_action, validate_report
 
+TASK_SUCCESS_VERSION = 'task_success_v1'
+
 
 def check_config(config):
     """
@@ -32,14 +34,14 @@ def check_config(config):
     return result
 
 
-def process_score(report, expected_uid, accepted_answer_em, penalty):
+def process_reward_components(report, expected_uid, accepted_answer_em, penalty):
     """
-    @brief 从真实接受答案EM计算候选奖励，防止报告或解析被篡改后放行。
+    @brief 从可信事件统一计算门控、成功标签和原奖励，防止分项判定漂移。
     @param report 程序过程报告。
     @param expected_uid 同行轨迹ID。
     @param accepted_answer_em 按原EM归一化判定的0/1分数。
     @param penalty 非负无答案惩罚系数。
-    @return 实数奖励；故障不会转成模型负奖励。
+    @return 协议门控、布尔任务成功、标签版本和浮点奖励的字典；故障抛错。
     @raises ValueError 报告错配、基础设施故障或非法奖励输入。
     """
     # 故障和错配批次停止评分，不将基础设施失败转为模型负奖励。
@@ -57,7 +59,24 @@ def process_score(report, expected_uid, accepted_answer_em, penalty):
     codes.update(r['code'] for event in report['events'] for r in event['reasons'])
     gate = not bool(codes & HARD_CODES)
     # R=EM乘协议合法门控减beta乘无答案标记；合法直接作答不要求额外搜索。
-    return float(accepted_answer_em) * gate - penalty * (not report['answered'])
+    reward = float(accepted_answer_em) * gate - penalty * (not report['answered'])
+    # 成功由接受答案与同一门控共同决定，不依赖惩罚大小或原文本 EM。
+    return dict(protocol_reward=reward, protocol_gate=gate,
+                task_success=bool(accepted_answer_em == 1. and gate),
+                task_success_version=TASK_SUCCESS_VERSION)
+
+
+def process_score(report, expected_uid, accepted_answer_em, penalty):
+    """@brief 保持原浮点奖励接口，复用统一可信分量计算。
+    @param report 程序过程报告。
+    @param expected_uid 同行独立轨迹身份。
+    @param accepted_answer_em 实际接受答案的零或一 EM。
+    @param penalty 非负有限的无答案惩罚。
+    @return 与历史公式一致的浮点训练奖励。
+    @raises ValueError 来源、协议报告或输入奖励非法。
+    """
+    # 兼容旧调用方，筛选标签与旧奖励共享唯一门控实现。
+    return process_reward_components(report, expected_uid, accepted_answer_em, penalty)['protocol_reward']
 
 
 def append_reports(path, reports, phase):

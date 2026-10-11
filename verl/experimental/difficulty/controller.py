@@ -7,26 +7,40 @@ import numpy as np
 from .sampling import DifficultyBatchSampler, load_labels, pool_hash, validate_labels
 from .scoring import score_pool
 from .state import atomic_json, capture_rng, fingerprint, restore_rng, trajectory_seed
+from .eligibility import normalize_dynamic_filter
 
 
 class DifficultyExperiment:
     def __init__(self, rows, settings, batch_size, steps, seed, output_dir, provenance):
-        """组合采样、评分与日志组件，不持有训练器或 worker 对象。
-        settings 为解析后的普通字典；同一输出目录只能属于同一配置的任务。
+        """@brief 组合采样、资格规则与日志组件，不持有训练器或 worker。
+        @param rows 冻结问题池的普通记录列表。
+        @param settings 解析后的实验设置映射，缺省资格保持旧规则。
+        @param batch_size 每次更新保留的完整问题数。
+        @param steps 总更新周期数，用于候选预算。
+        @param seed 抽样和轨迹种子的整数根种子。
+        @param output_dir 独立运行产物目录。
+        @param provenance 模型、训练协议和环境的来源身份。
+        @return 无；建立可恢复的采样器和策略。
+        @raises ValueError 资格配置、标签或已有目录的身份不一致。
+        @note 配置副本规范化后保存；旧 checkpoint 和目录保持兼容。
         """
         # 旧设置移除关闭的新字段，避免旧目录/旧策略无故失配。
         settings = dict(settings)
+        if 'dynamic_filter' in settings:
+            settings['dynamic_filter'] = normalize_dynamic_filter(settings['dynamic_filter'])
         if not settings.get('dynamic_filter', {}).get('enabled', False):
             settings.pop('dynamic_filter', None)
         self.rows, self.settings = rows, settings
         self.group_size = int(settings.get('group_size', 4))
         self.dynamic = settings.get('dynamic_filter', {}).get('enabled', False)
+        self.dynamic_eligibility = settings.get('dynamic_filter', {}).get('eligibility', 'reward_variance')
         self.max_candidate_rounds = int(settings.get('dynamic_filter', {}).get('max_rounds', 1))
         self.seed, self.output_dir = seed, Path(output_dir)
         self.output_dir.mkdir(parents=True, exist_ok=True)
         self.provenance = provenance
         self.label_payload = None
         labels = None
+        # 标签加载与配比保持原职责，新的成功资格由在线奖励报告提供。
         if settings.get('labels'):
             self.label_payload, labels = load_labels(settings['labels'], rows)
         ratios = settings.get('ratios')
@@ -39,6 +53,7 @@ class DifficultyExperiment:
             self.strategy.update(group_size=self.group_size, dynamic_filter=settings['dynamic_filter'])
         self.sampler = DifficultyBatchSampler(rows, batch_size,
                     steps*self.max_candidate_rounds if self.dynamic else steps, seed, ratios, labels)
+        # 所有计数以完整更新边界推进，失败补抽不能记作训练完成。
         self.completed_step = 0
         self.accepted_question_ids = set()
         self.refresh_steps = set(settings.get('refresh_steps', []))
@@ -198,16 +213,29 @@ class DifficultyExperiment:
                 'generated_tokens': self.generated_tokens, 'score_tokens': self.score_tokens}
 
     def load_state_dict(self, state, branch=False, scoring=False, compatible_provenance=None):
-        """验证题池与训练来源后恢复实验状态和 driver RNG。
-        continue 保持策略不变；branch 保留父训练状态但采用显式新标签／比例；score 只恢复用于评估。
+        """@brief 验证来源与资格规则后恢复采样器、实验状态和 driver RNG。
+        @param state 完整更新边界保存的实验状态。
+        @param branch 是否显式切换标签或配比，不能切换任务资格规则。
+        @param scoring 是否只恢复用于评价的状态。
+        @param compatible_provenance 已验证仅设备放置差异的兼容来源，可为空。
+        @return 无；成功时恢复完成步数、曝光、随机流及成本。
+        @raises ValueError 状态版本、资格、来源、采样或曝光完整性不一致。
+        @note 资格变化需要共同权重重启的新实验，不能通过 branch 绕过。
         """
         if state['schema_version'] != 1:
             raise ValueError('Unsupported difficulty checkpoint version')
-        # 阶段二允许标签/比例变更，模型、参考模型、题池和训练关键参数必须保持一致。
+        # branch 只能改变标签或配比；资格版本也在状态层检查，防止兼容来源参数绕过。
+        parent_dynamic = normalize_dynamic_filter(state['strategy'].get('dynamic_filter', {}))
+        current_dynamic = self.settings.get('dynamic_filter', {})
+        if (parent_dynamic.get('eligibility', 'reward_variance') != self.dynamic_eligibility
+                or parent_dynamic.get('eligibility_version') != current_dynamic.get('eligibility_version')):
+            raise ValueError('Task-success eligibility differs from parent checkpoint')
+        # 模型、参考模型、题池和训练关键参数必须保持一致。
         if state['provenance'] != self.provenance and state['provenance'] != compatible_provenance:
             raise ValueError('Resume provenance differs (reference/model/training/retrieval settings)')
         if not branch and not scoring and state['strategy'] != self.strategy:
             raise ValueError('Continue mode requires the same refresh and scoring strategy')
+        # 严格续训恢复父标签；评分使用父策略，显式配比分支保留当前设置。
         if not branch or scoring:
             self.label_payload = state['labels']
             self.sampler.configure(state['strategy']['ratios'] if scoring else self.sampler.ratios,
@@ -231,4 +259,5 @@ class DifficultyExperiment:
             self.imported_label_seconds += state.get('imported_label_seconds', 0.)
         for key in ('train_seconds','score_seconds','generated_tokens','score_tokens'):
             setattr(self, key, state[key])
+        # 随机流最后恢复，所有结构完整性检查必须先通过。
         restore_rng(state['rng'])

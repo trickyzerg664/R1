@@ -22,7 +22,7 @@ from verl.utils.reward_score import qa_em
 from verl.trainer.ppo.ray_trainer import RayPPOTrainer
 import re
 import numpy as np
-from verl.experimental.process_checks.reward import check_config, process_score, append_reports
+from verl.experimental.process_checks.reward import check_config, process_reward_components, append_reports
 
 def _select_rm_score_fn(data_source):
     if data_source in ['nq', 'triviaqa', 'popqa', 'hotpotqa', '2wikimultihopqa', 'musique', 'bamboogle']:
@@ -64,6 +64,9 @@ class RewardManager():
         # 默认关闭保持历史奖励；实数模式由同一奖励配置决定，不能猜测k的含义。
         self.process_config = check_config(process_checks)
         self.apply_process_reward = apply_process_reward
+        # 筛选器只接受训练门控已生效的成功标签，避免误接纯评价奖励。
+        self.task_success_enabled = (self.process_config['enabled'] and
+                                     self.process_config['reward_gate'] and apply_process_reward)
         self.group_reward_mode = ('finite' if self.process_config['reward_gate'] and
                                   self.process_config['missing_answer_penalty'] else 'binary')
         if self.process_config['enabled'] and (answer_mode != 'response_only_v1' or format_score != 0.):
@@ -71,7 +74,7 @@ class RewardManager():
 
     def __call__(self, data: DataProto):
         """
-        @brief 复用原EM与过程奖励，保存分项并可选只读展示，展示故障不影响评分。
+        @brief 复用原 EM 和统一奖励分量，保存可信成功标签，评价与展示保持原奖励。
         @param data 完整响应DataProto，检查开启时要求同行来源报告及轨迹ID。
         @return token级奖励矩阵；开发评价返回原EM，训练可返回门控/惩罚。
         @raises ValueError 来源报告不可信、故障批次、空token负奖励或外部RM绕过检查。
@@ -141,10 +144,11 @@ class RewardManager():
                     raise ValueError('Process checks require row-bound generation reports')
                 # 查询或未执行尾部中的答案不能取得过程奖励；EM归一化继续复用原实现。
                 accepted_em = float(qa_em.em_check(report['answer'], ground_truth['target'])) if report['answered'] else 0.
-                candidate_score = process_score(report, uid, accepted_em,
-                                                self.process_config['missing_answer_penalty'])
+                components = process_reward_components(report, uid, accepted_em,
+                                                       self.process_config['missing_answer_penalty'])
+                candidate_score = components['protocol_reward']
                 record = dict(report, original_em=float(score), accepted_answer_em=accepted_em,
-                              protocol_reward=candidate_score, question_id=data_item.non_tensor_batch.get('question_id'),
+                              **components, question_id=data_item.non_tensor_batch.get('question_id'),
                               data_source=data_source)
                 process_rows.append(record)
                 # 审计模式与开发评价不改原EM；开启门控的训练才写入新奖励。
