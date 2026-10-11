@@ -1686,3 +1686,80 @@ search_result_max_chars默认1000，首尾正文按3:1保留并标注省略数�
 ## 2026-10-11T06:17:23.744369+00:00 提交前验收与指标结论更正
 
 启动前复核更正：AST核验当前dp_actor.py第451行及原训练源码快照第395行，Entropy/PG/clip/ppo_kl指标字典均位于micro_batch循环内，每个微批都有记录。此前将其解释为“仅末微批”的判断有误，相关历史熵/PG统计不应再标为末微批样本；它们是现有微批均值聚合，仍不等同于全token加权统计。后续只补充total_loss、有效token加权熵及覆盖计数，不迁移既有正确的日志循环。奖励方差资格错误强化的重放结果不受此更正影响。证据：metax-grpo-bt-verification-20261011-v1/metric-loop-audit.json。分功能提交前CPU204项复验通过，真实训练/生成0。
+
+
+## 2026-10-11T06:20:42.176868+00:00 实验前损失展示接入
+
+原PG/Entropy循环保持正确位置；只读接入total_loss、有效模型token熵分子/分母及微批覆盖计数。新增3项CPU案例，待回归；无真实训练。模块独立于GPU/Ray，仅worker适配调用，聚合复用原reduce_metric。负责人/root。
+
+
+## 2026-10-11T06:22:54.772649+00:00 有界过程软罚接入
+
+bounded_invalid_v1接入独立纯模块，复用已校验门控/成功标签；仅原生stop且真实执行拒绝的消费动作每轮计一次，最多两轮×.02；缺答案与软罚总成本封顶.12。长度截断与未知终止免新增罚；loop项0。旧默认值及恢复指纹兼容，新奖励版本/系数纳入身份；评价原EM不变。新增8项CPU案例待回归，无GPU启动。负责人/root。
+
+
+## 2026-10-11T06:30:50.858750+00:00 顺序验证监督接入
+
+新增参数化stability_trial.py：默认只检查，显式launch顺序父D256/B20/冷D256/T20/冷D256；原生终止覆盖不足时使用预冻结LK替代配置并明确记录。持有八卡锁、46小时停止预留2小时收尾，显存56GiB保护只停止本次任务；完整checkpoint复用原校验，唯一RAY_TMPDIR/启动身份清理不涉及检索。新增6项CPU案例待测试，真实GPU验证未宣称完成。负责人/root。
+
+
+## 2026-10-11T06:37:49.887072+00:00 B/T启动前锁定验收
+
+最终启动前验收：CPU224项通过，新增20项（指标3、奖励10、监督7），失败/错误/跳过0；test_fp16.py另在真实cuda:0运行1项通过，覆盖CPU以外的FP16小模型更新、单rank FSDP和溢出恢复。world_size=1下FSDP使用NO_SHARD，不能冒称八卡FULL_SHARD已验收；八卡完整更新将在B前2–5步按真实日志检查。正式GRPO更新仍0，真实7B生成0。
+
+当前task_success_mixed与连续轨迹日志已分功能提交06688fc、7d0b5f7，研究文档f7975c5；未推送。损失展示只增加total_loss、有效模型token熵总量/计数及微批覆盖，现有循环位置正确。新bounded_invalid_v1奖励已接入：R=S-min(.12,.1*M+.02*min(N_invalid,2))，N_invalid仅原生stop且执行器拒绝的消费动作；length/未知免新增罚；loop项未启用；legacy默认原数值和旧恢复指纹兼容。新版本/系数进入训练身份，评价保持原EM。
+
+监督入口默认仅检查，显式launch才顺序父D256、B20、B冷D256、T20、T冷D256；最初2–5步为同一训练中的八卡接线验收。持有八卡独占锁，56GiB总显存保护，整个预算48小时且46小时停止预留2小时收尾，任何非有限/更新跳过/实际微批覆盖不足停止并保留结果。只清理本阶段唯一RAY_TMPDIR和启动身份一致的进程，不全局停止Ray，不触碰独立检索。原生终止覆盖<95%或没有stop时采用已预冻结的T-LK配置，显式记录未验证新增奖励；不改正在运行的配置。父D256缺答案>12时停止，不擅自带异常父模型训练或更换父模型覆盖失败。两组20步完成后先分析，不自动延长40/60；总耗时目标一到两天不变。
+
+父加载文件17项已流式哈希通过（仅HF Actor权重/分词器；旧优化器rank文件未使用），参考Qwen2.5-7B固定。固定D64为原D256顺序前30NQ/34Hotpot，生成配置不缩短；训练32题×8、micro8、mini128，fresh optimizer/scheduler/scaler，同seed42，同预热10步。B lr1e-6/Actor KL.001/legacy；T lr5e-7/Actor KL.002/bounded_invalid_v1。审计记录原生token/终止，文本文件每批每来源2条、控制台1条，两组相同；保留全量结构化审计，未新增字符特定惩罚。
+
+职责：loss_observations和bounded_reward纯模块只消费张量/普通报告；worker与RewardManager仅薄接线；监督脚本调用现有Hydra入口、评分、checkpoint校验，不复制生成/训练算法。注释：43新增/修改函数标签无缺失，46/46语义逻辑单元有效中文说明，覆盖100%，关键逻辑独立检查；详列source-audit.json。GPU8、长期收益与实际异常复现待观察。产物 /mnt/public/code/lyk/lzy/runs/metax-grpo-bt-verification-20261011-v1；负责人/root；本条UTC由远程脚本填写。
+
+### 本次46项逻辑单元注释验收
+
+1. loss_observations：只读总Loss、有效模型token熵与微批覆盖计数；说明：函数说明和float32/排除环境注释。
+2. DataParallelPPOActor.update_policy：反传前观测原总Loss，不改变系数/累积/mask；说明：反传前只读说明。
+3. reduce_metric：两类明确计数命名空间求和，其余旧指标口径保持；说明：可加总量说明。
+4. reduce_metrics：跨微批/rank先加分子分母再算熵；说明：全局加权说明。
+5. ActorObservationTests：真实四微批覆盖与Loss恒等式；说明：函数说明和真实微批注释。
+6. ActorObservationTests：长短token加权、环境排除和无图/无梯度；说明：各测试职责及熵算例。
+7. check_config：新奖励缺省兼容与版本、有限系数、门控、.12边界校验；说明：函数参数说明和版本边界注释。
+8. bounded_reward：仅使用已可信校验的报告与同一任务标签；说明：函数职责和输入前提。
+9. bounded_reward：legacy直接返回原分量；事件数不一致失败；说明：函数兼容职责及raises。
+10. bounded_reward：无元数据标未知；length/未知免新增罚；说明：不通过长度猜测注释。
+11. bounded_reward：重算消费动作原因，真实拒绝且stop才计一次；说明：执行拒绝第二道条件注释。
+12. bounded_reward：最多两次计费，总成本.12封顶，成功标签不变；说明：成本与G8优势符号说明。
+13. RewardManager.__call__：新训练候选接线与评价原EM保留；说明：新软罚只接可信终止说明。
+14. provenance：仅新奖励进入恢复身份，旧缺省兼容；说明：旧缺省不改变身份注释。
+15. render_trajectory：区分原公式、新训练候选成本和终止免罚；说明：新旧分值展示注释。
+16. BoundedRewardTests：真实账本/原门控夹具和成功恢复.98；说明：各函数职责。
+17. BoundedRewardTests：截断/未知/正常回答免罚，五轮计费和缺答案封顶；说明：对应测试说明。
+18. BoundedRewardTests：缺元数据、事件数/身份错配及非法配置；说明：对应测试说明。
+19. BoundedRewardTests：legacy精确兼容、真实训练/验证入口、日志解释；说明：对应测试说明。
+20. BoundedRewardTests：G8边界优势符号和恢复指纹变化；说明：对应测试说明。
+21. BoundedRewardTests：合法重复检索、未消费尾部和硬门控；说明：正常探索与原门控说明。
+22. stability_trial.now/save/rows：UTC、原子小状态、只读闭合行；说明：各函数说明。
+23. stability_trial.verify：冻结哈希与父Actor验收；说明：函数说明和小型清单注释。
+24. stability_trial.training_summary：实测更新次数、微批覆盖、有限数值、checkpoint进度；说明：每rank及覆盖注释。
+25. stability_trial.evaluation_summary：完整唯一零更新评价和原生终止覆盖；说明：函数说明。
+26. stability_trial.publish：原子状态及仅本run区块更新；说明：函数note和文档边界注释。
+27. stability_trial.interrupt：信号异常触发所属任务清理；说明：函数职责。
+28. stability_trial.owned_processes：唯一完整Ray环境值匹配，保留其他环境隐私；说明：函数职责和完整匹配。
+29. stability_trial.owned_processes：带空格comm正确提取启动ticks，IO竞态跳过；说明：右括号及ticks注释。
+30. stability_trial.cleanup_owned：只终止独占Ray环境进程，二次启动身份核验；说明：函数note和PID复用注释。
+31. stability_trial.run_phase：冻结阶段调用原入口，独占环境覆盖和外部Ray地址清理；说明：函数note和分步覆盖注释。
+32. stability_trial.run_phase：56GiB总显存、46h截止与真实进度发布；说明：驱动包含检索说明。
+33. stability_trial.run_phase：20步完整状态逐文件验收、冷评价统计；说明：冷评价前原校验说明。
+34. stability_trial.run_phase：正常/失败均只清理本次进程组与Ray环境；说明：finally说明。
+35. stability_trial.main：默认仅检查，launch锁/重复任务/GPU占用拒绝；说明：函数note和占用复核注释。
+36. stability_trial.main：父缺答案≤12、原生覆盖95%，预冻结LK回退；说明：健康门限注释和设计配置。
+37. stability_trial.main：顺序B/T20并等待分析，不自动扩展40/60；说明：函数note。
+38. TrialSupervisorTests：闭合日志、唯一环境/带空格进程身份；说明：对应函数说明。
+39. TrialSupervisorTests：默认不启动、阶段环境覆盖与冻结失败；说明：对应函数说明。
+40. TrialSupervisorTests：跳过更新/覆盖不足停止，完整零更新评价；说明：对应函数说明。
+41. prepare_configs.py：固定30/34来源题单，不按结果选择；说明：固定来源配比注释。
+42. prepare_configs.py：同parent/seed、fresh optimizer及目标Actor lr/KL；说明：实际配置差异核对注释。
+43. prepare_configs.py：评价/训练调用原入口并保留预冻结LK；说明：共用seed入口注释。
+44. parent_verify.py：只核验HF Actor加载文件，不读旧优化器；说明：脚本头和核验范围注释。
+45. gpu_verify.py：要求真实GPU，不将skip作为通过；说明：显式GPU注释。
+46. ppo_trainer.yaml：默认旧奖励、真实stop软罚和成本上限；说明：配置就近说明。
