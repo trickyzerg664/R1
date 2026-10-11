@@ -243,7 +243,10 @@ trajectory_logging:
   enabled: true
   console_samples_per_source: 1
   every_n_batches: 1
+  # 兼容旧字段：仅限制末尾辅助诊断，模型思考/回答始终完整。
   max_chars_per_trajectory: 12000
+  # 每次真实搜索正文保留首尾共1000字符；0为全文，不改变模型可见观察。
+  search_result_max_chars: 1000
   # 可选可读文本文件；0表示选中批次记录全部轨迹，默认不额外落盘。
   file_path: null
   file_samples_per_source: 0

@@ -11,7 +11,7 @@ import numpy as np
 import torch
 from verl.experimental.process_checks.protocol import TraceLedger, parse_action
 from verl.trainer.main_ppo import RewardManager
-from verl.utils.trajectory_logging import HumanTrajectoryLogger, display_text, render_trajectory
+from verl.utils.trajectory_logging import HumanTrajectoryLogger, display_text, render_trajectory, render_search_result
 from tests.test_process_checks import execute
 from tests.test_reward_boundary import Tokenizer, batch
 
@@ -140,30 +140,24 @@ class TrajectoryLoggingTests(unittest.TestCase):
         self.assertNotIn('HIDDEN',text);self.assertIn('未执行尾部',text)
         self.assertEqual(record,before)
         # 反复展示不应倍增标签空行，奖励块与推理段之间必须保留清楚边界。
-        self.assertIn('不计入奖励。\n\n[答案与奖励判定]',text)
+        self.assertLess(text.index('[连续轨迹结束]'),text.index('[答案与奖励判定]'))
         tags='<think>first\nsecond</think><answer>Paris</answer>'
         self.assertEqual(display_text(display_text(tags,500),500),display_text(tags,500))
 
-    def test_newlines_controls_and_length_budget(self):
-        """@brief 真实换行保留、字面量转义不误改，长文本不能吞掉奖励总结。
+    def test_newlines_controls_and_auxiliary_budget(self):
+        """@brief 清理控制字符，旧预算只限制诊断，完整生成与奖励均保留。
         @return 无。
         """
-        # 终端控制字符只在显示副本中去除，字面量反斜线n保留原样。
-        shown=display_text('第一行\r\n第二行\\n字面量\x1b[31m红色\x00',200)
-        self.assertIn('第一行\n第二行\\n字面量',shown)
-        self.assertNotIn('\x1b',shown);self.assertNotIn('\x00',shown)
-        record=sample_record();record.update(prompt='问'*30000,model_response='想'*30000,full_response='答'*30000)
-        text=render_trajectory(record,2000)
-        self.assertLessEqual(len(text),2000)
-        self.assertIn('展示截断',text);self.assertIn('[答案与奖励判定]',text)
-        self.assertIn('本次实际返回规则奖励=1',text)
-        # 奖励总结自身很长时也遵守总预算，实际返回分和结束边界不能丢失。
-        report={'trace_uid':'trace','events':[],'calls':[],'protocol_valid':True,'missing_answer':False,
-                'reasons':[],'answer':'x'*10000,'accepted_answer_em':1.,'protocol_reward':1.}
-        record.update(process_report=report,target=['x'*10000],scoring_text='<answer>'+'x'*10000+'</answer>')
-        text=render_trajectory(record,2000)
-        self.assertLessEqual(len(text),2000)
-        self.assertIn('本次实际返回规则奖励=1',text);self.assertIn('[轨迹结束]',text)
+        shown = display_text('第一行\r\n第二行\\n字面量\x1b[31m红色\x00', 200)
+        self.assertIn('第一行\n第二行\\n字面量', shown)
+        self.assertNotIn('\x1b', shown); self.assertNotIn('\x00', shown)
+        record = sample_record(); history = '想' * 30000 + '<answer>FINAL_ANSWER</answer>'
+        record.update(prompt='问' * 30000, model_response=history, full_response=history)
+        text = render_trajectory(record, 2000)
+        # 提示可以缩略，连续模型轨迹不得被旧2000预算截掉。
+        self.assertIn(display_text(history, None), text)
+        self.assertIn('展示截断', text); self.assertIn('[答案与奖励判定]', text)
+        self.assertIn('本次实际返回规则奖励=1', text); self.assertIn('[轨迹结束]', text)
 
     def test_deterministic_limits_and_batch_frequency(self):
         """@brief 每来源样例和批次频率独立限制，不消费随机数。
@@ -229,13 +223,114 @@ class TrajectoryLoggingTests(unittest.TestCase):
             self.assertEqual(reward(batch('<answer>Paris</answer>')).sum().item(),1.)
         self.assertTrue(reward.human_logger.warned)
 
+    def test_continuous_long_model_output_and_deferred_diagnostics(self):
+        """@brief 多轮超长模型输出必须完整，诊断和未消费尾部只能出现在轨迹之后。
+        @return 无。
+        """
+        ledger = TraceLedger(1)
+        first = '<think>THINK_A' + '甲' * 16000 + 'END_A</think><search>first query</search>'
+        second = '<think>THINK_B' + '乙' * 16000 + 'END_B</think><answer>Paris</answer>'
+        execute(ledger, [first], result='Doc 1(Title: A) ' + '证据' * 10000)
+        execute(ledger, [second + '<search>UNCONSUMED_TAIL</search>'], turn=1)
+        report = ledger.reports()[0]
+        report.update(accepted_answer_em=1., protocol_reward=1., original_em=1., returned_reward=1.)
+        record = sample_record(report); before = deepcopy(record)
+        text = render_trajectory(record, 2000, 400)
+        # 用每轮完整格式化文本校验，不能只检查首尾哨兵而遗漏中间思考。
+        self.assertIn(display_text(first, None), text)
+        self.assertIn(display_text(second, None), text)
+        chain = text.split('[连续轨迹：', 1)[1].split('[连续轨迹结束]', 1)[0]
+        self.assertLess(chain.index('END_A'), chain.index('搜索结果省略'))
+        self.assertLess(chain.index('搜索结果省略'), chain.index('THINK_B'))
+        self.assertNotIn('实际执行=', chain); self.assertNotIn('UNCONSUMED_TAIL', chain)
+        self.assertGreater(text.index('UNCONSUMED_TAIL'), text.index('[答案与奖励判定]'))
+        self.assertIn('[过程诊断：不属于模型输出]', text); self.assertEqual(record, before)
+
+    def test_search_abbreviation_boundaries_and_full_option(self):
+        """@brief 搜索正文只缩略真实观察，保留首尾、信息标签及准确省略数量。
+        @return 无。
+        """
+        source = '<information>HEAD' + 'x' * 1000 + 'TAIL</information>'
+        shown = render_search_result(source, 200)
+        # 正文1008字符，保留200，省略说明的字符不占正文预算。
+        self.assertIn('省略 808 字符', shown)
+        self.assertTrue(shown.startswith('<information>\nHEAD'))
+        self.assertTrue(shown.endswith('TAIL\n</information>'))
+        self.assertEqual(render_search_result(source, 0), display_text(source, None))
+        self.assertEqual(render_search_result('<information>short</information>', 200),
+                         display_text('<information>short</information>', None))
+        for limit in (-1, 1, 199, True, '200'):
+            with self.subTest(limit=limit), self.assertRaises(ValueError):
+                render_search_result(source, limit)
+
+    def test_model_information_tag_never_abbreviated(self):
+        """@brief 模型自己写的伪观察即使很长也应完整展示，不能当工具返回省略。
+        @return 无。
+        """
+        raw = '<information>MODEL_FAKE' + 'z' * 18000 + '</information><answer>Paris</answer>'
+        ledger = TraceLedger(1); execute(ledger, [raw])
+        report = ledger.reports()[0]
+        report.update(accepted_answer_em=1., protocol_reward=0., original_em=1., returned_reward=0.)
+        text = render_trajectory(sample_record(report), 2000, 200)
+        # 保留错误生成本身用于退化分析；没有真实call_id便不会缩略。
+        self.assertIn(display_text(raw, None), text); self.assertNotIn('搜索结果省略', text)
+
+    def test_no_ledger_history_displayed_once(self):
+        """@brief 无账本时完整历史只输出一次，缺失历史则回退到模型输出。
+        @return 无。
+        """
+        record = sample_record()
+        history = '<think>ONLY_ONCE' + 'h' * 20000 + '</think><answer>Paris</answer>'
+        record.update(model_response=history, full_response=history)
+        text = render_trajectory(record, 2000, 200)
+        self.assertEqual(text.count('ONLY_ONCE'), 1); self.assertIn(display_text(history, None), text)
+        # 无来源身份时不可缩略information，避免把模型文本误当工具结果。
+        record['full_response'] = '<information>' + 'ENV_UNKNOWN' * 300 + '</information>' + history
+        self.assertIn(display_text(record['full_response'], None), render_trajectory(record, 2000))
+        for missing in (None, ''):
+            record['full_response'] = missing
+            self.assertIn(display_text(history, None), render_trajectory(record, 2000))
+
+    def test_unanswered_trace_not_fabricated(self):
+        """@brief 缺答案轨迹连续保留真实输出，明确结束状态且不补造答案。
+        @return 无。
+        """
+        ledger = TraceLedger(1); execute(ledger, ['<think>still thinking</think>'], final=True)
+        report = ledger.reports()[0]
+        report.update(accepted_answer_em=0., protocol_reward=-.1, original_em=0., returned_reward=-.1)
+        record = sample_record(report); record.update(original_em=0., returned_reward=-.1, scoring_text='')
+        text = render_trajectory(record)
+        chain = text.split('[连续轨迹：', 1)[1].split('[连续轨迹结束]', 1)[0]
+        self.assertIn('still thinking', chain); self.assertIn('未接受最终回答', chain)
+        self.assertNotIn('<answer>', chain); self.assertIn('本次实际返回规则奖励=-0.1', text)
+
+    def test_console_and_file_each_receive_complete_single_block(self):
+        """@brief 控制台和文件得到同一完整块，模型长输出不受旧预算限制。
+        @return 无。
+        """
+        record = sample_record(); history = '<think>' + 'q' * 15000 + '</think><answer>Paris</answer>'
+        record.update(full_response=history, model_response=history)
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / 'trajectory.log'
+            logger = HumanTrajectoryLogger(dict(enabled=True, file_path=str(path),
+                max_chars_per_trajectory=2000, search_result_max_chars=0))
+            logger.begin_batch(); output = io.StringIO()
+            # 本条仅一次print，避免logger自身逐轮打印穿插其他轨迹。
+            with patch('builtins.print', wraps=print) as printer, redirect_stdout(output):
+                logger.emit('nq', record)
+            self.assertEqual(printer.call_count, 1)
+            self.assertEqual(output.getvalue(), path.read_text())
+            self.assertIn(display_text(history, None), output.getvalue())
+
     def test_invalid_configuration_rejected(self):
         """@brief 非法展示配置启动时失败，避免隐式真值或无界预算。
         @return 无。
         """
         # 非法真值、负限额、零频率与空路径均在启动时显式拒绝。
         for config in [dict(enabled='False'),dict(every_n_batches=0),dict(console_samples_per_source=-1),
-                       dict(max_chars_per_trajectory=100),dict(file_path='')]:
+                       dict(max_chars_per_trajectory=100),dict(file_path=''),
+                       dict(search_result_max_chars=199),dict(search_result_max_chars=-1),
+                       dict(search_result_max_chars=True),dict(search_result_max_chars='1000')]:
             with self.subTest(config=config),self.assertRaises(ValueError):HumanTrajectoryLogger(config)
 
 
