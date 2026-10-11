@@ -32,7 +32,7 @@ def verify(plan):
     """@brief 核对冻结代码/配置/数据与父模型验收，拒绝运行中漂移。
     @param plan 已冻结运行方案映射。
     @return 无。
-    @raises RuntimeError 哈希不符或父Actor未验收。
+    @raises RuntimeError 哈希不符、父Actor未验收或Ray通信路径过长。
     """
     # 大父权重已单独流式核验；本函数只重复核对小型冻结清单。
     for name,digest in plan['hashes'].items():
@@ -40,6 +40,12 @@ def verify(plan):
             raise RuntimeError('Frozen content changed: '+name)
     if not json.loads(Path(plan['parent_verification']).read_text())['successful']:
         raise RuntimeError('Parent actor verification missing')
+    # Ray的Unix socket路径上限107字节；按10位PID保守估计，创建GPU子进程前拒绝。
+    if plan.get('ray_base'):
+        for phase in plan.get('phases', []):
+            socket_path = plan['ray_base']+'-'+phase['name']+'/ray/session_2000-01-01_00-00-00_000000_2147483647/sockets/plasma_store'
+            if len(socket_path.encode()) > 107:
+                raise RuntimeError('Ray socket path exceeds107 bytes: '+phase['name'])
 
 def training_summary(directory):
     """@brief 读取真实训练事件，核验有限更新及指标覆盖，不把计划值写成完成值。

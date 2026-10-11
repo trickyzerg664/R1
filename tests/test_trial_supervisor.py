@@ -169,3 +169,16 @@ class TrialSupervisorTests(unittest.TestCase):
         # 两种设计共用相同健康门限，不因更换预算而放宽。
         with self.assertRaisesRegex(RuntimeError, 'health gate'):
             trial.select_phases(plan, dict(parent, missing=13))
+
+    def test_ray_socket_path_limit_checked_before_gpu(self):
+        """@brief 过长Ray目录在启动前拒绝，短独占目录可通过相同冻结验收。
+        @return 无。
+        """
+        with tempfile.TemporaryDirectory() as tmp:
+            parent=Path(tmp)/'parent.json';parent.write_text('{"successful":true}')
+            plan=dict(hashes={},parent_verification=str(parent),phases=[{'name':'parent-eval'}])
+            # 仅路径不同，GPU启动接口禁止调用，防止运行后才暴露系统路径限制。
+            with patch.object(trial.subprocess,'Popen',side_effect=AssertionError('GPU spawn')):
+                with self.assertRaisesRegex(RuntimeError,'socket path exceeds'):
+                    trial.verify(dict(plan,ray_base='/tmp/grpo-reward100-20261011-v1'))
+                trial.verify(dict(plan,ray_base='/tmp/rw100v2'))
