@@ -164,6 +164,11 @@ def provenance(config):
         c['algorithm']['process_checks'] = dict(version='process_checks_v1',
                                                reward_gate=process['reward_gate'],
                                                missing_answer_penalty=process['missing_answer_penalty'])
+        # 仅开启新奖励时改变恢复来源；旧缺省新增字段不改变原指纹。
+        if process['reward_variant'] != 'legacy':
+            c['algorithm']['process_checks'].update(reward_variant=process['reward_variant'],
+                invalid_action_penalty=process['invalid_action_penalty'],
+                process_penalty_cap=process['process_penalty_cap'])
     retriever = dict(c['retriever'])
     retriever.pop('url', None)
     return {'initial_model_id': c['difficulty']['initial_model_id'],

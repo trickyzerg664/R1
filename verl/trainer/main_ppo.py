@@ -146,7 +146,10 @@ class RewardManager():
                 accepted_em = float(qa_em.em_check(report['answer'], ground_truth['target'])) if report['answered'] else 0.
                 components = process_reward_components(report, uid, accepted_em,
                                                        self.process_config['missing_answer_penalty'])
-                candidate_score = components['protocol_reward']
+                # 新软罚只接可信原生终止，评价仍由原EM路径返回。
+                from verl.experimental.process_checks.bounded_reward import bounded_reward
+                components = bounded_reward(report, components, self.process_config)
+                candidate_score = components.get('training_reward', components['protocol_reward'])
                 record = dict(report, original_em=float(score), accepted_answer_em=accepted_em,
                               **components, question_id=data_item.non_tensor_batch.get('question_id'),
                               data_source=data_source)

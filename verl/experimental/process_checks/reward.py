@@ -10,7 +10,7 @@ TASK_SUCCESS_VERSION = 'task_success_v1'
 def check_config(config):
     """
     @brief 校验显式开关，拒绝未记录过程却修改奖励的配置。
-    @param config 包含enabled、reward_gate、missing_answer_penalty、audit_path的映射。
+    @param config 含过程开关、缺答案惩罚、奖励版本、无效动作系数、成本上限及审计路径的映射。
     @return 普通字典，数值与布尔字段已校验。
     @raises ValueError 非有限/负惩罚或不一致开关。
     """
@@ -19,6 +19,9 @@ def check_config(config):
     result.setdefault('reward_gate', False)
     result.setdefault('missing_answer_penalty', 0.)
     result.setdefault('audit_path', None)
+    result.setdefault('reward_variant', 'legacy')
+    result.setdefault('invalid_action_penalty', 0.)
+    result.setdefault('process_penalty_cap', .12)
     # 拒绝字符串False等隐式真值，避免误开启实际奖励修改。
     if any(type(result[key]) is not bool for key in ('enabled', 'reward_gate')):
         raise ValueError('Process switches must be booleans')
@@ -30,6 +33,17 @@ def check_config(config):
         raise ValueError('Process reward requires enabled process checks')
     if penalty and not result['reward_gate']:
         raise ValueError('Missing-answer penalty requires protocol gate')
+    # 新奖励显式版本与上限受限，未知终止保护不能由配置绕过。
+    if result['reward_variant'] not in ('legacy', 'bounded_invalid_v1'):
+        raise ValueError('Unknown process reward variant')
+    invalid, cap = float(result['invalid_action_penalty']), float(result['process_penalty_cap'])
+    if not math.isfinite(invalid) or invalid < 0 or not math.isfinite(cap) or not 0 < cap <= .12:
+        raise ValueError('Invalid bounded process costs')
+    if result['reward_variant'] != 'legacy' and (not result['reward_gate'] or penalty > cap or invalid <= 0):
+        raise ValueError('Bounded reward requires gated costs within cap')
+    if result['reward_variant'] == 'legacy' and invalid:
+        raise ValueError('Invalid-action cost requires bounded reward variant')
+    result.update(invalid_action_penalty=invalid, process_penalty_cap=cap)
     result['missing_answer_penalty'] = penalty
     return result
 

@@ -127,6 +127,11 @@ def render_trajectory(record, max_chars=12000, search_result_max_chars=1000):
                     '返回策略：' + ('采用过程奖励' if record['apply_process_reward'] and record['reward_gate'] else '保留原始答案分（验证或仅审计）')]
     else:
         summary.append(f"过程检查关闭；没有来源合法性判定；错误答案格式分={record['format_score']:g}")
+    # 原过程奖励仍展示原公式；启用软罚时另列训练候选，避免误读新旧分值。
+    if report and 'training_reward' in report:
+        summary += [f"奖励版本：{report['reward_version']}；完整无效动作数={report['invalid_action_count']}",
+                    f"训练候选奖励={report['training_reward']:g}；总过程成本={report['process_penalty']:g}",
+                    f"原生终止未知={report['unknown_termination_count']}；长度截断免新增罚={report['length_termination_count']}"]
     summary += [f"本次实际返回规则奖励={record['returned_reward']:g}",
                 '这里展示评分入口奖励；KL、GRPO优势及最终损失在后续流程计算。']
     # 诊断独立放在答案之后，辅助截断不会吞掉任何一轮模型思考或最终回答。

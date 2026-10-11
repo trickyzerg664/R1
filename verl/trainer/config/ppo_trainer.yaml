@@ -236,6 +236,10 @@ process_checks:
   enabled: false
   reward_gate: false
   missing_answer_penalty: 0.0
+  # 原奖励默认不变；有界软罚仅确认完整拒绝动作，不罚长度截断/未知终止。
+  reward_variant: legacy
+  invalid_action_penalty: 0.0
+  process_penalty_cap: 0.12
   audit_path: null
 
 # 默认每评分批次每来源展示1条；不触发额外生成或开启过程奖励。
