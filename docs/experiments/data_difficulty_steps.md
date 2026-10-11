@@ -644,3 +644,8 @@ bounded_invalid_v1接入独立纯模块，复用已校验门控/成功标签；�
 ## 2026-10-11T06:44:02.228693+00:00 验证实验实际启动
 
 验证监督器已实际启动：launcher PID2829354，父D256评价PID2829362，启动UTC2026-10-11T06:41:56.895844+00:00。当前phase=parent-eval，正式GRPO训练步数B/T均0，无本次新checkpoint；不是已完成评价。冻结代码6cbd7dca5bafca19a9e4eb9c1c83c444a81c2233，292项源码/13项资产哈希核对通过，真实配置入口B/T均通过，固定reference与父元数据一致。实际命令为bash env/metax/run.sh -u scripts/difficulty/stability_trial.py --run-directory /mnt/public/code/lyk/lzy/runs/metax-grpo-bt-verification-20261011-v1 --launch，经ssh mx后台启动。下一步先确认父健康与原生终止门限，再按冻结方案顺序B20、B冷D256、T20、T冷D256。CPU224通过和单卡小模型1项通过仅代表已执行范围；父评价/八卡首段/长期效果尚在进行。进度以status.json自动区块实测时间为准；负责人/root。
+
+
+## 2026-10-11T08:30:43.521429+00:00 跨rank指标修复后的验证流程
+
+后续执行更新：修复跨rank指标收集后，两组在独立metax-grpo-bt-verification-20261011-v2目录从相同父step60权重重启；v1第1步无checkpoint，不做伪恢复。共用父D256完整原始记录显式冻结并重验后复用（122/256、缺答案0、779/779原生终止）；无需重复耗费约40分钟父评价。B/T超参、奖励、数据、种子不变，微批256门限不变。历史PG/Entropy/KL/norm经过DataProto拼接曾只保留rank0，原报告涉及全局均值的判断须限制到rank0；异常波动仍作为线索，不能从该日志推断全8卡分布。总48小时预算从原v1开始计，46小时停止期限保留。正式八卡验收与长期算法效果待验证。

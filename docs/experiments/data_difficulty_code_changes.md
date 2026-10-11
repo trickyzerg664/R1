@@ -1768,3 +1768,18 @@ bounded_invalid_v1接入独立纯模块，复用已校验门控/成功标签；�
 ## 2026-10-11T06:44:02.228693+00:00 验证实验实际启动
 
 验证监督器已实际启动：launcher PID2829354，父D256评价PID2829362，启动UTC2026-10-11T06:41:56.895844+00:00。当前phase=parent-eval，正式GRPO训练步数B/T均0，无本次新checkpoint；不是已完成评价。冻结代码6cbd7dca5bafca19a9e4eb9c1c83c444a81c2233，292项源码/13项资产哈希核对通过，真实配置入口B/T均通过，固定reference与父元数据一致。实际命令为bash env/metax/run.sh -u scripts/difficulty/stability_trial.py --run-directory /mnt/public/code/lyk/lzy/runs/metax-grpo-bt-verification-20261011-v1 --launch，经ssh mx后台启动。下一步先确认父健康与原生终止门限，再按冻结方案顺序B20、B冷D256、T20、T冷D256。CPU224通过和单卡小模型1项通过仅代表已执行范围；父评价/八卡首段/长期效果尚在进行。进度以status.json自动区块实测时间为准；负责人/root。
+
+
+## 异常诊断与修复开始
+
+本次异常诊断：UTC 2026-10-11T08:25:05.121718+00:00；B已完成第1个GRPO训练步、每rank两次优化器更新；无COMPLETE checkpoint，T尚未开始。父D256已完成122/256、缺答案0、原生终止779/779。监督器在微批计数检查实际32/预期256时主动SIGTERM，当前训练进程已退出、独立检索保留。根因是DP_COMPUTE_PROTO经DataProto.concat仅保留data[0].meta_info，丢弃rank1–7所有训练指标；此前CPU微批测试及单rankGPU测试未覆盖真实跨rank返回路径。微批循环自身覆盖完整；历史和本次全局PG/熵/KL/norm统计可能仅rank0，不能宣称全局均值。第1步total_loss=-0.0578348096、KL=.3623620658、grad_norm=2.02278173均有限，未出现跳过更新；该异常由监控数据汇集错误触发。修复将合并各rank metrics、保持其他metadata首份语义，覆盖计数仍256；不改变loss/reward/优化器。旧失败运行保留，新v2共用同父/参考/数据/超参/seed且两臂均从0重训；复用完整父评价需hash绑定并重验零更新/完整性，总48小时预算从原开始计。CPU/修复后八卡尚未验证。负责人/root。
+
+
+## 2026-10-11T08:27:27.422356+00:00 跨rank汇集修复
+
+本次最小修复已落盘：verl/protocol.py的DataProto.concat合并各rank全部metrics，其他metadata仍取首份、原worker容器不修改；指标缺失或字段不一致明确失败。稳定性监督新增显式verified_parent_evaluation复用路径，必须冻结answers/metrics/process-audit并通过原完整256题/零更新验收；默认流程仍原父评价。监督计数仍256，未放宽数值/更新/显存门限，未改GRPO损失或奖励。修复前新增跨rank回归4项均失败，其中真实DataProto拼接复现32!=256；修复后全量CPU测试尚待执行。注释检查范围：concat职责/跨rank条件/字段一致性拒绝/微批及标量收集/输入不变性；parent_evaluation职责/默认分支/冻结证据循环/重验及复用落盘；四项汇集测试职责与真实监督路径/不同rank加权统计/其他metadata及无原位修改/缺字段拒绝；两项父复用测试职责及缺证据/GPU禁止条件。17/17语义逻辑单元有有效中文说明，函数标签及关键逻辑检查无遗漏；覆盖100%。负责人/root。
+
+
+## 2026-10-11T08:30:43.521429+00:00 跨rank指标修复后的验证流程
+
+后续执行更新：修复跨rank指标收集后，两组在独立metax-grpo-bt-verification-20261011-v2目录从相同父step60权重重启；v1第1步无checkpoint，不做伪恢复。共用父D256完整原始记录显式冻结并重验后复用（122/256、缺答案0、779/779原生终止）；无需重复耗费约40分钟父评价。B/T超参、奖励、数据、种子不变，微批256门限不变。历史PG/Entropy/KL/norm经过DataProto拼接曾只保留rank0，原报告涉及全局均值的判断须限制到rank0；异常波动仍作为线索，不能从该日志推断全8卡分布。总48小时预算从原v1开始计，46小时停止期限保留。正式八卡验收与长期算法效果待验证。

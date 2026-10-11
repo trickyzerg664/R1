@@ -89,3 +89,30 @@ class TrialSupervisorTests(unittest.TestCase):
             self.assertEqual(result['correct'],2);self.assertEqual(result['parameter_updates'],0)
             (root/'metrics.jsonl').write_text('{"event":"train"}\n')
             with self.assertRaisesRegex(RuntimeError,'performed training'):trial.evaluation_summary(root,2)
+
+    def test_cached_parent_requires_frozen_raw_evidence(self):
+        """@brief 父评价只允许复用冻结原始记录，缺失证据时拒绝。
+        @return 无。
+        """
+        with tempfile.TemporaryDirectory() as tmp:
+            root=Path(tmp);cached=root/'old';cached.mkdir()
+            plan=dict(verified_parent_evaluation=str(cached),hashes={},
+                      phases=[dict(directory=str(root/'new'))])
+            with patch.object(trial,'verify'), self.assertRaisesRegex(RuntimeError,'not frozen'):
+                trial.parent_evaluation(root,plan,0)
+
+    def test_cached_parent_rechecks_without_gpu_spawn(self):
+        """@brief 完整冻结父评价重验后复用，不创建GPU任务或伪称新评分。
+        @return 无。
+        """
+        with tempfile.TemporaryDirectory() as tmp:
+            root=Path(tmp);cached=root/'old';cached.mkdir()
+            hashes={str(cached/name):'verified' for name in ('answers.jsonl','metrics.jsonl','process-audit.jsonl')}
+            plan=dict(verified_parent_evaluation=str(cached),hashes=hashes,
+                      phases=[dict(directory=str(root/'new'))])
+            with patch.object(trial,'verify'), patch.object(trial,'evaluation_summary',return_value={'count':256}) as check, \
+                 patch.object(trial,'run_phase',side_effect=AssertionError('GPU spawn')):
+                result=trial.parent_evaluation(root,plan,0)
+            check.assert_called_once_with(cached,256)
+            self.assertEqual(result['count'],256)
+            self.assertTrue((root/'new/reused-evaluation.json').exists())

@@ -53,8 +53,10 @@ def training_summary(directory):
         # 每rank两次mini更新；全八rank微批观测共256，任意跳过均停止该组。
         if m.get('actor/optimizer_step')!=1 or m.get('actor/optimizer_updates_per_rank')!=2:
             raise RuntimeError('Optimizer update incomplete at step '+str(event['step']))
+        # 错误同时报告预期/实测及步数，保留256门限便于定位覆盖丢失。
         if m.get('actor/observations/micro_batches_sum')!=256:
-            raise RuntimeError('Microbatch observation coverage differs')
+            raise RuntimeError('Microbatch observation coverage differs at step '+str(event['step'])+
+                               ': expected=256 actual='+str(m.get('actor/observations/micro_batches_sum')))
         for key in ('actor/total_loss','actor/grad_norm','actor/entropy_token_weighted','actor/kl_loss'):
             if not math.isfinite(m.get(key,float('nan'))):raise RuntimeError('Nonfinite '+key)
     points=sorted(int(p.parent.name.split('_')[-1]) for p in (directory/'checkpoints').glob('step_*/COMPLETE.json'))
@@ -199,6 +201,33 @@ def run_phase(run, phase, plan, deadline):
             except subprocess.TimeoutExpired:os.killpg(child.pid,signal.SIGKILL);child.wait()
         cleanup_owned(ray_directory)
 
+def parent_evaluation(run, plan, deadline):
+    """@brief 复用显式绑定且重新验收的父评价，默认仍执行原父评价阶段。
+    @param run 当前运行产物根Path。
+    @param plan 冻结运行计划，可包含verified_parent_evaluation目录。
+    @param deadline 总预算截止Unix时间。
+    @return 通过完整性及零更新检查的父评价结果。
+    @raises RuntimeError 缓存评价缺失、非完整或含训练更新。
+    @note 缓存原始文件须纳入plan.hashes；复用信息单独落盘不改旧实验。
+    """
+    cached = plan.get('verified_parent_evaluation')
+    # 默认仍创建原父评价任务；复用只能由冻结计划显式指定。
+    if not cached:
+        return run_phase(run, plan['phases'][0], plan, deadline)
+    # 外部评价只在显式冻结所有原始证据后复用，不能相信单个summary文件。
+    verify(plan)
+    directory = Path(cached)
+    for filename in ('answers.jsonl', 'metrics.jsonl', 'process-audit.jsonl'):
+        if str(directory/filename) not in plan['hashes']:
+            raise RuntimeError('Cached parent evidence is not frozen: '+filename)
+    summary = evaluation_summary(directory, 256)
+    target = Path(plan['phases'][0]['directory'])
+    target.mkdir(parents=True, exist_ok=True)
+    save(target/'summary.json', summary)
+    save(target/'reused-evaluation.json', dict(source=str(directory), verified_utc=now(),
+                                             parameter_updates=0))
+    return summary
+
 def main():
     """@brief 默认检查冻结计划；显式--launch才顺序执行父评价和两组20步。
     @return 无。
@@ -223,7 +252,8 @@ def main():
         save(run/'supervisor-process.json',dict(pid=os.getpid(),started_utc=now()))
         signal.signal(signal.SIGTERM,interrupt);signal.signal(signal.SIGINT,interrupt)
         try:
-            parent=run_phase(run,plan['phases'][0],plan,deadline)
+            # 显式缓存先重验，随后仍按同一健康/终止门限选择两臂。
+            parent=parent_evaluation(run,plan,deadline)
             # 健康验收预先固定：缺答案不超过5%，父评价无更新；未通过便停止锁定新父模型。
             if parent['missing']>12:raise RuntimeError('Parent generation failed health gate')
             bounded=parent['native_coverage']>=.95 and parent['stop_events']>0

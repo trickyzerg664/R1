@@ -133,3 +133,8 @@ KL下降但EM/恢复率下降：约束过强；Entropy升高但无效动作增�
 父加载文件17项已流式哈希通过（仅HF Actor权重/分词器；旧优化器rank文件未使用），参考Qwen2.5-7B固定。固定D64为原D256顺序前30NQ/34Hotpot，生成配置不缩短；训练32题×8、micro8、mini128，fresh optimizer/scheduler/scaler，同seed42，同预热10步。B lr1e-6/Actor KL.001/legacy；T lr5e-7/Actor KL.002/bounded_invalid_v1。审计记录原生token/终止，文本文件每批每来源2条、控制台1条，两组相同；保留全量结构化审计，未新增字符特定惩罚。
 
 职责：loss_observations和bounded_reward纯模块只消费张量/普通报告；worker与RewardManager仅薄接线；监督脚本调用现有Hydra入口、评分、checkpoint校验，不复制生成/训练算法。注释：43新增/修改函数标签无缺失，46/46语义逻辑单元有效中文说明，覆盖100%，关键逻辑独立检查；详列source-audit.json。GPU8、长期收益与实际异常复现待观察。产物 /mnt/public/code/lyk/lzy/runs/metax-grpo-bt-verification-20261011-v1；负责人/root；本条UTC由远程脚本填写。
+
+
+## 2026-10-11T08:30:43.521429+00:00 跨rank指标修复后的验证流程
+
+后续执行更新：修复跨rank指标收集后，两组在独立metax-grpo-bt-verification-20261011-v2目录从相同父step60权重重启；v1第1步无checkpoint，不做伪恢复。共用父D256完整原始记录显式冻结并重验后复用（122/256、缺答案0、779/779原生终止）；无需重复耗费约40分钟父评价。B/T超参、奖励、数据、种子不变，微批256门限不变。历史PG/Entropy/KL/norm经过DataProto拼接曾只保留rank0，原报告涉及全局均值的判断须限制到rank0；异常波动仍作为线索，不能从该日志推断全8卡分布。总48小时预算从原v1开始计，46小时停止期限保留。正式八卡验收与长期算法效果待验证。

@@ -76,21 +76,10 @@ CUDA_VISIBLE_DEVICES='' bash env/metax/run.sh /mnt/public/code/lyk/lzy/runs/meta
 <!-- metax-grpo-bt-verification-20261011-v1-current -->
 
 {
-  "status": "running",
-  "phase": "parent-eval",
-  "child_pid": 2829362,
-  "gpu_current_MiB": [
-    9630,
-    9694,
-    9630,
-    9630,
-    9630,
-    9630,
-    9630,
-    10334
-  ],
-  "trained_step": 0,
-  "checked_utc": "2026-10-11T06:44:01.537172+00:00"
+  "status": "failed",
+  "phase": "stopped",
+  "error": "Microbatch observation coverage differs",
+  "checked_utc": "2026-10-11T07:39:59.836720+00:00"
 }
 
 <!-- /metax-grpo-bt-verification-20261011-v1-current -->
@@ -99,3 +88,18 @@ CUDA_VISIBLE_DEVICES='' bash env/metax/run.sh /mnt/public/code/lyk/lzy/runs/meta
 ## 2026-10-11T06:44:02.228693+00:00 验证实验实际启动
 
 验证监督器已实际启动：launcher PID2829354，父D256评价PID2829362，启动UTC2026-10-11T06:41:56.895844+00:00。当前phase=parent-eval，正式GRPO训练步数B/T均0，无本次新checkpoint；不是已完成评价。冻结代码6cbd7dca5bafca19a9e4eb9c1c83c444a81c2233，292项源码/13项资产哈希核对通过，真实配置入口B/T均通过，固定reference与父元数据一致。实际命令为bash env/metax/run.sh -u scripts/difficulty/stability_trial.py --run-directory /mnt/public/code/lyk/lzy/runs/metax-grpo-bt-verification-20261011-v1 --launch，经ssh mx后台启动。下一步先确认父健康与原生终止门限，再按冻结方案顺序B20、B冷D256、T20、T冷D256。CPU224通过和单卡小模型1项通过仅代表已执行范围；父评价/八卡首段/长期效果尚在进行。进度以status.json自动区块实测时间为准；负责人/root。
+
+
+## 2026-10-11 首批真实评价与日志确认
+
+UTC2026-10-11T06:48:07.942504+00:00启动复核：共同父D256评价已完成首批8题的回答审计落盘；原生finish_reason实际观测到stop/length，完整D256覆盖率门限尚未判定。八卡引擎完成加载并实际生成，当前仍parent-eval，B/T正式更新均0。冻结292项源码及13项资产哈希再次一致。首批可读轨迹已按连续思考/搜索/结果/回答展示，未改变评分；不得以8题结果宣称父评价或训练修复完成。证据 launch-verification.json、parent-eval/answers.jsonl、parent-eval/trajectories.readable.log；当前进度以后续自动区块时间为准。负责人/root。
+
+
+## 2026-10-11T06:55:29.897317+00:00 用户进度查询
+
+当前阶段 parent-eval，状态 running；当前独立评价已落盘 56 条（阶段目标256；未完成不能称完整评价），本阶段训练步数 0；具体以status.json实际检查时间为准。证据 /mnt/public/code/lyk/lzy/runs/metax-grpo-bt-verification-20261011-v1/progress-query.json；负责人/root。
+
+
+## 异常诊断与修复开始
+
+本次异常诊断：UTC 2026-10-11T08:25:05.121718+00:00；B已完成第1个GRPO训练步、每rank两次优化器更新；无COMPLETE checkpoint，T尚未开始。父D256已完成122/256、缺答案0、原生终止779/779。监督器在微批计数检查实际32/预期256时主动SIGTERM，当前训练进程已退出、独立检索保留。根因是DP_COMPUTE_PROTO经DataProto.concat仅保留data[0].meta_info，丢弃rank1–7所有训练指标；此前CPU微批测试及单rankGPU测试未覆盖真实跨rank返回路径。微批循环自身覆盖完整；历史和本次全局PG/熵/KL/norm统计可能仅rank0，不能宣称全局均值。第1步total_loss=-0.0578348096、KL=.3623620658、grad_norm=2.02278173均有限，未出现跳过更新；该异常由监控数据汇集错误触发。修复将合并各rank metrics、保持其他metadata首份语义，覆盖计数仍256；不改变loss/reward/优化器。旧失败运行保留，新v2共用同父/参考/数据/超参/seed且两臂均从0重训；复用完整父评价需hash绑定并重验零更新/完整性，总48小时预算从原开始计。CPU/修复后八卡尚未验证。负责人/root。
