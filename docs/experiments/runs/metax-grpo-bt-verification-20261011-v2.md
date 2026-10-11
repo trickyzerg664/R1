@@ -49,3 +49,8 @@
 - v1监督07:39:59 UTC报告Microbatch observation coverage differs并主动终止。根因是DP_COMPUTE_PROTO最终DataProto.concat保留第0个rank的meta_info。
 - v2首次CPU230项：0fail、1error，新增夹具中整数numpy总量无法直接json.dumps；修复夹具使用与实际浮点观察一致的数值，失败证据cpu-regression.attempt1.*保留。生产拼接已正确收齐所有rank，回归重跑中。
 - 负责人/root；每次状态检查更新本记录与总台账；模型训练效果尚未证明。
+
+
+## 2026-10-11T08:34:34.549052+00:00
+
+CPU230项全部通过，失败/错误/跳过0；新增跨rank4项及父复用2项。修复前4项失败复现、首次CPU夹具1error及最终通过均保留；尚无修复后八卡实际更新证据。最后只补中文注释，未改变已测行为。注释审计按同名concat曾误选未修改DataProtoFuture.concat，已改为精确选取DataProto类。10函数标签完整，24/24语义逻辑单元均有有效中文说明，100%；此前17项清单由本完整清单补足，细目见本次source-audit.json。指标修复e6f4cbc、父评价复用4bf5ff9已提交，未推送。负责人/root。
