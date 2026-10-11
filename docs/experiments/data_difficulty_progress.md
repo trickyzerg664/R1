@@ -1292,15 +1292,21 @@ v1完成2/100步、64题/512保留轨迹；第3步候选已筛完但无完整tra
 <!-- metax-process-r1-100-b32-gpu-20261008-v2-current -->
 
 {
-  "checked_utc": "2026-10-08T10:48:47.237233+00:00",
-  "status": "running",
-  "phase": "train",
-  "trained_step": 7,
+  "checked_utc": "2026-10-09T16:15:41.502367+00:00",
+  "status": "stopped_or_failed",
+  "phase": "final_D256",
+  "trained_step": 100,
   "target_steps": 100,
-  "published_checkpoint_steps": [],
-  "child_pid": 2257943,
-  "exit_code": null,
-  "error": null
+  "published_checkpoint_steps": [
+    20,
+    40,
+    60,
+    80,
+    100
+  ],
+  "child_pid": 2781312,
+  "exit_code": -6,
+  "error": "RuntimeError('Stage failed or stopped: final_D256, exit=-6')"
 }
 
 <!-- /metax-process-r1-100-b32-gpu-20261008-v2-current -->
@@ -1314,58 +1320,62 @@ v1完成2/100步、64题/512保留轨迹；第3步候选已筛完但无完整tra
 <!-- metax-process-r1-100-b32-gpu-20261008-v2-repair-check -->
 
 {
-  "checked_utc": "2026-10-08T10:44:53.628527+00:00",
+  "checked_utc": "2026-10-09T04:43:24.046237+00:00",
   "status": "running",
   "supervisor_identity_alive": true,
   "training_identity_alive": true,
-  "trained_step": 7,
+  "trained_step": 72,
   "target_steps": 100,
-  "retained_questions": 224,
-  "retained_trajectories": 1792,
-  "checkpoint_steps": [],
-  "gpu_peak_GiB": 52.4619140625,
+  "retained_questions": 2304,
+  "retained_trajectories": 18432,
+  "checkpoint_steps": [
+    20,
+    40,
+    60
+  ],
+  "gpu_peak_GiB": 53.025390625,
   "gpu_current_MiB": [
-    43546,
-    44058,
-    43738,
-    43674,
-    43674,
-    43994,
-    43738,
-    44314
+    43162,
+    20953,
+    43354,
+    20569,
+    43482,
+    26906,
+    26650,
+    27289
   ],
   "gpu_limit_GiB": 56,
   "protection_reason": null,
   "completed_steps_valid": true,
   "latest_stage": {
-    "time_unix": 1791456091.374481,
-    "pid": 2260903,
+    "time_unix": 1791520549.5494728,
+    "pid": 2261506,
     "stage": "actor_update_end",
     "device": 0,
     "shapes": {
       "input_ids": [
         32,
-        4107
+        4093
       ],
       "responses": [
         32,
-        3883
+        3900
       ]
     },
-    "allocated_MiB": 3983.76123046875,
-    "reserved_MiB": 6984.0,
-    "peak_allocated_MiB": 36868.71826171875,
+    "allocated_MiB": 3928.015625,
+    "reserved_MiB": 6068.0,
+    "peak_allocated_MiB": 31817.107421875,
     "optimizer_state_bytes": {
       "cpu": 0,
       "cuda": 0
     }
   },
-  "latest_candidate": "(main_task pid=2259685) [动态筛选] step=8 round=1/16 candidates=32 mixed=13 retained=13/32",
+  "latest_candidate": "(main_task pid=2259685) [动态筛选] step=73 round=2/16 candidates=64 mixed=4 retained=10/32",
   "last_metrics": {
-    "actor/grad_norm": 2.610621929168701,
+    "actor/grad_norm": 1.76408451795578,
     "actor/optimizer_step": 1.0,
-    "timing_s/step": 634.6678014565259,
-    "timing_s/update_actor": 142.93190544843674
+    "timing_s/step": 1130.1867651697248,
+    "timing_s/update_actor": 139.39776103198528
   },
   "all_steps": [
     {
@@ -1409,6 +1419,396 @@ v1完成2/100步、64题/512保留轨迹；第3步候选已筛完但无完整tra
       "time": 634.6678014565259,
       "grad_norm": 2.610621929168701,
       "optimizer_step": 1.0
+    },
+    {
+      "step": 8,
+      "time": 591.8537605814636,
+      "grad_norm": 2.8263083696365356,
+      "optimizer_step": 1.0
+    },
+    {
+      "step": 9,
+      "time": 592.8163139894605,
+      "grad_norm": 2.011294186115265,
+      "optimizer_step": 1.0
+    },
+    {
+      "step": 10,
+      "time": 602.5223283357918,
+      "grad_norm": 1.6728767156600952,
+      "optimizer_step": 1.0
+    },
+    {
+      "step": 11,
+      "time": 606.6795335803181,
+      "grad_norm": 3.203297197818756,
+      "optimizer_step": 1.0
+    },
+    {
+      "step": 12,
+      "time": 624.2672936916351,
+      "grad_norm": 3.595761299133301,
+      "optimizer_step": 1.0
+    },
+    {
+      "step": 13,
+      "time": 767.8143133353442,
+      "grad_norm": 2.7960606813430786,
+      "optimizer_step": 1.0
+    },
+    {
+      "step": 14,
+      "time": 621.2598229479045,
+      "grad_norm": 4.11447811126709,
+      "optimizer_step": 1.0
+    },
+    {
+      "step": 15,
+      "time": 734.9845045171678,
+      "grad_norm": 5.039340257644653,
+      "optimizer_step": 1.0
+    },
+    {
+      "step": 16,
+      "time": 655.0322879478335,
+      "grad_norm": 21.693071126937866,
+      "optimizer_step": 1.0
+    },
+    {
+      "step": 17,
+      "time": 664.4178495276719,
+      "grad_norm": 2.5924887657165527,
+      "optimizer_step": 1.0
+    },
+    {
+      "step": 18,
+      "time": 612.4314907509834,
+      "grad_norm": 3.0424174070358276,
+      "optimizer_step": 1.0
+    },
+    {
+      "step": 19,
+      "time": 768.8461599517614,
+      "grad_norm": 2.8349310159683228,
+      "optimizer_step": 1.0
+    },
+    {
+      "step": 20,
+      "time": 3168.3828100562096,
+      "grad_norm": 6.370364308357239,
+      "optimizer_step": 1.0
+    },
+    {
+      "step": 21,
+      "time": 716.9364369045943,
+      "grad_norm": 5.306874513626099,
+      "optimizer_step": 1.0
+    },
+    {
+      "step": 22,
+      "time": 630.2780446652323,
+      "grad_norm": 3.0798953771591187,
+      "optimizer_step": 1.0
+    },
+    {
+      "step": 23,
+      "time": 644.7522893548012,
+      "grad_norm": 2.7850013971328735,
+      "optimizer_step": 1.0
+    },
+    {
+      "step": 24,
+      "time": 709.2915884107351,
+      "grad_norm": 4.69830197095871,
+      "optimizer_step": 1.0
+    },
+    {
+      "step": 25,
+      "time": 639.7509534563869,
+      "grad_norm": 200.2030336856842,
+      "optimizer_step": 1.0
+    },
+    {
+      "step": 26,
+      "time": 729.1275517903268,
+      "grad_norm": 4.41488778591156,
+      "optimizer_step": 1.0
+    },
+    {
+      "step": 27,
+      "time": 721.9098197165877,
+      "grad_norm": 3.0507673025131226,
+      "optimizer_step": 1.0
+    },
+    {
+      "step": 28,
+      "time": 777.1360456943512,
+      "grad_norm": 20.703341245651245,
+      "optimizer_step": 1.0
+    },
+    {
+      "step": 29,
+      "time": 752.9881760701537,
+      "grad_norm": 2.287122130393982,
+      "optimizer_step": 1.0
+    },
+    {
+      "step": 30,
+      "time": 721.1869722306728,
+      "grad_norm": 1.904420256614685,
+      "optimizer_step": 1.0
+    },
+    {
+      "step": 31,
+      "time": 602.9699498098344,
+      "grad_norm": 2.0938825607299805,
+      "optimizer_step": 1.0
+    },
+    {
+      "step": 32,
+      "time": 803.1940652485937,
+      "grad_norm": 1.4695493578910828,
+      "optimizer_step": 1.0
+    },
+    {
+      "step": 33,
+      "time": 736.9436798449606,
+      "grad_norm": 1.6157737374305725,
+      "optimizer_step": 1.0
+    },
+    {
+      "step": 34,
+      "time": 846.6727837678045,
+      "grad_norm": 1.8014870882034302,
+      "optimizer_step": 1.0
+    },
+    {
+      "step": 35,
+      "time": 749.1947218775749,
+      "grad_norm": 1.6227834224700928,
+      "optimizer_step": 1.0
+    },
+    {
+      "step": 36,
+      "time": 922.2211836818606,
+      "grad_norm": 1.736897051334381,
+      "optimizer_step": 1.0
+    },
+    {
+      "step": 37,
+      "time": 883.2750402074307,
+      "grad_norm": 1.6355761885643005,
+      "optimizer_step": 1.0
+    },
+    {
+      "step": 38,
+      "time": 839.86446557194,
+      "grad_norm": 2.056018114089966,
+      "optimizer_step": 1.0
+    },
+    {
+      "step": 39,
+      "time": 985.1980404667556,
+      "grad_norm": 1.6453660726547241,
+      "optimizer_step": 1.0
+    },
+    {
+      "step": 40,
+      "time": 3256.66377264075,
+      "grad_norm": 1.6391428709030151,
+      "optimizer_step": 1.0
+    },
+    {
+      "step": 41,
+      "time": 849.942229827866,
+      "grad_norm": 1.860592007637024,
+      "optimizer_step": 1.0
+    },
+    {
+      "step": 42,
+      "time": 983.9517377838492,
+      "grad_norm": 1.9631671905517578,
+      "optimizer_step": 1.0
+    },
+    {
+      "step": 43,
+      "time": 920.950417837128,
+      "grad_norm": 1.967519760131836,
+      "optimizer_step": 1.0
+    },
+    {
+      "step": 44,
+      "time": 987.5105471760035,
+      "grad_norm": 1.8534813523292542,
+      "optimizer_step": 1.0
+    },
+    {
+      "step": 45,
+      "time": 1045.2057831380516,
+      "grad_norm": 1.8765363693237305,
+      "optimizer_step": 1.0
+    },
+    {
+      "step": 46,
+      "time": 977.8622740209103,
+      "grad_norm": 1.8414620757102966,
+      "optimizer_step": 1.0
+    },
+    {
+      "step": 47,
+      "time": 987.435828667134,
+      "grad_norm": 1.8428358435630798,
+      "optimizer_step": 1.0
+    },
+    {
+      "step": 48,
+      "time": 1019.9605279322714,
+      "grad_norm": 1.9402247667312622,
+      "optimizer_step": 1.0
+    },
+    {
+      "step": 49,
+      "time": 863.8021233677864,
+      "grad_norm": 1.8948900699615479,
+      "optimizer_step": 1.0
+    },
+    {
+      "step": 50,
+      "time": 829.1823011003435,
+      "grad_norm": 1.6498469114303589,
+      "optimizer_step": 1.0
+    },
+    {
+      "step": 51,
+      "time": 855.7499798927456,
+      "grad_norm": 1.8775493502616882,
+      "optimizer_step": 1.0
+    },
+    {
+      "step": 52,
+      "time": 925.4005821850151,
+      "grad_norm": 2.2003008127212524,
+      "optimizer_step": 1.0
+    },
+    {
+      "step": 53,
+      "time": 1025.1625859271735,
+      "grad_norm": 2.2737306356430054,
+      "optimizer_step": 1.0
+    },
+    {
+      "step": 54,
+      "time": 1375.0443030036986,
+      "grad_norm": 2.0732959508895874,
+      "optimizer_step": 1.0
+    },
+    {
+      "step": 55,
+      "time": 1048.308686999604,
+      "grad_norm": 1.8398648500442505,
+      "optimizer_step": 1.0
+    },
+    {
+      "step": 56,
+      "time": 1022.852221282199,
+      "grad_norm": 1.9879305362701416,
+      "optimizer_step": 1.0
+    },
+    {
+      "step": 57,
+      "time": 895.670333661139,
+      "grad_norm": 2.3736159801483154,
+      "optimizer_step": 1.0
+    },
+    {
+      "step": 58,
+      "time": 901.9621544219553,
+      "grad_norm": 2.7922353744506836,
+      "optimizer_step": 1.0
+    },
+    {
+      "step": 59,
+      "time": 903.4130819477141,
+      "grad_norm": 2.081642270088196,
+      "optimizer_step": 1.0
+    },
+    {
+      "step": 60,
+      "time": 3066.3738737050444,
+      "grad_norm": 1.824072241783142,
+      "optimizer_step": 1.0
+    },
+    {
+      "step": 61,
+      "time": 843.5698988437653,
+      "grad_norm": 2.1096831560134888,
+      "optimizer_step": 1.0
+    },
+    {
+      "step": 62,
+      "time": 907.2897283229977,
+      "grad_norm": 1.9174748659133911,
+      "optimizer_step": 1.0
+    },
+    {
+      "step": 63,
+      "time": 1063.7709233798087,
+      "grad_norm": 2.2611075043678284,
+      "optimizer_step": 1.0
+    },
+    {
+      "step": 64,
+      "time": 905.0242354217917,
+      "grad_norm": 2.04256135225296,
+      "optimizer_step": 1.0
+    },
+    {
+      "step": 65,
+      "time": 1228.5927307177335,
+      "grad_norm": 2.4160715341567993,
+      "optimizer_step": 1.0
+    },
+    {
+      "step": 66,
+      "time": 1218.5154236927629,
+      "grad_norm": 2.063917815685272,
+      "optimizer_step": 1.0
+    },
+    {
+      "step": 67,
+      "time": 1279.0397936273366,
+      "grad_norm": 2.2168692350387573,
+      "optimizer_step": 1.0
+    },
+    {
+      "step": 68,
+      "time": 1170.2159141954035,
+      "grad_norm": 1.8779345750808716,
+      "optimizer_step": 1.0
+    },
+    {
+      "step": 69,
+      "time": 1255.4849558454007,
+      "grad_norm": 2.305111050605774,
+      "optimizer_step": 1.0
+    },
+    {
+      "step": 70,
+      "time": 1500.2835140638053,
+      "grad_norm": 2.1333054304122925,
+      "optimizer_step": 1.0
+    },
+    {
+      "step": 71,
+      "time": 1016.7601299826056,
+      "grad_norm": 2.0276185870170593,
+      "optimizer_step": 1.0
+    },
+    {
+      "step": 72,
+      "time": 1130.1867651697248,
+      "grad_norm": 1.76408451795578,
+      "optimizer_step": 1.0
     }
   ],
   "five_step_validation_passed": true,
@@ -1437,6 +1837,151 @@ v1完成2/100步、64题/512保留轨迹；第3步候选已筛完但无完整tra
 
 
 提交前补充：普通git diff --check只覆盖已跟踪修改并通过；完整git diff --cached --check发现gpu_flat_index.py、activation_offload.py、gpu_memory_trace.py末尾已有CRLF空行（无逻辑问题）。当前运行冻结源码字节，未为格式问题改动运行中的文件。采用core.whitespace=blank-at-eol,space-before-tab,cr-at-eol,-blank-at-eof核查其余空白项；语法9文件及函数27项检查仍通过。该例外仅为已冻结的末尾格式，未重跑GPU回归。
+
+
+## 2026-10-08T18:55:41.428335+08:00 可读日志与剩余时间核查
+
+trajectories.readable.log实际存在，当前约57.2MiB；按候选轨迹展示问题、模型各轮思考/动作、真实工具查询及模型可见检索结果、未执行尾部和答案/奖励判定。候选不等于入选训练轨迹，较长片段有展示截断提示。训练仍运行，完成8/100步。前8步平均9.96分钟、最近5步平均9.90分钟，剩余92步纯训练外推约15.28小时（当前剩余步尚未完整计入）。每20步checkpoint保存和D256、最终完整哈希核查及冷D256另计；当前尚无本轮完整周期评价/保存耗时，以总剩余约16–20小时作粗略排期，2026-10-09北京时间约11–15点，非保证。后续候选补抽轮次变化或磁盘保存变慢会改变估计，第20步后需校准。未修改训练配置/源码，未启动新GPU验证。
+
+
+## 2026-10-09T12:43:24.074193+08:00 正式训练72步评估
+
+当前完成72/100步，2304道运行内不同入选题、18432条入选轨迹；监管及训练PID身份存活，所有完整步32题×8 rollout、optimizer_step=1、actor数值有限。checkpoint已发布step20/40/60，COMPLETE所列文件存在，尚未本轮重算全部大权重哈希；最新训练步与持久化步区分，step61–72尚未保存。累计5秒驱动采样峰值53.025GiB，未触发56GiB保护，无记录OOM，GPU检索全量21015324向量/8卡健康；230个冻结源/数据/控制文件哈希匹配。
+
+| 模型 | D256正确数 | EM |
+| --- | ---: | ---: |
+| 当前起点：过程实验step40 | 115/256 | 44.922% |
+| 本轮step20 | 113/256 | 44.141% |
+| 本轮step40 | 116/256 | 45.312% |
+| 本轮step60 | 122/256 | 47.656% |
+
+每轮256唯一ID，标签与提示逐题和起点一致，均无缺答案。step60比起点净多7题/+2.734个百分点，其中NQ49→55/120、HotpotQA66→67/136。逐题26错→对、19对→错；种子20261009、10000次配对bootstrap95%区间[-2.344,+7.812]个百分点，精确McNemar p=0.371，样本不足以确认稳定改善。基线采用此前CPU检索、现为已验证GPU检索，非单变量因果对照；D256是开发集，非独立测试集。没有仅凭训练reward或下降loss推断效果。
+
+正常非评价步平均耗时从step1–19约10.56分钟、21–39约12.64分钟、41–59约16.16分钟，升到61–72约18.78分钟；最近10步19.61分钟。补抽从前8步每步3轮/96候选增至近期6轮/192候选；每步仍只保留32题×8条，保留比例从约1/3降到1/6。生成耗时增加是主要慢速来源，actor更新136→141秒基本稳定，不能解释为显存修复失效。轨迹平均响应长度早期约1422、近期1504（含工具观察），没有证据仅归因于纯思考增长。
+
+训练无答案率阶段升高：step61为17.58%，61–72平均7.10%，最近5步降到2.89%，step72为2.73%；需关注，不能忽略，也未达到“模型崩溃”的证据标准。最新D256 step60仍0/256缺答案，但这早于61–72波动，不能替代step80评价。建议维持已冻结配置继续到80/100节点，观察D256正确率、缺答案及协议合法性，最终比较开发集checkpoint，不默认最后一步最好。未自动改变预算、奖励或提前停训。
+
+剩余28步按最近10步速度纯训练约9.15小时；D256实测均40.77分钟，尚有step80/100两轮及最终冷评价，再加保存/校验和加载，粗估还需10–13小时，北京时间2026-10-09约23点至10-10凌晨2点。昨日11–15点预计完成偏乐观，源于前8步约10分钟、尚无周期开销实测；当前补抽轮次已翻倍。候选分布继续变化时需重估，无保证完成时间。
+
+原清理限制仍为仅未正常结束的训练；本次没有删除文件。
+
+
+
+## 2026-10-09T16:19:55.625251+00:00 最终评估入口修复与重新验收
+
+原训练100/100及step100完整哈希通过；训练内D256129/256、缺答案7。旧独立评估val_only=True/val_before_train=False误入训练，至少两次optimizer_step=1，已获用户授权停止并保留现场。新run=final-D256-recovery-20261010-v1，独立配置val_before_train=True、val_only=True、difficulty关闭，零更新保护；CPU真实fit入口控制流正负检查通过，GPU结果待验证。生产源码未修改，父检查点不覆盖。
+
+
+### 2026-10-09T16:23:56.634983+00:00 修正D256进度
+
+{"run": "final-D256-recovery-20261010-v1", "status": "running", "scored_answers": 0, "audit_phases": {}, "training_markers": []}
+
+
+### 2026-10-09T16:26:30.732716+00:00 修正D256进度
+
+{"time": "2026-10-10T00:26:30.730984", "status": "running", "elapsed": 377, "scored": 16, "generated_traces": 16, "phases": {"generation": 16, "validation": 16}, "error": null}
+
+
+### 2026-10-09T16:28:12.726606+00:00 修正D256检查
+
+{"time": "2026-10-10T00:28:12.725168", "status": "running", "count": 32, "correct": 16.0, "missing": 0, "updates": 0, "error": null, "summary": null}
+
+
+### 2026-10-09T16:28:53.286907+00:00 修正D256检查
+
+{"time": "2026-10-10T00:28:53.285533", "status": "running", "count": 40, "correct": 20.0, "missing": 0, "updates": 0, "error": null, "summary": null}
+
+
+### 2026-10-09T16:29:38.702291+00:00 修正D256检查
+
+{"time": "2026-10-10T00:29:38.700797", "status": "running", "count": 48, "correct": 24.0, "missing": 0, "updates": 0, "error": null, "summary": null}
+
+
+### 2026-10-09T16:30:21.797336+00:00 修正D256检查
+
+{"time": "2026-10-10T00:30:21.795853", "status": "running", "count": 56, "correct": 27.0, "missing": 0, "updates": 0, "error": null, "summary": null}
+
+
+### 2026-10-09T16:31:16.430642+00:00 修正D256检查
+
+{"time": "2026-10-10T00:31:16.429024", "status": "running", "count": 64, "correct": 29.0, "missing": 0, "updates": 0, "error": null, "summary": null}
+
+
+### 2026-10-09T16:31:58.320076+00:00 修正D256检查
+
+{"time": "2026-10-10T00:31:58.318609", "status": "running", "count": 72, "correct": 33.0, "missing": 0, "updates": 0, "error": null, "summary": null}
+
+
+### 2026-10-09T16:32:40.972236+00:00 修正D256检查
+
+{"time": "2026-10-10T00:32:40.970692", "status": "running", "count": 72, "correct": 33.0, "missing": 0, "updates": 0, "error": null, "summary": null}
+
+
+### 2026-10-09T16:33:25.044191+00:00 修正D256检查
+
+{"time": "2026-10-10T00:33:25.042734", "status": "running", "count": 80, "correct": 34.0, "missing": 0, "updates": 0, "error": null, "summary": null}
+
+
+### 2026-10-09T16:34:06.332869+00:00 修正D256检查
+
+{"time": "2026-10-10T00:34:06.331436", "status": "running", "count": 88, "correct": 40.0, "missing": 0, "updates": 0, "error": null, "summary": null}
+
+
+### 2026-10-09T16:34:48.433921+00:00 修正D256检查
+
+{"time": "2026-10-10T00:34:48.432341", "status": "running", "count": 88, "correct": 40.0, "missing": 0, "updates": 0, "error": null, "summary": null}
+
+
+### 2026-10-09T16:35:32.839801+00:00 修正D256检查
+
+{"time": "2026-10-10T00:35:32.838387", "status": "running", "count": 88, "correct": 40.0, "missing": 0, "updates": 0, "error": null, "summary": null}
+
+
+### 2026-10-09T16:36:14.496495+00:00 修正D256检查
+
+{"time": "2026-10-10T00:36:14.494973", "status": "running", "count": 96, "correct": 45.0, "missing": 1, "updates": 0, "error": null, "summary": null}
+
+
+### 2026-10-09T16:36:57.336122+00:00 修正D256检查
+
+{"time": "2026-10-10T00:36:57.334721", "status": "running", "count": 96, "correct": 45.0, "missing": 1, "updates": 0, "error": null, "summary": null}
+
+
+### 2026-10-09T16:37:38.233224+00:00 修正D256检查
+
+{"time": "2026-10-10T00:37:38.232549", "status": "running", "count": 96, "correct": 45.0, "missing": 1, "updates": 0, "error": null, "summary": null}
+
+
+### 2026-10-09T16:38:19.729141+00:00 修正D256检查
+
+{"time": "2026-10-10T00:38:19.727633", "status": "running", "count": 104, "correct": 48.0, "missing": 2, "updates": 0, "error": null, "summary": null}
+
+
+### 2026-10-09T16:39:04.561238+00:00 修正D256检查
+
+{"time": "2026-10-10T00:39:04.559746", "status": "running", "count": 104, "correct": 48.0, "missing": 2, "updates": 0, "error": null, "summary": null}
+
+
+### 2026-10-09T16:39:47.615470+00:00 修正D256检查
+
+{"time": "2026-10-10T00:39:47.614074", "status": "running", "count": 104, "correct": 48.0, "missing": 2, "updates": 0, "error": null, "summary": null}
+
+
+## 2026-10-09T17:00:52.772467+00:00 独立D256修正评估完成
+
+{"count": 256, "correct": 129.0, "missing_answer": 7, "parameter_updates": 0, "complete": true, "model_step": 100}
+产物：/mnt/public/code/lyk/lzy/runs/metax-process-r1-100-b32-gpu-20261008-v2/final-D256-recovery-20261010-v1
+
+
+## 2026-10-10 最终独立评估验收
+
+验收时间：2026-10-10T14:37:24.020498+08:00（北京时间）。恢复运行 final-D256-recovery-20261010-v1 已于北京时间2026-10-10 01:00:52完成，耗时2457秒，退出码0，参数更新0；日志无actor更新/反传标记。256条答案对应256个唯一问题。
+
+冷加载原step100结果：129/256，EM=50.390625%；未作答7/256=2.734375%；实际消费模型内容重复7条，全部未答对。NQ=54/120（未作答/重复3），HotpotQA=75/136（未作答/重复4）。逐题与训练内step100对照：答案差异0、完整响应差异0、奖励差异0，7条异常全部复现。独立指独立进程重载，仍为同一D256开发集。
+
+与step80相比：9题改善、12题退步，净少3题（-1.171875个百分点），精确McNemar双侧p=0.6636238098；准确率差异不足以认定显著下降，新增贪心重复/未作答是明确的行为退化证据。
+
+判定：100步训练及有效零更新评估完成，保存模型的异常可复现，质量未通过继续长训练的行为验收。step80作为准确率参照，step60作为稳定性候选，应先在固定采样探针比较，再选择续训起点；优先修复答对异常轨迹正优势、全错组相对正优势、协议门控和循环终止，再开展5至20步小学习率试验，针对性SFT作为对照。原独立评估因val_only入口错误至少额外更新2次，已获授权停止，该阶段无效；原监管状态保留旧失败历史，恢复运行status.json/summary.json为completed。
 
 
 ## 2026-10-10T10:12:56.476668+00:00 GRPO stability phase1 started
@@ -1484,3 +2029,82 @@ Final diagnostic review: fixed-trajectory probe now rejects nonzero module/atten
 阶段一提交准备：170 项 CPU 复验通过，交付哈希一致；未启动真实生成/训练。准备仅提交阶段一修复，保留此前无关工作区修改。GPU/FSDP 尚未验证，后续不得据 CPU 结果宣称长期稳定性已修复。
 
 Evidence: /mnt/public/code/lyk/lzy/runs/metax-grpo-phase1-20261010-v1/submission-verification/; agent: /root.
+
+
+## 2026-10-10T11:42:28.658290+00:00 GRPO phase2 planning
+
+阶段一已按用户要求提交：f20278902082e2bfc28c7a48a8d58e34482b38f3；未推送。提交前 CPU 170 项通过，15 项源码/配置/测试的工作区哈希不变，提交内容按行尾规范化后全部一致，Python AST 一致。证据：/mnt/public/code/lyk/lzy/runs/metax-grpo-phase1-20261010-v1/submission-verification/cpu-regression.final.json 与 precommit-check.json / postcommit-check.json。GPU/FSDP 尚未验证，真实生成/训练更新均为 0。原有无关报告和台账修改保留。
+
+下一部分已形成 [第二阶段修复计划](grpo_stability_phase2_plan.md)：首先验证任务成功与过程惩罚方差耦合，再单独调整动态组资格；token 对齐和协议门控按证据触发，学习率/KL 分开对照。本轮未修改第二阶段源码或启动实验，未创建虚构 run_id。下一步实施入口为 2A 历史离线重放；真实训练前需 GPU 前提验收。新计划仅文档，注释覆盖率不适用，未把本次历史核对称作离线重放已完成。
+
+Agent: /root; evidence: grpo_stability_phase2_plan.md.
+
+
+## 2026-10-10T12:12:09.902192+00:00 Phase2 implementation clarification
+
+按用户问题补充序列一致性的准确含义和各修复实施包，见 grpo_stability_phase2_plan.md 第7/8节。已核对实际 decode->消费->retokenize->actor 重算 old_log_probs 路径；新旧 loss 自洽不证明采样动作自洽，真实失配频率与根因贡献未证实。明确保留既有 bounded/context/loss_mask 保护，GPU 前提验收、历史重放、task_success_mixed、条件性 token 修复、门控、lr/KL 及后续消融的接入/验收边界。本轮仅文档细化，无源码修改、真实测试/生成/训练；未重跑 CPU，历史170项仅对应阶段一。代码注释覆盖率不适用。
+
+Agent: /root.
+
+
+## 2026-10-10T13:48:54.219582+00:00 Task-success filter implementation
+
+Task-success filtering implementation in progress. Reward components now share one gate; the old scalar reward remains unchanged. New eligibility module and complete-group selector are present; configuration/controller wiring and tests are pending. No model generation or training started. Agent: /root; evidence: /mnt/public/code/lyk/lzy/runs/metax-task-success-filter-20261010-v1/.
+
+
+Configuration/controller wiring 2026-10-10T13:50:28.806950+00:00: explicit eligibility, canonical legacy fingerprint, task-success version, pre-generation reward capability and branch/continue rejection implemented. CPU tests pending; no model generation/training. Agent /root.
+
+
+CPU test draft 2026-10-10T13:56:58.809326+00:00: 25 new cases cover real reward components, complete refills, zero partial updates, reordered identities, old fingerprints and strict/branch resume refusal. Test execution pending; no GPU/model workload. Agent /root.
+
+
+Review 2026-10-10T14:02:28.228048+00:00: first CPU run passed 195/195, 25 new cases. Added three cases for binary rewards, GPU padding removal (CPU tools only), and actual prepare_config continue/branch provenance rejection. Production logic unchanged, comments only; final 198-case run pending. No actual GPU/model workload. Agent /root.
+
+
+## 2026-10-10T14:13:13.372171+00:00 Task-success filtering CPU acceptance
+
+任务成功筛选修复已实现并完成CPU验证，详见 [运行记录](runs/metax-task-success-filter-20261010-v1.md)。新增显式 task_success_mixed：成功为接受答案EM=1且原门控通过，要求成功与失败共存；保留奖励值和GRPO优势/超参数。旧模式兼容，新模式版本进入指纹，continue/branch不可切换资格规则。真实奖励完整补抽、身份/版本保护和零部分更新已接入；CPU198项通过，新增28项，GPU/长期效果未验证。原100步配置旧指纹和默认字段兼容检查通过，但隔离模型身份IO。真实模型生成/训练更新均0，未提交/推送。用户要求先做代码修复，完整历史重放2A尚未执行；下一步量化补抽成本并完成GPU前提。证据 /mnt/public/code/lyk/lzy/runs/metax-task-success-filter-20261010-v1；负责人/root。
+
+
+## 2026-10-11T04:44:58.595324+00:00 Reward design and root-cause replay
+
+本次历史回放与奖励设计已完成，负责人/root；检查日期2026-10-11（北京时间），全部命令经ssh mx。详细报告见 reports/grpo_reward_rootcause_20261011.md；产物 /mnt/public/code/lyk/lzy/runs/metax-grpo-reward-rootcause-20261011-v1。3200个实际入选组、25600条训练轨迹及全部100步奖励均值对齐；81–100无成功组40.625%，占正优势轨迹48.05898%。任务成功口径41–60全失败组45，原文本EM口径44，不能混用。完整2A奖励/资格重放已完成；原始token/mask、真实终止元数据不足的子项仍未知，未做反事实真实补采。
+
+发现原训练及当前actor的PG/Entropy/clip/ppo_kl只记录mini最后micro，KL记录全部micro，需优先修复指标覆盖并增加total_loss，不能伪造历史总loss。response_length包含环境文本；loss模型token/轨迹为216、264、282、333、245，不能据旧长度断定持续增长。根因最强证据为奖励方差资格与标准差归一化的错误强化；策略漂移与整轨迹信用问题强怀疑，LLDS/数值溢出/实际token失配因果未确认。
+
+新增bounded_process_v2方案候选：R=S-min(.12,.1*M+.02*min(N_invalid,2)+.02*min(N_loop,2))；先独立启用一个新项，保留task_success_mixed资格。G8下成功R≥.88、失败R≤0且≥-.12，混合组均值至少.005，失败优势必负；仅代数验证，未证明训练效果。完整违规与原生截断区分；复用search_diagnostic，只对第三次起相同query且无新可见证据的循环候选软罚；不罚文风、普通回退、总长度，不针对字符。整轨迹广播仍会强化成功错误前缀，动作级PG屏蔽另做独立消融，KL/Entropy mask分开。
+
+实施顺序：先真实GPU前提及全micro指标验收，再A0旧筛选/A1任务成功筛选；A2无效动作软罚、A3重复无新增证据软罚分别对A1；lr减半与KL加倍单独对照；确认token实现错误则先修、重锁基线。5步接线、20步筛选，长期100新增步/3配对seed；开发集与正常纠错评价、相同更新和rollout预算同时比较。监控仅配套保护，预防重点是信号、信用分配和更新偏移。真实模型生成0、更新0，无生产源码/配置修改、无新GPU实验或生产CPU复测，未提交/推送；上次198项仅适用原筛选修复。
+
+
+## 2026-10-11T05:06:25.399661+00:00 LR/KL/reward trial validation planning
+
+User confirmed lr=5e-7 and actor KL=.002. Validation plan: grpo_stability_trial_validation_plan.md. Common task_success_mixed baseline; separate B/L/K/R and LK/LKR comparisons; candidate bounded invalid-action reward remains unimplemented. CPU/history and GPU prerequisites before 5-step smoke, 20-step screen and selected 100-new-step/3-paired-seed confirmation. Independent EM/generation/recovery and cost metrics; no new training, model generation, source/config changes or tests. Planning only; no fabricated run_id. Agent /root.
+
+
+## 2026-10-11T05:22:47.905170+00:00 Budget-limited trial plan
+
+User total budget 1–2 days. Latest section7 of grpo_stability_trial_validation_plan.md supersedes mandatory six-arm/three-seed first round: only B vs target T(lr5e-7,actorKL.002,one validated process penalty), common task_success_mixed and paired seed42. Start20 new steps each, extend40 then60 only with value and time. Target first report24h, hard budget48h including preparation/evaluation/cleanup; share parent D256, mid fixed64 questions every20steps, final cold D256 per arm. Original historical training step means10.56–19.27min; D256~40min, new sampling cost unknown. No model workload/source/config changes or tests started; planning only, no run_id. Single-seed short/midterm results cannot claim long-term causal repair; conditional one ablation only. Agent/root.
+
+
+## 2026-10-11T05:54:06.537783+00:00 Continuous trajectory logging implementation
+
+连续轨迹展示修复进行中：只读复用真实消费账本；模型输出全文连续展示，搜索观察独立缩略，奖励及诊断移到末尾。旧总字符限制改为辅助诊断预算；search_result_max_chars默认1000，0为搜索全文。保留原dirty修改；CPU及历史预览待执行，无真实生成/训练。负责人/root；产物 /mnt/public/code/lyk/lzy/runs/metax-trajectory-readable-20261011-v1。
+
+
+## 2026-10-11T06:02:30.196859+00:00 连续轨迹日志验收
+
+连续轨迹日志修复已完成。修改仅限 verl/utils/trajectory_logging.py、tests/test_trajectory_logging.py、verl/trainer/config/ppo_trainer.yaml；共用展示器复用真实账本和既有奖励解释，不新增生成、检索或奖励路径。思考/动作消费文本按真实轮次全文输出；对应visible_text只在搜索结果中缩略。奖励、执行状态、原因码、调用身份、未消费尾部及引用诊断统一置于连续轨迹之后。
+
+search_result_max_chars默认1000，首尾正文按3:1保留并标注省略数量；0表示搜索全文。兼容max_chars_per_trajectory旧字段，改为末尾辅助诊断预算；不再截断模型思考/最终回答。无逐轮账本时完整生成历史展示一次，来源不明的information不缩略；模型自己生成的伪观察也全文保留。无接受答案则明确未作答，不补造答案。样例数、批次频率、异常隔离及默认关闭的直接调用保持兼容。控制台每条一次print，文件一次write同一完整块；多进程汇总日志是否另有外部插入尚未GPU验证。
+
+最终CPU204项通过，新增6项，失败/错误/跳过0；test_fp16.py明确排除。覆盖32k多轮模型文本、20k无账本历史、18k伪观察、搜索0/短/长预算、未作答、尾部隔离、控制台/文件一致、真实RewardManager奖励/输入/Python随机状态不变及展示失败隔离。源码AST函数说明14项无缺失；人工逐项检查36/36逻辑单元中文说明，覆盖100%，函数与关键逻辑分别合格；范围含两个运行脚本和配置。CPU及历史展示验收不能代替真实GPU日志集成或训练稳定性结论。
+
+历史预览取原100步运行首条真实候选轨迹（原step1，3轮、2次真实搜索），匹配评分审计第257行同一trace_uid，模型消费552字符，两次可见观察2028/2084字符，实际返回奖励1不变；逐轮完整顺序和记录不变检查通过。无需重新生成。预览：/mnt/public/code/lyk/lzy/runs/metax-trajectory-readable-20261011-v1/historical-preview.readable.log。
+
+负责人/root；全部命令经ssh mx。产物 /mnt/public/code/lyk/lzy/runs/metax-trajectory-readable-20261011-v1，详细记录 runs/metax-trajectory-readable-20261011-v1.md。原有dirty筛选代码/文档保留，本次未提交/推送；真实生成0、训练更新0，无新checkpoint。下一步：新启动任务复用该展示器；保留1–2天B/T验证计划，在GPU前提和指标/reward接线完成后使用新日志核对至少一条实际轨迹。已有历史大日志未改写。
+
+
+## 2026-10-11T06:17:23.744369+00:00 提交前验收与指标结论更正
+
+启动前复核更正：AST核验当前dp_actor.py第451行及原训练源码快照第395行，Entropy/PG/clip/ppo_kl指标字典均位于micro_batch循环内，每个微批都有记录。此前将其解释为“仅末微批”的判断有误，相关历史熵/PG统计不应再标为末微批样本；它们是现有微批均值聚合，仍不等同于全token加权统计。后续只补充total_loss、有效token加权熵及覆盖计数，不迁移既有正确的日志循环。奖励方差资格错误强化的重放结果不受此更正影响。证据：metax-grpo-bt-verification-20261011-v1/metric-loop-audit.json。分功能提交前CPU204项复验通过，真实训练/生成0。

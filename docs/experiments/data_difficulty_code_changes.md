@@ -1289,6 +1289,11 @@ GPU原8000服务PID2137145 ready，21015324向量/8卡，训练后256真实查�
 提交前补充：普通git diff --check只覆盖已跟踪修改并通过；完整git diff --cached --check发现gpu_flat_index.py、activation_offload.py、gpu_memory_trace.py末尾已有CRLF空行（无逻辑问题）。当前运行冻结源码字节，未为格式问题改动运行中的文件。采用core.whitespace=blank-at-eol,space-before-tab,cr-at-eol,-blank-at-eof核查其余空白项；语法9文件及函数27项检查仍通过。该例外仅为已冻结的末尾格式，未重跑GPU回归。
 
 
+## 2026-10-09T16:19:55.625251+00:00 独立最终评估配置与生命周期修复
+
+生产源码未修改；新增运行脚本/mnt/public/code/lyk/lzy/runs/metax-process-r1-100-b32-gpu-20261008-v2/final-D256-recovery-20261010-v1/supervisor.py，配置/mnt/public/code/lyk/lzy/runs/metax-process-r1-100-b32-gpu-20261008-v2/final-D256-recovery-20261010-v1/final_eval.yaml。职责仅进程/资源/零更新验收，生成与奖励复用原入口。CPU当前fit入口AST控制流测试两项通过；新脚本AST通过；完整GPUD256尚未完成。注释逻辑单元：状态原子提交、历史保留、文档同步、双开关前置检查、GPU锁、子进程身份、更新迹象拦截、资源监控、完整题目验收、失败范围限制，共10项，10/10=100%；两个函数@brief/@param(适用)/@return/@raises/@note检查通过。未接入生产val_only独立入口修复，未来仍应在共用trainer修复嵌套分支。
+
+
 ## 2026-10-10T10:12:56.476668+00:00 GRPO stability phase1 started
 
 User authorized phase1 CPU verification and minimal repairs; agent /root. Baseline backup and manifest: /mnt/public/code/lyk/lzy/runs/metax-grpo-phase1-20261010-v1. No GPU generation/training started. Existing test_actor_scaler_step.py: 3 errors caused by SimpleNamespace lacking config.get; production behavior not yet exercised. Evaluation-only control flow and max-metric aggregation confirmed defects; repairs and CPU regression pending. Historical run artifacts/checkpoints remain unchanged.
@@ -1456,3 +1461,228 @@ Final diagnostic review: fixed-trajectory probe now rejects nonzero module/atten
 提交前重新执行全量 CPU 回归：170 项通过、失败/错误/跳过均为 0；日志独立保存，不覆盖历史结果。全部 20 项交付文件哈希与 final-manifest.json 一致，其中 15 项为源码/配置/测试。未进行真实 GPU/FSDP 验收，真实模型生成与训练更新为 0。源码未再次修改；原注释审计 80 函数、116/116 逻辑单元因源码哈希一致继续适用，本次记录修改的注释覆盖率不适用。仅暂存阶段一代码与文档新增段落，原有报告与台账修改保留。提交身份使用 Codex <codex@localhost>，不更改仓库身份配置。提交哈希在下一阶段计划台账补记。
 
 Evidence: /mnt/public/code/lyk/lzy/runs/metax-grpo-phase1-20261010-v1/submission-verification/; agent: /root.
+
+
+## 2026-10-10T11:42:28.658290+00:00 GRPO phase2 planning
+
+阶段一已提交 f202789；提交前 CPU 170 项通过，15 项源码/配置/测试提交后与验证版本一致（允许行尾规范化），没有推送。证据 /mnt/public/code/lyk/lzy/runs/metax-grpo-phase1-20261010-v1/submission-verification/。本轮第二阶段只新增设计文档并同步计划、步骤及台账；未修改实现，未重放完整历史轨迹、未生成真实输出或训练。代码注释覆盖率不适用；源码仍沿用阶段一对应审查，不为待实施修复宣称测试通过。
+
+Agent: /root; evidence: grpo_stability_phase2_plan.md.
+
+
+## 2026-10-10T12:12:09.902192+00:00 Phase2 implementation clarification
+
+按用户问题补充序列一致性的准确含义和各修复实施包，见 grpo_stability_phase2_plan.md 第7/8节。已核对实际 decode->消费->retokenize->actor 重算 old_log_probs 路径；新旧 loss 自洽不证明采样动作自洽，真实失配频率与根因贡献未证实。明确保留既有 bounded/context/loss_mask 保护，GPU 前提验收、历史重放、task_success_mixed、条件性 token 修复、门控、lr/KL 及后续消融的接入/验收边界。本轮仅文档细化，无源码修改、真实测试/生成/训练；未重跑 CPU，历史170项仅对应阶段一。代码注释覆盖率不适用。
+
+Agent: /root.
+
+
+## 2026-10-10T13:48:54.219582+00:00 Task-success filter implementation
+
+Task-success filtering implementation in progress. Reward components now share one gate; the old scalar reward remains unchanged. New eligibility module and complete-group selector are present; configuration/controller wiring and tests are pending. No model generation or training started. Agent: /root; evidence: /mnt/public/code/lyk/lzy/runs/metax-task-success-filter-20261010-v1/.
+
+
+Configuration/controller wiring 2026-10-10T13:50:28.806950+00:00: explicit eligibility, canonical legacy fingerprint, task-success version, pre-generation reward capability and branch/continue rejection implemented. CPU tests pending; no model generation/training. Agent /root.
+
+
+CPU test draft 2026-10-10T13:56:58.809326+00:00: 25 new cases cover real reward components, complete refills, zero partial updates, reordered identities, old fingerprints and strict/branch resume refusal. Test execution pending; no GPU/model workload. Agent /root.
+
+
+Review 2026-10-10T14:02:28.228048+00:00: first CPU run passed 195/195, 25 new cases. Added three cases for binary rewards, GPU padding removal (CPU tools only), and actual prepare_config continue/branch provenance rejection. Production logic unchanged, comments only; final 198-case run pending. No actual GPU/model workload. Agent /root.
+
+
+## 2026-10-10T14:13:13.372171+00:00 Task-success filtering CPU acceptance
+
+任务成功筛选修复已实现并完成CPU验证，详见 [运行记录](runs/metax-task-success-filter-20261010-v1.md)。新增显式 task_success_mixed：成功为接受答案EM=1且原门控通过，要求成功与失败共存；保留奖励值和GRPO优势/超参数。旧模式兼容，新模式版本进入指纹，continue/branch不可切换资格规则。真实奖励完整补抽、身份/版本保护和零部分更新已接入；CPU198项通过，新增28项，GPU/长期效果未验证。原100步配置旧指纹和默认字段兼容检查通过，但隔离模型身份IO。真实模型生成/训练更新均0，未提交/推送。用户要求先做代码修复，完整历史重放2A尚未执行；下一步量化补抽成本并完成GPU前提。证据 /mnt/public/code/lyk/lzy/runs/metax-task-success-filter-20261010-v1；负责人/root。
+
+
+本次中文说明审查：仓库47函数+验证脚本1函数，48项标签/语法通过；逻辑单元97/97=100%。关键逻辑人工复核与函数检查独立执行，无遗漏。以下按预先定义的职责单元列出，测试表格输入不额外放大计数。
+
+| 文件 | 逻辑单元 | 中文说明 |
+| --- | --- | --- |
+| reward.py | 可信报告校验和基础设施故障拒绝 | 已核查 |
+| reward.py | 接受答案EM与惩罚边界校验 | 已核查 |
+| reward.py | 无答案与非零接受EM冲突拒绝 | 已核查 |
+| reward.py | 从消费事件重算协议门控 | 已核查 |
+| reward.py | 原奖励公式保持及成功分量版本生成 | 已核查 |
+| reward.py | 旧浮点接口委托统一分量 | 已核查 |
+| main_ppo.py | 奖励管理器能力标记和纯评价隔离 | 已核查 |
+| main_ppo.py | 共用分量接入与原EM并列记录 | 已核查 |
+| main_ppo.py | 训练门控应用与开发奖励兼容 | 已核查 |
+| eligibility.py | 配置副本与资格枚举校验 | 已核查 |
+| eligibility.py | 新模式显式启用约束 | 已核查 |
+| eligibility.py | 新模式规则版本生成和拒绝未知版本 | 已核查 |
+| eligibility.py | 旧缺省字段规范化且不修改调用者 | 已核查 |
+| eligibility.py | 报告数量与独立身份完整性 | 已核查 |
+| eligibility.py | 重复轨迹身份拒绝 | 已核查 |
+| eligibility.py | 同行绑定与标签版本校验 | 已核查 |
+| eligibility.py | 布尔标签和接受EM类型校验 | 已核查 |
+| eligibility.py | 接受答案状态契合检查 | 已核查 |
+| eligibility.py | 任务成功与门控分量一致性检查 | 已核查 |
+| dynamic_filter.py | 资格和奖励模式输入校验 | 已核查 |
+| dynamic_filter.py | 任务成功标签窄接口提取 | 已核查 |
+| dynamic_filter.py | uid分组与完整有限奖励检查 | 已核查 |
+| dynamic_filter.py | 同题身份保护 | 已核查 |
+| dynamic_filter.py | 方差和旧二值资格保留 | 已核查 |
+| dynamic_filter.py | 成功/失败混合判定和排除原因 | 已核查 |
+| dynamic_filter.py | 重复问题保护和入选seen提交 | 已核查 |
+| dynamic_filter.py | 原文本/接受EM/成功数分开记录 | 已核查 |
+| dynamic_filter.py | 新模式生成前能力校验 | 已核查 |
+| dynamic_filter.py | 补抽轮次和完整目标批次保留 | 已核查 |
+| dynamic_filter.py | 候选多原因统计 | 已核查 |
+| dynamic_filter.py | 候选事件资格记录 | 已核查 |
+| dynamic_filter.py | 耗尽零部分更新保护 | 已核查 |
+| dynamic_filter.py | 有效组拼接及旧概率计算复用 | 已核查 |
+| dynamic_filter.py | 动态排除原因指标输出 | 已核查 |
+| configuration.py | 新模式有效开启前置检查 | 已核查 |
+| configuration.py | 实验入口/轨迹数约束保留 | 已核查 |
+| configuration.py | 新模式协议门控与答案评分前提 | 已核查 |
+| configuration.py | 动态补抽预算和互斥旧模式保护 | 已核查 |
+| configuration.py | 数值版本与GRPO执行框架约束 | 已核查 |
+| configuration.py | GPU批量/去padding/本地checkpoint约束 | 已核查 |
+| configuration.py | 检索/数据/刷新/长度约束 | 已核查 |
+| configuration.py | 随机采样前提 | 已核查 |
+| configuration.py | actor/reference定位及父模型预算恢复 | 已核查 |
+| configuration.py | 严格恢复身份检查及随机流设置 | 已核查 |
+| configuration.py | 旧模式指纹规范化与新版本纳入 | 已核查 |
+| controller.py | 设置副本规范化和关闭实验兼容 | 已核查 |
+| controller.py | 显式资格属性接入 | 已核查 |
+| controller.py | 标签/配比组合及候选预算复用 | 已核查 |
+| controller.py | 完整更新计数与曝光初始化 | 已核查 |
+| controller.py | 既有输出目录身份保护 | 已核查 |
+| controller.py | 状态格式版本校验 | 已核查 |
+| controller.py | 资格版本在branch和兼容来源路径强制校验 | 已核查 |
+| controller.py | 模型来源与严格策略校验 | 已核查 |
+| controller.py | 标签和采样器恢复 | 已核查 |
+| controller.py | 接受问题曝光和完整更新游标检查 | 已核查 |
+| controller.py | 训练评分成本恢复与随机流最后恢复 | 已核查 |
+| ppo_trainer.yaml | 缺省旧资格模式和显式新模式说明 | 已核查 |
+| test_task_success_filter.py | 分组夹具的独立口径和身份构造 | 已核查 |
+| test_task_success_filter.py | 真实门控奖励入口复用 | 已核查 |
+| test_task_success_filter.py | 模型返回夹具的全错/全对/混合三种情况 | 已核查 |
+| test_task_success_filter.py | 完整响应mask和账本行绑定 | 已核查 |
+| test_task_success_filter.py | 测试目录和控制器隔离 | 已核查 |
+| test_task_success_filter.py | 配置夹具的实际八卡约束 | 已核查 |
+| config_compatibility.py | 固定模型身份测试接口 | 已核查 |
+| config_compatibility.py | 加载修改前配置函数副本 | 已核查 |
+| config_compatibility.py | 实际历史配置与旧缺省指纹对比 | 已核查 |
+| config_compatibility.py | 新模式身份变化对比 | 已核查 |
+| config_compatibility.py | 实际配置前置检查 | 已核查 |
+| config_compatibility.py | 模板其他配置不变校验 | 已核查 |
+| test_task_success_filter.py | 新分量保持旧奖励，并从原始事件重算门控。 | 已核查 |
+| test_task_success_filter.py | 成功、错答和缺答案仍分别得到一、零和负零点一。 | 已核查 |
+| test_task_success_filter.py | 新分量接口不能绕过旧来源和奖励输入保护。 | 已核查 |
+| test_task_success_filter.py | 真实评分入口保存成功分量，训练奖励和开发 EM 保持原语义。 | 已核查 |
+| test_task_success_filter.py | 全错差异组在旧模式有正优势，新模式直接排除。 | 已核查 |
+| test_task_success_filter.py | 成功失败混合组完整保留，奖励矩阵不被筛选器改写。 | 已核查 |
+| test_task_success_filter.py | 全成功组没有相对任务信号，保持排除。 | 已核查 |
+| test_task_success_filter.py | 原文本正确与门控后成功独立，筛选只读取后者。 | 已核查 |
+| test_task_success_filter.py | 新模式缺标签或独立身份时失败，旧模式仍接受历史报告。 | 已核查 |
+| test_task_success_filter.py | 拒绝字符串标记、版本缺失、分量矛盾、非法 EM 与同行错配。 | 已核查 |
+| test_task_success_filter.py | 复制轨迹身份不能冒充同题独立的八次 rollout。 | 已核查 |
+| test_task_success_filter.py | 成功标签不能绕过奖励有限性与完整八条组约束。 | 已核查 |
+| test_task_success_filter.py | 新模式保留同题身份检查和已接受问题去重。 | 已核查 |
+| test_task_success_filter.py | 成功混合也不能绕过用户已有的有限奖励方差阈值。 | 已核查 |
+| test_task_success_filter.py | 完整组重排后成功标签与独立轨迹身份同步，筛选不串组。 | 已核查 |
+| test_task_success_filter.py | 缺省与显式旧模式得到相同字典，调用者原设置不被修改。 | 已核查 |
+| test_task_success_filter.py | 模式拼写、规则版本和未启用组合不得静默沿用旧行为。 | 已核查 |
+| test_task_success_filter.py | 新字段缺省兼容旧指纹，启用资格规则会改变训练身份。 | 已核查 |
+| test_task_success_filter.py | 合法配置通过前置检查，资格修复不更改奖励及学习率裁剪。 | 已核查 |
+| test_task_success_filter.py | 新模式在生成前拒绝关闭实验、关闭动态、无门控或旧答案评分。 | 已核查 |
+| test_task_success_filter.py | 已有旧运行目录可接受新增缺省配置，不产生策略误失配。 | 已核查 |
+| test_task_success_filter.py | 同版本恢复成功，资格变化在 branch 和兼容来源路径仍被拒绝。 | 已核查 |
+| test_task_success_filter.py | 共用补抽和真实奖励仅保留成功混合组，完整状态可恢复。 | 已核查 |
+| test_task_success_filter.py | 全错差异组在新模式耗尽补抽，不计算训练概率或推进步数。 | 已核查 |
+| test_task_success_filter.py | 纯评价奖励不能作为新筛选训练入口，拒绝发生在生成前。 | 已核查 |
+| test_task_success_filter.py | 无缺答案惩罚时仍按成功混合筛选，二值奖励保护保持。 | 已核查 |
+| test_task_success_filter.py | 补齐复制行不冒充独立轨迹，去补齐后报告和成功标签原样保留。 | 已核查 |
+| test_task_success_filter.py | 实际入口指纹检查拒绝将旧资格 checkpoint 作为新模式续训。 | 已核查 |
+
+
+## 2026-10-11T04:44:58.595324+00:00 Reward design and root-cause replay
+
+本次历史回放与奖励设计已完成，负责人/root；检查日期2026-10-11（北京时间），全部命令经ssh mx。详细报告见 reports/grpo_reward_rootcause_20261011.md；产物 /mnt/public/code/lyk/lzy/runs/metax-grpo-reward-rootcause-20261011-v1。3200个实际入选组、25600条训练轨迹及全部100步奖励均值对齐；81–100无成功组40.625%，占正优势轨迹48.05898%。任务成功口径41–60全失败组45，原文本EM口径44，不能混用。完整2A奖励/资格重放已完成；原始token/mask、真实终止元数据不足的子项仍未知，未做反事实真实补采。
+
+发现原训练及当前actor的PG/Entropy/clip/ppo_kl只记录mini最后micro，KL记录全部micro，需优先修复指标覆盖并增加total_loss，不能伪造历史总loss。response_length包含环境文本；loss模型token/轨迹为216、264、282、333、245，不能据旧长度断定持续增长。根因最强证据为奖励方差资格与标准差归一化的错误强化；策略漂移与整轨迹信用问题强怀疑，LLDS/数值溢出/实际token失配因果未确认。
+
+新增bounded_process_v2方案候选：R=S-min(.12,.1*M+.02*min(N_invalid,2)+.02*min(N_loop,2))；先独立启用一个新项，保留task_success_mixed资格。G8下成功R≥.88、失败R≤0且≥-.12，混合组均值至少.005，失败优势必负；仅代数验证，未证明训练效果。完整违规与原生截断区分；复用search_diagnostic，只对第三次起相同query且无新可见证据的循环候选软罚；不罚文风、普通回退、总长度，不针对字符。整轨迹广播仍会强化成功错误前缀，动作级PG屏蔽另做独立消融，KL/Entropy mask分开。
+
+实施顺序：先真实GPU前提及全micro指标验收，再A0旧筛选/A1任务成功筛选；A2无效动作软罚、A3重复无新增证据软罚分别对A1；lr减半与KL加倍单独对照；确认token实现错误则先修、重锁基线。5步接线、20步筛选，长期100新增步/3配对seed；开发集与正常纠错评价、相同更新和rollout预算同时比较。监控仅配套保护，预防重点是信号、信用分配和更新偏移。真实模型生成0、更新0，无生产源码/配置修改、无新GPU实验或生产CPU复测，未提交/推送；上次198项仅适用原筛选修复。
+
+仅新增远端独立分析脚本 historical_replay.py（不在生产源码目录），以及报告/文档。脚本流式重建完整8轨迹组、真实入选前缀、旧门控奖励和样本标准差优势；不导入训练器/Ray/GPU。函数2个均含中文@brief、各@param、@return与适用@raises/@note；27逻辑单元说明审核，证据 source-audit.json。原始日志身份、奖励、每步均值断言通过，脚本退出0。首次单字符重复启发式包含空白误报，attempt1完整保留；最终排除空白并重跑，首次正优势异常长串候选为step51。启发式不用于训练奖励。奖励设计cap代数校验见reward-design-check.json；不属于效果验收。生产源码/配置0修改，生产注释覆盖不适用，未重跑生产CPU或GPU测试。
+
+
+## 2026-10-11T05:06:25.399661+00:00 LR/KL/reward trial validation planning
+
+User confirmed lr=5e-7 and actor KL=.002. Validation plan: grpo_stability_trial_validation_plan.md. Common task_success_mixed baseline; separate B/L/K/R and LK/LKR comparisons; candidate bounded invalid-action reward remains unimplemented. CPU/history and GPU prerequisites before 5-step smoke, 20-step screen and selected 100-new-step/3-paired-seed confirmation. Independent EM/generation/recovery and cost metrics; no new training, model generation, source/config changes or tests. Planning only; no fabricated run_id. Agent /root.
+
+Documentation only; code-comment coverage not applicable. No production CPU/GPU test rerun; prior198 passes apply to previous selector repair only.
+
+
+## 2026-10-11T05:22:47.905170+00:00 Budget-limited trial plan
+
+User total budget 1–2 days. Latest section7 of grpo_stability_trial_validation_plan.md supersedes mandatory six-arm/three-seed first round: only B vs target T(lr5e-7,actorKL.002,one validated process penalty), common task_success_mixed and paired seed42. Start20 new steps each, extend40 then60 only with value and time. Target first report24h, hard budget48h including preparation/evaluation/cleanup; share parent D256, mid fixed64 questions every20steps, final cold D256 per arm. Original historical training step means10.56–19.27min; D256~40min, new sampling cost unknown. No model workload/source/config changes or tests started; planning only, no run_id. Single-seed short/midterm results cannot claim long-term causal repair; conditional one ablation only. Agent/root.
+
+Documentation only; source-comment coverage not applicable, no production tests rerun.
+
+
+## 2026-10-11T05:54:06.537783+00:00 Continuous trajectory logging implementation
+
+连续轨迹展示修复进行中：只读复用真实消费账本；模型输出全文连续展示，搜索观察独立缩略，奖励及诊断移到末尾。旧总字符限制改为辅助诊断预算；search_result_max_chars默认1000，0为搜索全文。保留原dirty修改；CPU及历史预览待执行，无真实生成/训练。负责人/root；产物 /mnt/public/code/lyk/lzy/runs/metax-trajectory-readable-20261011-v1。
+
+
+## 2026-10-11T06:02:30.196859+00:00 连续轨迹日志验收
+
+连续轨迹日志修复已完成。修改仅限 verl/utils/trajectory_logging.py、tests/test_trajectory_logging.py、verl/trainer/config/ppo_trainer.yaml；共用展示器复用真实账本和既有奖励解释，不新增生成、检索或奖励路径。思考/动作消费文本按真实轮次全文输出；对应visible_text只在搜索结果中缩略。奖励、执行状态、原因码、调用身份、未消费尾部及引用诊断统一置于连续轨迹之后。
+
+search_result_max_chars默认1000，首尾正文按3:1保留并标注省略数量；0表示搜索全文。兼容max_chars_per_trajectory旧字段，改为末尾辅助诊断预算；不再截断模型思考/最终回答。无逐轮账本时完整生成历史展示一次，来源不明的information不缩略；模型自己生成的伪观察也全文保留。无接受答案则明确未作答，不补造答案。样例数、批次频率、异常隔离及默认关闭的直接调用保持兼容。控制台每条一次print，文件一次write同一完整块；多进程汇总日志是否另有外部插入尚未GPU验证。
+
+最终CPU204项通过，新增6项，失败/错误/跳过0；test_fp16.py明确排除。覆盖32k多轮模型文本、20k无账本历史、18k伪观察、搜索0/短/长预算、未作答、尾部隔离、控制台/文件一致、真实RewardManager奖励/输入/Python随机状态不变及展示失败隔离。源码AST函数说明14项无缺失；人工逐项检查36/36逻辑单元中文说明，覆盖100%，函数与关键逻辑分别合格；范围含两个运行脚本和配置。CPU及历史展示验收不能代替真实GPU日志集成或训练稳定性结论。
+
+历史预览取原100步运行首条真实候选轨迹（原step1，3轮、2次真实搜索），匹配评分审计第257行同一trace_uid，模型消费552字符，两次可见观察2028/2084字符，实际返回奖励1不变；逐轮完整顺序和记录不变检查通过。无需重新生成。预览：/mnt/public/code/lyk/lzy/runs/metax-trajectory-readable-20261011-v1/historical-preview.readable.log。
+
+负责人/root；全部命令经ssh mx。产物 /mnt/public/code/lyk/lzy/runs/metax-trajectory-readable-20261011-v1，详细记录 runs/metax-trajectory-readable-20261011-v1.md。原有dirty筛选代码/文档保留，本次未提交/推送；真实生成0、训练更新0，无新checkpoint。下一步：新启动任务复用该展示器；保留1–2天B/T验证计划，在GPU前提和指标/reward接线完成后使用新日志核对至少一条实际轨迹。已有历史大日志未改写。
+
+### 本次逻辑单元注释清单（36/36）
+
+1. display_text：完整展示模式、控制字符清理与幂等排版；说明位置：函数说明及原有清理分支说明。
+2. render_search_result：真实观察的展示职责和预算校验；说明位置：函数说明及参数异常说明。
+3. render_search_result：仅剥离真实工具字段的完整information外壳；说明位置：仅真实工具字段允许省略注释。
+4. render_search_result：首尾3:1分配、省略量计算与标签恢复；说明位置：首尾保留及预算范围注释。
+5. render_trajectory：完整消费轨迹与末尾奖励诊断的职责；说明位置：函数说明和副作用约束。
+6. render_trajectory：辅助预算与无搜索场景的搜索预算校验；说明位置：函数异常说明和入口拒绝注释。
+7. render_trajectory：候选阶段及同行身份的只读呈现；说明位置：沿用真实候选身份说明和候选标记。
+8. render_trajectory：按账本顺序保留每轮完整消费文本；说明位置：账本消费文本注释。
+9. render_trajectory：绑定call_id展示可见搜索观察并缩略；说明位置：visible_text/raw_text边界注释。
+10. render_trajectory：执行状态和长调用身份移到诊断；说明位置：长身份留在诊断区注释。
+11. render_trajectory：原因码、原位置与未消费尾部隔离；说明位置：账本尾部移至末尾注释。
+12. render_trajectory：引用诊断不混入模型输出；说明位置：末尾诊断职责说明。
+13. render_trajectory：未作答结束状态不补造答案；说明位置：函数不补造答案约束。
+14. render_trajectory：无账本只展示一次历史及缺失回退；说明位置：无来源身份不可误删模型文本注释。
+15. render_trajectory：复用答案提取及既有分值和返回策略；说明位置：仅解释既有奖励注释。
+16. render_trajectory：辅助诊断单独截断且完整输出起止边界；说明位置：诊断预算不吞模型输出注释。
+17. HumanTrajectoryLogger.__init__：新增搜索展示预算、严格整数及范围校验；说明位置：函数配置说明和预算0/下限注释。
+18. HumanTrajectoryLogger.emit：共享连续渲染器一次输出并隔离故障；说明位置：函数整块输出和故障隔离说明。
+19. test_real_turns_visible_evidence_and_tail：真实可见观察、未消费尾部和新的奖励边界；说明位置：真实裁剪与边界说明。
+20. test_newlines_controls_and_auxiliary_budget：控制字符及旧预算下完整模型与奖励保留；说明位置：函数说明和模型不截断注释。
+21. test_continuous_long_model_output_and_deferred_diagnostics：真实两轮账本及32000字符模型完整性；说明位置：函数说明和逐轮全文断言注释。
+22. test_continuous_long_model_output_and_deferred_diagnostics：工具位置、诊断尾部顺序及输入不变；说明位置：函数诊断隔离及顺序说明。
+23. test_search_abbreviation_boundaries_and_full_option：200正文预算的首尾、808省略量及0全文；说明位置：函数说明和精确预算注释。
+24. test_search_abbreviation_boundaries_and_full_option：短观察及非法预算分支；说明位置：函数参数边界职责说明。
+25. test_model_information_tag_never_abbreviated：真实执行器生成的18000字符伪观察不缩略；说明位置：无真实call_id不缩略注释。
+26. test_no_ledger_history_displayed_once：20000字符无账本历史单份全文；说明位置：函数说明与无来源身份注释。
+27. test_no_ledger_history_displayed_once：无来源观察不得截断、空历史回退；说明位置：函数回退说明和不可误删注释。
+28. test_unanswered_trace_not_fabricated：真实缺答案轨迹完整结束和负奖励；说明位置：函数不补造答案说明。
+29. test_console_and_file_each_receive_complete_single_block：旧预算下长轨迹的同一控制台/文件输出；说明位置：函数完整块职责。
+30. test_console_and_file_each_receive_complete_single_block：一次print验证避免逐轮打印穿插；说明位置：一次print注释。
+31. test_invalid_configuration_rejected：新增搜索预算的类型、负值及过小值拒绝；说明位置：函数说明和非法配置启动拒绝注释。
+32. ppo_trainer.yaml：1000搜索正文预算、0全文及旧字段辅助语义；说明位置：就近配置中文注释。
+33. cpu_verify.py：无GPU限制、单线程及排除真实GPU测试；说明位置：驱动头部及单线程说明。
+34. cpu_verify.py：收集现有CPU测试和真实统计/失败返回；说明位置：驱动可复现CPU回归说明。
+35. historical_preview.py：历史问题/标准答案与同trace报告对应；说明位置：同trace获取注释。
+36. historical_preview.py：逐轮完整消费、顺序、缩略及奖励记录不变核验；说明位置：每轮及顺序断言注释。
+
+
+## 2026-10-11T06:17:23.744369+00:00 提交前验收与指标结论更正
+
+启动前复核更正：AST核验当前dp_actor.py第451行及原训练源码快照第395行，Entropy/PG/clip/ppo_kl指标字典均位于micro_batch循环内，每个微批都有记录。此前将其解释为“仅末微批”的判断有误，相关历史熵/PG统计不应再标为末微批样本；它们是现有微批均值聚合，仍不等同于全token加权统计。后续只补充total_loss、有效token加权熵及覆盖计数，不迁移既有正确的日志循环。奖励方差资格错误强化的重放结果不受此更正影响。证据：metax-grpo-bt-verification-20261011-v1/metric-loop-audit.json。分功能提交前CPU204项复验通过，真实训练/生成0。

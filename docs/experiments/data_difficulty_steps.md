@@ -548,3 +548,66 @@ GPU原8000服务PID2137145 ready，21015324向量/8卡，训练后256真实查�
 阶段一提交前 CPU 复验通过；GPU/FSDP 仍未验证。下一阶段先离线核对任务成功标签和组资格，再单变量修改动态筛选。真实训练前完成 GPU 前提验收。
 
 Evidence: /mnt/public/code/lyk/lzy/runs/metax-grpo-phase1-20261010-v1/submission-verification/; agent: /root.
+
+
+## 2026-10-10T11:42:28.658290+00:00 GRPO phase2 planning
+
+第二阶段执行顺序：[详细计划](grpo_stability_phase2_plan.md)。2A 历史流式重放与三种正确性标签对齐；2B 单独接入 task_success_mixed 和 CPU 完整组/兼容/恢复验收；2C 复用已有 token 诊断，确认失配后再修；2D 先分类重试与截断，再按单项协议规则消融。真实实验须先完成尚未执行的 GPU/FSDP 前提验收。后续计划为 5 步接通、20 步筛选、至少 100 个新增周期及三个配对种子；这些均为计划值，未启动。新模式无成功组入选更新数必须为 0，完整 32×8、原奖励及优势计算保持；同时评估正常作答率/EM/KL/熵和补抽成本。严格恢复指纹不放宽，共同冷起点不得称作无缝续训。
+
+Agent: /root; evidence: grpo_stability_phase2_plan.md.
+
+
+## 2026-10-10T12:12:09.902192+00:00 Phase2 implementation clarification
+
+按用户问题补充序列一致性的准确含义和各修复实施包，见 grpo_stability_phase2_plan.md 第7/8节。已核对实际 decode->消费->retokenize->actor 重算 old_log_probs 路径；新旧 loss 自洽不证明采样动作自洽，真实失配频率与根因贡献未证实。明确保留既有 bounded/context/loss_mask 保护，GPU 前提验收、历史重放、task_success_mixed、条件性 token 修复、门控、lr/KL 及后续消融的接入/验收边界。本轮仅文档细化，无源码修改、真实测试/生成/训练；未重跑 CPU，历史170项仅对应阶段一。代码注释覆盖率不适用。
+
+Agent: /root.
+
+
+## 2026-10-10T14:13:13.372171+00:00 Task-success filtering CPU acceptance
+
+任务成功筛选修复已实现并完成CPU验证，详见 [运行记录](runs/metax-task-success-filter-20261010-v1.md)。新增显式 task_success_mixed：成功为接受答案EM=1且原门控通过，要求成功与失败共存；保留奖励值和GRPO优势/超参数。旧模式兼容，新模式版本进入指纹，continue/branch不可切换资格规则。真实奖励完整补抽、身份/版本保护和零部分更新已接入；CPU198项通过，新增28项，GPU/长期效果未验证。原100步配置旧指纹和默认字段兼容检查通过，但隔离模型身份IO。真实模型生成/训练更新均0，未提交/推送。用户要求先做代码修复，完整历史重放2A尚未执行；下一步量化补抽成本并完成GPU前提。证据 /mnt/public/code/lyk/lzy/runs/metax-task-success-filter-20261010-v1；负责人/root。
+
+
+## 2026-10-11T04:44:58.595324+00:00 Reward design and root-cause replay
+
+本次历史回放与奖励设计已完成，负责人/root；检查日期2026-10-11（北京时间），全部命令经ssh mx。详细报告见 reports/grpo_reward_rootcause_20261011.md；产物 /mnt/public/code/lyk/lzy/runs/metax-grpo-reward-rootcause-20261011-v1。3200个实际入选组、25600条训练轨迹及全部100步奖励均值对齐；81–100无成功组40.625%，占正优势轨迹48.05898%。任务成功口径41–60全失败组45，原文本EM口径44，不能混用。完整2A奖励/资格重放已完成；原始token/mask、真实终止元数据不足的子项仍未知，未做反事实真实补采。
+
+发现原训练及当前actor的PG/Entropy/clip/ppo_kl只记录mini最后micro，KL记录全部micro，需优先修复指标覆盖并增加total_loss，不能伪造历史总loss。response_length包含环境文本；loss模型token/轨迹为216、264、282、333、245，不能据旧长度断定持续增长。根因最强证据为奖励方差资格与标准差归一化的错误强化；策略漂移与整轨迹信用问题强怀疑，LLDS/数值溢出/实际token失配因果未确认。
+
+新增bounded_process_v2方案候选：R=S-min(.12,.1*M+.02*min(N_invalid,2)+.02*min(N_loop,2))；先独立启用一个新项，保留task_success_mixed资格。G8下成功R≥.88、失败R≤0且≥-.12，混合组均值至少.005，失败优势必负；仅代数验证，未证明训练效果。完整违规与原生截断区分；复用search_diagnostic，只对第三次起相同query且无新可见证据的循环候选软罚；不罚文风、普通回退、总长度，不针对字符。整轨迹广播仍会强化成功错误前缀，动作级PG屏蔽另做独立消融，KL/Entropy mask分开。
+
+实施顺序：先真实GPU前提及全micro指标验收，再A0旧筛选/A1任务成功筛选；A2无效动作软罚、A3重复无新增证据软罚分别对A1；lr减半与KL加倍单独对照；确认token实现错误则先修、重锁基线。5步接线、20步筛选，长期100新增步/3配对seed；开发集与正常纠错评价、相同更新和rollout预算同时比较。监控仅配套保护，预防重点是信号、信用分配和更新偏移。真实模型生成0、更新0，无生产源码/配置修改、无新GPU实验或生产CPU复测，未提交/推送；上次198项仅适用原筛选修复。
+
+
+## 2026-10-11T05:06:25.399661+00:00 LR/KL/reward trial validation planning
+
+User confirmed lr=5e-7 and actor KL=.002. Validation plan: grpo_stability_trial_validation_plan.md. Common task_success_mixed baseline; separate B/L/K/R and LK/LKR comparisons; candidate bounded invalid-action reward remains unimplemented. CPU/history and GPU prerequisites before 5-step smoke, 20-step screen and selected 100-new-step/3-paired-seed confirmation. Independent EM/generation/recovery and cost metrics; no new training, model generation, source/config changes or tests. Planning only; no fabricated run_id. Agent /root.
+
+
+## 2026-10-11T05:22:47.905170+00:00 Budget-limited trial plan
+
+User total budget 1–2 days. Latest section7 of grpo_stability_trial_validation_plan.md supersedes mandatory six-arm/three-seed first round: only B vs target T(lr5e-7,actorKL.002,one validated process penalty), common task_success_mixed and paired seed42. Start20 new steps each, extend40 then60 only with value and time. Target first report24h, hard budget48h including preparation/evaluation/cleanup; share parent D256, mid fixed64 questions every20steps, final cold D256 per arm. Original historical training step means10.56–19.27min; D256~40min, new sampling cost unknown. No model workload/source/config changes or tests started; planning only, no run_id. Single-seed short/midterm results cannot claim long-term causal repair; conditional one ablation only. Agent/root.
+
+
+## 2026-10-11T05:54:06.537783+00:00 Continuous trajectory logging implementation
+
+连续轨迹展示修复进行中：只读复用真实消费账本；模型输出全文连续展示，搜索观察独立缩略，奖励及诊断移到末尾。旧总字符限制改为辅助诊断预算；search_result_max_chars默认1000，0为搜索全文。保留原dirty修改；CPU及历史预览待执行，无真实生成/训练。负责人/root；产物 /mnt/public/code/lyk/lzy/runs/metax-trajectory-readable-20261011-v1。
+
+
+## 2026-10-11T06:02:30.196859+00:00 连续轨迹日志验收
+
+连续轨迹日志修复已完成。修改仅限 verl/utils/trajectory_logging.py、tests/test_trajectory_logging.py、verl/trainer/config/ppo_trainer.yaml；共用展示器复用真实账本和既有奖励解释，不新增生成、检索或奖励路径。思考/动作消费文本按真实轮次全文输出；对应visible_text只在搜索结果中缩略。奖励、执行状态、原因码、调用身份、未消费尾部及引用诊断统一置于连续轨迹之后。
+
+search_result_max_chars默认1000，首尾正文按3:1保留并标注省略数量；0表示搜索全文。兼容max_chars_per_trajectory旧字段，改为末尾辅助诊断预算；不再截断模型思考/最终回答。无逐轮账本时完整生成历史展示一次，来源不明的information不缩略；模型自己生成的伪观察也全文保留。无接受答案则明确未作答，不补造答案。样例数、批次频率、异常隔离及默认关闭的直接调用保持兼容。控制台每条一次print，文件一次write同一完整块；多进程汇总日志是否另有外部插入尚未GPU验证。
+
+最终CPU204项通过，新增6项，失败/错误/跳过0；test_fp16.py明确排除。覆盖32k多轮模型文本、20k无账本历史、18k伪观察、搜索0/短/长预算、未作答、尾部隔离、控制台/文件一致、真实RewardManager奖励/输入/Python随机状态不变及展示失败隔离。源码AST函数说明14项无缺失；人工逐项检查36/36逻辑单元中文说明，覆盖100%，函数与关键逻辑分别合格；范围含两个运行脚本和配置。CPU及历史展示验收不能代替真实GPU日志集成或训练稳定性结论。
+
+历史预览取原100步运行首条真实候选轨迹（原step1，3轮、2次真实搜索），匹配评分审计第257行同一trace_uid，模型消费552字符，两次可见观察2028/2084字符，实际返回奖励1不变；逐轮完整顺序和记录不变检查通过。无需重新生成。预览：/mnt/public/code/lyk/lzy/runs/metax-trajectory-readable-20261011-v1/historical-preview.readable.log。
+
+负责人/root；全部命令经ssh mx。产物 /mnt/public/code/lyk/lzy/runs/metax-trajectory-readable-20261011-v1，详细记录 runs/metax-trajectory-readable-20261011-v1.md。原有dirty筛选代码/文档保留，本次未提交/推送；真实生成0、训练更新0，无新checkpoint。下一步：新启动任务复用该展示器；保留1–2天B/T验证计划，在GPU前提和指标/reward接线完成后使用新日志核对至少一条实际轨迹。已有历史大日志未改写。
+
+
+## 2026-10-11T06:17:23.744369+00:00 提交前验收与指标结论更正
+
+启动前复核更正：AST核验当前dp_actor.py第451行及原训练源码快照第395行，Entropy/PG/clip/ppo_kl指标字典均位于micro_batch循环内，每个微批都有记录。此前将其解释为“仅末微批”的判断有误，相关历史熵/PG统计不应再标为末微批样本；它们是现有微批均值聚合，仍不等同于全token加权统计。后续只补充total_loss、有效token加权熵及覆盖计数，不迁移既有正确的日志循环。奖励方差资格错误强化的重放结果不受此更正影响。证据：metax-grpo-bt-verification-20261011-v1/metric-loop-audit.json。分功能提交前CPU204项复验通过，真实训练/生成0。

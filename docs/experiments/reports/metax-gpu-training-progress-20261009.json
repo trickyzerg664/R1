@@ -1,0 +1,87 @@
+{
+  "checked_beijing": "2026-10-09T12:41:56.753995+08:00",
+  "step": 72,
+  "baseline_EM": 0.44921875,
+  "D256": [
+    {
+      "step": 20,
+      "rows": 256,
+      "correct": 113.0,
+      "EM_pct": 44.140625,
+      "missing": 0,
+      "improved_vs_parent": 16,
+      "worsened_vs_parent": 18,
+      "net_vs_parent": -2,
+      "paired_bootstrap_95pp": [
+        -5.46875,
+        3.515625
+      ],
+      "mcnemar_exact_p": 0.8641662404406816,
+      "sources": {
+        "hotpotqa": {
+          "count": 136,
+          "correct": 63.0
+        },
+        "nq": {
+          "count": 120,
+          "correct": 50.0
+        }
+      }
+    },
+    {
+      "step": 40,
+      "rows": 256,
+      "correct": 116.0,
+      "EM_pct": 45.3125,
+      "missing": 0,
+      "improved_vs_parent": 18,
+      "worsened_vs_parent": 17,
+      "net_vs_parent": 1,
+      "paired_bootstrap_95pp": [
+        -4.296875,
+        5.078125
+      ],
+      "mcnemar_exact_p": 1,
+      "sources": {
+        "hotpotqa": {
+          "count": 136,
+          "correct": 62.0
+        },
+        "nq": {
+          "count": 120,
+          "correct": 54.0
+        }
+      }
+    },
+    {
+      "step": 60,
+      "rows": 256,
+      "correct": 122.0,
+      "EM_pct": 47.65625,
+      "missing": 0,
+      "improved_vs_parent": 26,
+      "worsened_vs_parent": 19,
+      "net_vs_parent": 7,
+      "paired_bootstrap_95pp": [
+        -2.34375,
+        7.8125
+      ],
+      "mcnemar_exact_p": 0.3712980344710104,
+      "sources": {
+        "hotpotqa": {
+          "count": 136,
+          "correct": 67.0
+        },
+        "nq": {
+          "count": 120,
+          "correct": 55.0
+        }
+      }
+    }
+  ],
+  "missing_last5_pct": 2.890625,
+  "recent10_mean_step_minutes": 19.61312397682729,
+  "remaining_pure_hours": 9.152791189186068,
+  "frozen_hashes_verified": 230,
+  "constraints": "仅分析既有日志和评价，不启动或更改训练；无新GPU生成；配对基线检索后端不同，非单因素训练因果对照"
+}
