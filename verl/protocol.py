@@ -523,15 +523,13 @@ class DataProto:
 
     @staticmethod
     def concat(data: List['DataProto']) -> 'DataProto':
-        """Concat a list of DataProto. The batch is concatenated among dim=0.
-        The meta_info is assumed to be identical and will use the first one.
-
-        Args:
-            data (List[DataProto]): list of DataProto
-
-        Returns:
-            DataProto: concatenated DataProto
+        """@brief 沿batch维拼接数据，并完整保留各rank训练指标。
+        @param data 非空DataProto列表；metrics存在时各rank字段必须一致。
+        @return 拼接后的DataProto；metrics为跨rank微批列表，其他metadata沿用首份。
+        @raises ValueError 部分rank缺失指标或指标字段不一致时抛出。
+        @note 指标只汇集不提前平均，避免丢失极值、可加计数和加权统计。
         """
+        # 张量及非张量仍按原batch维拼接，指标修复不改变训练样本。
         batch_lst = []
         for batch in data:
             batch_lst.append(batch.batch)
@@ -540,11 +538,31 @@ class DataProto:
         else:
             new_batch = None
 
+        # 环境/问题等非张量数组保持逐样本顺序，不参与指标聚合。
         non_tensor_batch = list_of_dict_to_dict_of_list(list_of_dict=[d.non_tensor_batch for d in data])
         for key, val in non_tensor_batch.items():
             non_tensor_batch[key] = np.concatenate(val, axis=0)
 
-        return DataProto(batch=new_batch, non_tensor_batch=non_tensor_batch, meta_info=data[0].meta_info)
+        meta_info = data[0].meta_info
+        if any('metrics' in item.meta_info for item in data):
+            # 指标由各rank独立产生，不能沿用其他metadata相同的假设。
+            expected = set(data[0].meta_info.get('metrics', {}))
+            # 缺少任一rank字段时拒绝部分报告，防止错误覆盖率继续训练。
+            if any('metrics' not in item.meta_info or
+                   set(item.meta_info['metrics']) != expected for item in data):
+                raise ValueError('Inconsistent metric keys across ranks')
+            combined = {key: [] for key in data[0].meta_info['metrics']}
+            for item in data:
+                for key, value in item.meta_info['metrics'].items():
+                    # 微批列表展开一次；学习率等rank标量也必须保留各rank值。
+                    if isinstance(value, (list, tuple, np.ndarray)):
+                        combined[key].extend(value)
+                    else:
+                        combined[key].append(value)
+            # 复制外层容器，禁止将汇总写回某个worker的原始报告。
+            meta_info = dict(meta_info, metrics=combined)
+
+        return DataProto(batch=new_batch, non_tensor_batch=non_tensor_batch, meta_info=meta_info)
 
     def reorder(self, indices):
         """
