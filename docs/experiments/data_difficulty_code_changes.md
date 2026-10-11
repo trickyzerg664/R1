@@ -1763,3 +1763,8 @@ bounded_invalid_v1接入独立纯模块，复用已校验门控/成功标签；�
 44. parent_verify.py：只核验HF Actor加载文件，不读旧优化器；说明：脚本头和核验范围注释。
 45. gpu_verify.py：要求真实GPU，不将skip作为通过；说明：显式GPU注释。
 46. ppo_trainer.yaml：默认旧奖励、真实stop软罚和成本上限；说明：配置就近说明。
+
+
+## 2026-10-11T06:44:02.228693+00:00 验证实验实际启动
+
+验证监督器已实际启动：launcher PID2829354，父D256评价PID2829362，启动UTC2026-10-11T06:41:56.895844+00:00。当前phase=parent-eval，正式GRPO训练步数B/T均0，无本次新checkpoint；不是已完成评价。冻结代码6cbd7dca5bafca19a9e4eb9c1c83c444a81c2233，292项源码/13项资产哈希核对通过，真实配置入口B/T均通过，固定reference与父元数据一致。实际命令为bash env/metax/run.sh -u scripts/difficulty/stability_trial.py --run-directory /mnt/public/code/lyk/lzy/runs/metax-grpo-bt-verification-20261011-v1 --launch，经ssh mx后台启动。下一步先确认父健康与原生终止门限，再按冻结方案顺序B20、B冷D256、T20、T冷D256。CPU224通过和单卡小模型1项通过仅代表已执行范围；父评价/八卡首段/长期效果尚在进行。进度以status.json自动区块实测时间为准；负责人/root。

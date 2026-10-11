@@ -639,3 +639,8 @@ bounded_invalid_v1接入独立纯模块，复用已校验门控/成功标签；�
 父加载文件17项已流式哈希通过（仅HF Actor权重/分词器；旧优化器rank文件未使用），参考Qwen2.5-7B固定。固定D64为原D256顺序前30NQ/34Hotpot，生成配置不缩短；训练32题×8、micro8、mini128，fresh optimizer/scheduler/scaler，同seed42，同预热10步。B lr1e-6/Actor KL.001/legacy；T lr5e-7/Actor KL.002/bounded_invalid_v1。审计记录原生token/终止，文本文件每批每来源2条、控制台1条，两组相同；保留全量结构化审计，未新增字符特定惩罚。
 
 职责：loss_observations和bounded_reward纯模块只消费张量/普通报告；worker与RewardManager仅薄接线；监督脚本调用现有Hydra入口、评分、checkpoint校验，不复制生成/训练算法。注释：43新增/修改函数标签无缺失，46/46语义逻辑单元有效中文说明，覆盖100%，关键逻辑独立检查；详列source-audit.json。GPU8、长期收益与实际异常复现待观察。产物 /mnt/public/code/lyk/lzy/runs/metax-grpo-bt-verification-20261011-v1；负责人/root；本条UTC由远程脚本填写。
+
+
+## 2026-10-11T06:44:02.228693+00:00 验证实验实际启动
+
+验证监督器已实际启动：launcher PID2829354，父D256评价PID2829362，启动UTC2026-10-11T06:41:56.895844+00:00。当前phase=parent-eval，正式GRPO训练步数B/T均0，无本次新checkpoint；不是已完成评价。冻结代码6cbd7dca5bafca19a9e4eb9c1c83c444a81c2233，292项源码/13项资产哈希核对通过，真实配置入口B/T均通过，固定reference与父元数据一致。实际命令为bash env/metax/run.sh -u scripts/difficulty/stability_trial.py --run-directory /mnt/public/code/lyk/lzy/runs/metax-grpo-bt-verification-20261011-v1 --launch，经ssh mx后台启动。下一步先确认父健康与原生终止门限，再按冻结方案顺序B20、B冷D256、T20、T冷D256。CPU224通过和单卡小模型1项通过仅代表已执行范围；父评价/八卡首段/长期效果尚在进行。进度以status.json自动区块实测时间为准；负责人/root。

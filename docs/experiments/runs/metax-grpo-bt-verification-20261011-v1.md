@@ -71,3 +71,31 @@ CUDA_VISIBLE_DEVICES='' bash env/metax/run.sh /mnt/public/code/lyk/lzy/runs/meta
 - 此前“PG/Entropy仅末微批”解释经AST复核更正，current/historical均完整micro循环；数值历史不被伪造重算。新增只读加权统计。
 - 配置脚本首次传输引号失败、无GPU启动；修正JSON传输后7份配置及D64生成成功，记录config-preparation-attempt1.json。
 - 新奖励未叠加循环惩罚、未新增动作级mask改动、保持GRPO。八卡训练与长期结论待验证。
+
+
+<!-- metax-grpo-bt-verification-20261011-v1-current -->
+
+{
+  "status": "running",
+  "phase": "parent-eval",
+  "child_pid": 2829362,
+  "gpu_current_MiB": [
+    9630,
+    9694,
+    9630,
+    9630,
+    9630,
+    9630,
+    9630,
+    10334
+  ],
+  "trained_step": 0,
+  "checked_utc": "2026-10-11T06:44:01.537172+00:00"
+}
+
+<!-- /metax-grpo-bt-verification-20261011-v1-current -->
+
+
+## 2026-10-11T06:44:02.228693+00:00 验证实验实际启动
+
+验证监督器已实际启动：launcher PID2829354，父D256评价PID2829362，启动UTC2026-10-11T06:41:56.895844+00:00。当前phase=parent-eval，正式GRPO训练步数B/T均0，无本次新checkpoint；不是已完成评价。冻结代码6cbd7dca5bafca19a9e4eb9c1c83c444a81c2233，292项源码/13项资产哈希核对通过，真实配置入口B/T均通过，固定reference与父元数据一致。实际命令为bash env/metax/run.sh -u scripts/difficulty/stability_trial.py --run-directory /mnt/public/code/lyk/lzy/runs/metax-grpo-bt-verification-20261011-v1 --launch，经ssh mx后台启动。下一步先确认父健康与原生终止门限，再按冻结方案顺序B20、B冷D256、T20、T冷D256。CPU224通过和单卡小模型1项通过仅代表已执行范围；父评价/八卡首段/长期效果尚在进行。进度以status.json自动区块实测时间为准；负责人/root。
