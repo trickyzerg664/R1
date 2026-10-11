@@ -103,3 +103,19 @@ UTC2026-10-11T06:48:07.942504+00:00启动复核：共同父D256评价已完成�
 ## 异常诊断与修复开始
 
 本次异常诊断：UTC 2026-10-11T08:25:05.121718+00:00；B已完成第1个GRPO训练步、每rank两次优化器更新；无COMPLETE checkpoint，T尚未开始。父D256已完成122/256、缺答案0、原生终止779/779。监督器在微批计数检查实际32/预期256时主动SIGTERM，当前训练进程已退出、独立检索保留。根因是DP_COMPUTE_PROTO经DataProto.concat仅保留data[0].meta_info，丢弃rank1–7所有训练指标；此前CPU微批测试及单rankGPU测试未覆盖真实跨rank返回路径。微批循环自身覆盖完整；历史和本次全局PG/熵/KL/norm统计可能仅rank0，不能宣称全局均值。第1步total_loss=-0.0578348096、KL=.3623620658、grad_norm=2.02278173均有限，未出现跳过更新；该异常由监控数据汇集错误触发。修复将合并各rank metrics、保持其他metadata首份语义，覆盖计数仍256；不改变loss/reward/优化器。旧失败运行保留，新v2共用同父/参考/数据/超参/seed且两臂均从0重训；复用完整父评价需hash绑定并重验零更新/完整性，总48小时预算从原开始计。CPU/修复后八卡尚未验证。负责人/root。
+
+
+<!-- metax-grpo-bt-verification-20261011-v2-current -->
+
+{
+  "status": "stopped_by_user",
+  "phase": "stopped",
+  "stopped_phase": "B",
+  "trained_step": 8,
+  "T_trained_step": 0,
+  "published_checkpoint_steps": [],
+  "reason": "User requested original initial checkpoint and revised controlled settings",
+  "checked_utc": "2026-10-11T10:53:39.965951+00:00"
+}
+
+<!-- /metax-grpo-bt-verification-20261011-v2-current -->
