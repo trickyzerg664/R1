@@ -90,6 +90,26 @@ def token_statistics(logits, responses, recompute=False, chunk_size=0, compute_e
     return tuple(torch.cat([p[j] for p in parts], dim=1) for j in range(2))
 
 
+def response_loss_mask(micro_batch, state_masking):
+    """@brief 合并可选工具观察掩码与始终生效的人工边界掩码。
+    @param micro_batch 含 responses、attention_mask 和可选 loss_mask/sampled_loss_mask 的张量字典。
+    @param state_masking 是否排除真实工具观察，沿用原训练开关。
+    @return 与回答同形状的零一损失掩码。
+    @raises ValueError 人工边界掩码形状错位或不是二值。
+    @note 没有新字段的旧批次保持原行为，人工 token 永不接受策略/KL/熵梯度。
+    """
+    length = micro_batch['responses'].shape[-1]
+    mask = (micro_batch['loss_mask'] if state_masking else
+            micro_batch['attention_mask'][:, -length:])
+    # 人工片段与工具观察是两个独立来源，不能因关闭 state_masking 放行人工 token。
+    if 'sampled_loss_mask' in micro_batch:
+        sampled = micro_batch['sampled_loss_mask']
+        if sampled.shape != mask.shape or not torch.all((sampled == 0) | (sampled == 1)):
+            raise ValueError('Sampled loss mask must be matching binary tokens')
+        mask = mask * sampled
+    return mask
+
+
 class DataParallelPPOActor(BasePPOActor):
 
     def __init__(
@@ -322,7 +342,7 @@ class DataParallelPPOActor(BasePPOActor):
         @note 输出端分量梯度不代表完整参数梯度；固定轨迹探针额外前向，默认关闭。
         @raises FloatingPointError 损失非有限时拒绝反传。
         @raises ValueError 固定概率探针遇到非零 dropout 时拒绝执行。
-        @note activation_offload默认关闭；开启不裁剪token或改变损失计算顺序。
+        @note activation_offload默认关闭；人工边界独立排除，工具观察仍按 state_masking 控制。
         """
         # make sure we are in training mode
         self.actor_module.train()
@@ -334,6 +354,9 @@ class DataParallelPPOActor(BasePPOActor):
         select_keys = ['responses', 'input_ids', 'attention_mask', 'position_ids', 'old_log_probs', 'advantages']
         if self.config.state_masking:
             select_keys.append('loss_mask')
+        # 人工边界掩码随样本筛选/重排进入所有微批，不能依赖工具观察开关。
+        if 'sampled_loss_mask' in data.batch:
+            select_keys.append('sampled_loss_mask')
         if self.config.use_kl_loss:
             select_keys.append('ref_log_prob')
         batch = data.select(batch_keys=select_keys).batch
@@ -375,9 +398,8 @@ class DataParallelPPOActor(BasePPOActor):
                 responses = data['responses']
                 response_length = responses.size(1)
                 attention_mask = data['attention_mask']
-                response_mask = attention_mask[:, -response_length:]
-                if self.config.state_masking:
-                    response_mask = data['loss_mask']
+                # 所有损失分量共用合并掩码，人工边界在两种工具观察模式下都排除。
+                response_mask = response_loss_mask(data, self.config.state_masking)
                 old_log_prob = data['old_log_probs']
                 advantages = data['advantages']
 

@@ -7,6 +7,7 @@ from dataclasses import dataclass
 from .tensor_helper import TensorHelper, TensorConfig
 # 新协议仅依赖独立的裁剪和预算模块，默认配置继续走旧路径。
 from .context_budget import observation_ids, pad_token_rows, ContextBudget
+from .token_alignment import preserve_sampled_prefix
 from verl import DataProto
 # [data-difficulty] 复用保留 DataProto 元数据的补齐工具，统一处理训练和评价尾批。
 from verl.protocol import pad_dataproto_to_divisor, unpad_dataproto
@@ -86,37 +87,42 @@ class LLMGenerationManager:
             padding="longest"
         )['input_ids']
 
-    def _postprocess_responses(self, responses: torch.Tensor) -> torch.Tensor:
+    def _postprocess_responses(self, responses, return_loss_mask=False, metadata=None):
+        """@brief 按协议裁剪原始 token，只重建并屏蔽跨 token 的边界片段。
+        @param responses 活动轨迹原始生成 token 矩阵。
+        @param return_loss_mask 是否追加同形状、人工片段置 pad 的生成 token 矩阵。
+        @param metadata 可选逐行原生长度等元数据，顺序必须与 responses 相同。
+        @return 默认返回 token 和消费字符串；开启掩码返回时追加屏蔽人工片段的矩阵。
+        @raises ValueError 不支持 no_think_rl、元数据错位或消费边界无法安全重建。
+        @note 消费文字与协议保持兼容；训练和下一轮使用同一处理后 token。
         """
-        @brief 按共用消费边界处理模型输出，关闭检查时保留原后处理。
-        @param responses 活动轨迹生成token矩阵。
-        @return 重分词token及对应消费字符串二元组。
-        @raises ValueError 不支持的no_think_rl设置。
-        """
-        responses_str = self.tokenizer.batch_decode(
-            responses, 
-            skip_special_tokens=True
-        )
-
-        # 首个实际动作终止本轮；尚未执行的尾部交给账本保存而不作为第二次动作惩罚。
+        responses_str = self.tokenizer.batch_decode(responses, skip_special_tokens=True)
+        # 消费边界继续由原解析器决定，原始未执行尾部仍交账本观察。
         if self.config.process_checks_enabled:
             responses_str = [parse_action(resp)['consumed'] for resp in responses_str]
         else:
             responses_str = [resp.split('</search>')[0] + '</search>'
-                     if '</search>' in resp
-                     else resp.split('</answer>')[0] + '</answer>'
-                     if '</answer>' in resp
-                     else resp
-                     for resp in responses_str]
-
+                             if '</search>' in resp else
+                             resp.split('</answer>')[0] + '</answer>'
+                             if '</answer>' in resp else resp for resp in responses_str]
         if self.config.no_think_rl:
             raise ValueError('stop')
-            # if no_think_rl is enabled, only keep action in the str
-            actions, _ = self.env.postprocess_predictions(responses_str)
-            responses_str=[f"<answer>{envs[idx].ACTION_LOOKUP[action]}</answer>" for idx, action in enumerate(actions)]
-            print("RESPONSES:", responses_str)
-        responses = self._batch_tokenize(responses_str)
-        return responses, responses_str
+        if metadata is not None and len(metadata) != len(responses):
+            raise ValueError('Native response metadata row alignment differs')
+        rows, sampled = [], []
+        # 不整段 encode；原始 token 原封保留，人工尾片段只作为上下文。
+        for index, (raw, consumed) in enumerate(zip(responses.cpu().tolist(), responses_str)):
+            native_length = None if metadata is None else metadata[index].get('raw_token_count')
+            ids, mask = preserve_sampled_prefix(raw, consumed, self.tokenizer, native_length)
+            rows.append(ids)
+            sampled.append(mask)
+        ids = pad_token_rows(rows, self.tokenizer.pad_token_id, self.tokenizer.padding_side).to(responses.device)
+        if not return_loss_mask:
+            return ids, responses_str
+        # 与 token 使用相同补齐方向，再借用既有 info_mask 路径排除人工片段。
+        mask = pad_token_rows(sampled, 0, self.tokenizer.padding_side).to(responses.device).bool()
+        masked_ids = ids.masked_fill(~mask, self.tokenizer.pad_token_id)
+        return ids, responses_str, masked_ids
 
     def _process_next_obs(self, next_obs: List[str], limits=None, diagnostics=None) -> torch.Tensor:
         """检索裁剪在独立模块中完成，生成和评分共用同一可见输入。"""
@@ -181,19 +187,37 @@ class LLMGenerationManager:
                 prompt_with_mask: torch.Tensor, 
                 response: torch.Tensor, 
                 info: torch.Tensor = None,
-                pad_to_left: bool = True
+                pad_to_left: bool = True,
+                response_with_mask: torch.Tensor = None,
+                mask_info: bool = True
             ) -> torch.Tensor:
-        """Concatenate tensors and handle padding. Additionally, create a mask (info_mask) to cover the information block if it exists."""
+        """@brief 拼接真实上下文，并同步保留生成/环境 token 掩码。
+        @param prompt 已有上下文 token 矩阵。
+        @param prompt_with_mask 已有生成 token 矩阵，环境/人工位置为 pad。
+        @param response 本轮实际上下文 token 矩阵。
+        @param info 可选真实环境反馈，全部排除梯度。
+        @param pad_to_left 是否将补齐搬到左侧；训练完整回答使用右补齐。
+        @param response_with_mask 可选本轮掩码矩阵，与 response 同形状。
+        @param mask_info 是否同时屏蔽环境反馈；独立人工边界掩码使用 False。
+        @return 拼接的完整上下文与同步重排的生成 token 矩阵。
+        @raises ValueError 本轮掩码形状与 token 不一致。
+        """
         pad_id = self.tokenizer.pad_token_id
         tensors = [prompt, response]
-        tensors_with_mask = [prompt_with_mask, response]
+        # 人工边界只能影响掩码，不能从真实上下文中删去，也不能改变补齐排序。
+        if response_with_mask is not None and response_with_mask.shape != response.shape:
+            raise ValueError('Response token mask shape differs')
+        tensors_with_mask = [prompt_with_mask, response if response_with_mask is None else response_with_mask]
         if info is not None:
             tensors.append(info)
-            info_mask = torch.full(info.size(), pad_id, dtype=info.dtype, device=info.device) # information mask
-            tensors_with_mask.append(info_mask)
+            # 真实工具反馈沿用全 pad 标记，与人工边界一样只参与上下文。
+            info_mask = torch.full(info.size(), pad_id, dtype=info.dtype, device=info.device)
+            # 人工边界掩码保留观察位置，工具观察是否训练仍由 state_masking 独立决定。
+            tensors_with_mask.append(info_mask if mask_info else info)
         
         concatenated = torch.cat(tensors, dim=1)
         concatenated_with_info = torch.cat(tensors_with_mask, dim=1)
+        # 仅按完整 token 排序，掩码中的 pad 不得让人工片段改变位置。
         mask = concatenated != pad_id if pad_to_left else concatenated == pad_id
         sorted_indices = mask.to(torch.int64).argsort(dim=1, stable=True)
         padded_tensor = concatenated.gather(1, sorted_indices)
@@ -203,30 +227,49 @@ class LLMGenerationManager:
 
     def _update_right_side(self, right_side: Dict, 
                           cur_responses: torch.Tensor,
-                          next_obs_ids: torch.Tensor = None) -> Dict:
-        """Update right side state."""
-        if next_obs_ids != None:
+                          next_obs_ids: torch.Tensor = None,
+                          cur_responses_with_mask: torch.Tensor = None) -> Dict:
+        """@brief 追加本轮 token、人工边界掩码和真实观察，保留完整训练历史。
+        @param right_side 已有 responses 与 responses_with_info_mask 字典。
+        @param cur_responses 本轮处理后的真实上下文 token。
+        @param next_obs_ids 可选环境反馈矩阵。
+        @param cur_responses_with_mask 可选人工边界置 pad 的本轮矩阵。
+        @return 更新后的回答和同步生成 token 掩码字典。
+        @raises ValueError 掩码形状错位或完整历史超过上下文预算。
+        """
+        # 环境反馈与人工边界都经同一拼接入口，防止二者掩码串位。
+        if next_obs_ids is not None:
             responses, responses_with_info_mask = self._info_masked_concatenate_with_padding(
                     right_side['responses'],
                     right_side['responses_with_info_mask'],
                     cur_responses,
                     next_obs_ids, 
-                    pad_to_left=False
+                    pad_to_left=False,
+                    response_with_mask=cur_responses_with_mask
                 )
         else:
             responses, responses_with_info_mask = self._info_masked_concatenate_with_padding(
                     right_side['responses'],
                     right_side['responses_with_info_mask'],
                     cur_responses,
-                    pad_to_left=False
+                    pad_to_left=False,
+                    response_with_mask=cur_responses_with_mask
                 )
+        # 人工边界使用独立掩码，关闭工具观察屏蔽时也绝不能给重建 token 梯度。
+        _, boundary_ids = self._info_masked_concatenate_with_padding(
+            right_side['responses'],
+            right_side.get('responses_with_boundary_mask', right_side['responses']),
+            cur_responses, next_obs_ids, pad_to_left=False,
+            response_with_mask=cur_responses_with_mask, mask_info=False)
         effective_len = self.tensor_fn.create_attention_mask(responses).sum(dim=1).max()
         # 奖励和训练使用完整生成轨迹；新协议超预算明确失败，不能丢掉最终答案。
         if self.config.context_policy == 'bounded' and effective_len > self.config.max_prompt_length:
             raise ValueError('Reward/training trajectory would lose generated tokens')
         max_len = min(self.config.max_prompt_length, effective_len)
 
-        return {'responses': responses[:, :max_len], 'responses_with_info_mask': responses_with_info_mask[:, :max_len]}
+        return {'responses': responses[:, :max_len],
+                'responses_with_info_mask': responses_with_info_mask[:, :max_len],
+                'responses_with_boundary_mask': boundary_ids[:, :max_len]}
 
     def _append_final_reminder(self, rollings, right_side, budget, mask):
         """结束提示属于环境反馈并排除梯度，输入与评分历史同步追加。"""
@@ -246,15 +289,16 @@ class LLMGenerationManager:
                 diagnostics[i]['generation_calls'] += 1
                 diagnostics[i]['generation_limit_hits'] += int(count >= self.config.max_response_length)
 
-    def _record_token_alignment(self, output, processed, active_mask, diagnostics):
+    def _record_token_alignment(self, output, processed, active_mask, diagnostics, sampled=None):
         """@brief 将原始及消费 token 审计映射回真实活动轨迹。
         @param output 已移除 GPU 复制行的生成 DataProto。
         @param processed 活动行后处理 token 矩阵。
         @param active_mask 完整批次活动掩码。
         @param diagnostics 完整批次诊断列表。
+        @param sampled 可选人工边界置 pad 的活动行矩阵，与 processed 同形状。
         @return 无。
-        @raises ValueError 活动行、输出或诊断数量不一致。
-        @note 不改重分词、终止或奖励；关闭开关不解码或保留 token。
+        @raises ValueError 活动行、输出、掩码或诊断数量不一致。
+        @note 审计不改生成或奖励；关闭时不另行保存 token。
         """
         if not self.config.record_token_diagnostics:
             return
@@ -263,13 +307,18 @@ class LLMGenerationManager:
         # 对应关系错误会污染整个训练审计，必须在任何逐行写入前失败。
         if diagnostics is None or len(indices) != len(output) or len(processed) != len(indices):
             raise ValueError('Token audit row alignment differs')
+        # 掩码必须在活动行补齐前逐位置对应，否则审计不能验证训练 token。
+        if sampled is not None and sampled.shape != processed.shape:
+            raise ValueError('Sampled token audit mask shape differs')
         native = output.non_tensor_batch.get('rollout_metadata')
         # 只记录活动行，继承原补齐工具的身份还原；各轮保持原始 token 顺序。
         for row, index in enumerate(indices):
             report = token_alignment_report(output.batch['responses'][row].cpu().tolist(),
                                             processed[row].cpu().tolist(), self.tokenizer,
                                             self.config.max_response_length,
-                                            None if native is None else native[row])
+                                            None if native is None else native[row],
+                                            sampled_mask=None if sampled is None else
+                                            (sampled[row] != self.tokenizer.pad_token_id).cpu().tolist())
             diagnostics[index].setdefault('token_turns', []).append(report)
 
     def _generate_with_gpu_padding(self, active_batch: DataProto) -> DataProto:
@@ -289,13 +338,13 @@ class LLMGenerationManager:
         return unpad_dataproto(output, padding_size)
 
     def run_llm_loop(self, gen_batch, initial_input_ids: torch.Tensor) -> Tuple[Dict, Dict]:
-        """
-        @brief 执行原检索循环，启用时随轨迹保存独立来源报告。
-        @param gen_batch 原始真实轨迹DataProto，GPU补齐在活动生成内部处理。
-        @param initial_input_ids 初始输入token矩阵。
-        @return 完整响应与逐行过程报告组成的DataProto。
-        @raises ValueError 预算、来源、工具返回或 token 审计行对应关系错误。
-        @note token 审计默认关闭；启用只追加来源证据，不修补特定输出。
+        """@brief 复用检索执行器完成多轮生成，并保持采样 token 与训练掩码对应。
+        @param gen_batch 含提示、注意力与位置编号的完整 DataProto。
+        @param initial_input_ids 旧流程初始提示；bounded 模式保留 gen_batch 完整问题。
+        @return 完整训练轨迹、环境掩码、协议报告和可选原生 token 审计的 DataProto。
+        @raises ValueError 上下文预算、token 边界或活动行身份不一致。
+        @raises Exception 工具调用失败时传播异常，不生成伪造观察。
+        @note 人工边界只参与上下文；实际采样 token 保留原编号并参与训练。
         """
         # 账本只属于本次调用，禁止挂在共享worker或训练器状态上。
         checks = TraceLedger(len(gen_batch)) if self.config.process_checks_enabled else None
@@ -356,8 +405,12 @@ class LLMGenerationManager:
             self._record_generation_limits(gen_output, active_mask, diagnostics)
 
             meta_info = gen_output.meta_info            
-            responses_ids, responses_str = self._postprocess_responses(gen_output.batch['responses'])
-            self._record_token_alignment(gen_output, responses_ids, active_mask, diagnostics)
+            responses_ids, responses_str, sampled_ids = self._postprocess_responses(
+                gen_output.batch['responses'], return_loss_mask=True,
+                metadata=gen_output.non_tensor_batch.get('rollout_metadata'))
+            self._record_token_alignment(gen_output, responses_ids, active_mask, diagnostics, sampled_ids)
+            # 原始生成掩码与活动行同步还原；必须在字符串补齐前使用相同活动顺序。
+            sampled_ids, _ = self.tensor_fn._example_level_pad(sampled_ids, responses_str, active_mask)
             responses_ids, responses_str = self.tensor_fn._example_level_pad(responses_ids, responses_str, active_mask)
 
             # Execute in environment and process observations
@@ -398,7 +451,8 @@ class LLMGenerationManager:
             original_right_side = self._update_right_side(
                 original_right_side,
                 responses_ids,
-                next_obs_ids
+                next_obs_ids,
+                cur_responses_with_mask=sampled_ids
             )
             if budget is not None: budget.validate(original_right_side['responses'])
 
@@ -429,8 +483,12 @@ class LLMGenerationManager:
             self._record_generation_limits(gen_output, active_mask, diagnostics)
 
             meta_info = gen_output.meta_info            
-            responses_ids, responses_str = self._postprocess_responses(gen_output.batch['responses'])
-            self._record_token_alignment(gen_output, responses_ids, active_mask, diagnostics)
+            responses_ids, responses_str, sampled_ids = self._postprocess_responses(
+                gen_output.batch['responses'], return_loss_mask=True,
+                metadata=gen_output.non_tensor_batch.get('rollout_metadata'))
+            self._record_token_alignment(gen_output, responses_ids, active_mask, diagnostics, sampled_ids)
+            # 原始生成掩码与活动行同步还原；必须在字符串补齐前使用相同活动顺序。
+            sampled_ids, _ = self.tensor_fn._example_level_pad(sampled_ids, responses_str, active_mask)
             responses_ids, responses_str = self.tensor_fn._example_level_pad(responses_ids, responses_str, active_mask)
 
             # # Execute in environment and process observations
@@ -458,6 +516,7 @@ class LLMGenerationManager:
             original_right_side = self._update_right_side(
                 original_right_side,
                 responses_ids,
+                cur_responses_with_mask=sampled_ids
             )
         
         if budget is not None:
@@ -491,8 +550,18 @@ class LLMGenerationManager:
     def _compose_final_output(self, left_side: Dict,
                             right_side: Dict,
                             meta_info: Dict) -> Tuple[Dict, Dict]:
-        """Compose final generation output."""
+        """@brief 构造同一完整上下文及独立人工边界训练掩码。
+        @param left_side 完整问题 token 字典。
+        @param right_side 完整回答、观察掩码与人工边界掩码字典。
+        @param meta_info 原生成设置及统计信息。
+        @return 用于评分、旧概率重算和训练的 DataProto。
+        @note sampled_loss_mask 只屏蔽人工/补齐位置，不改变工具观察开关语义。
+        """
         final_output = right_side.copy()
+        # 单独输出二值人工边界掩码；内部 token 矩阵不作为额外模型输入。
+        boundary_ids = final_output.pop('responses_with_boundary_mask', None)
+        if boundary_ids is not None:
+            final_output['sampled_loss_mask'] = self.tensor_fn.create_attention_mask(boundary_ids)
         final_output['prompts'] = left_side['input_ids']
         
         # Combine input IDs

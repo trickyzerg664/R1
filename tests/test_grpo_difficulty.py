@@ -160,8 +160,16 @@ class DifficultyTests(unittest.TestCase):
                 return DataProto.from_dict({'responses': torch.tensor(outputs)[:, None]},
                                            meta_info=batch.meta_info.copy())
         class Manager(LLMGenerationManager):
-            def _postprocess_responses(self, responses):
-                return responses, ['answer' if v == 11 else 'search' for v in responses[:,0].tolist()]
+            def _postprocess_responses(self, responses, return_loss_mask=False, metadata=None):
+                """@brief 保留固定动作夹具，兼容生成 token 掩码返回接口。
+                @param responses 活动行固定编号矩阵。
+                @param return_loss_mask 是否同时返回真实生成 token 掩码矩阵。
+                @param metadata 可选原生元数据，本夹具使用固定长度。
+                @return token/动作二元组，或追加全部为真实生成位置的矩阵。
+                """
+                # 此夹具只验证种子和活动行，所有固定编号都代表实际生成 token。
+                texts = ['answer' if v == 11 else 'search' for v in responses[:, 0].tolist()]
+                return (responses, texts, responses) if return_loss_mask else (responses, texts)
             def _process_next_obs(self, observations, limits=None, diagnostics=None):
                 """@brief 返回空环境观察，接受当前共用预算和诊断参数。
                 @param observations 各轨迹观察字符串。
