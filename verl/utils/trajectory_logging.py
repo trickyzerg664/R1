@@ -10,6 +10,28 @@ REASONS = {'forged_observation':'模型冒充工具观察', 'nested_action':'动
            'call_result_mismatch':'调用返回错配', 'unclosed_action':'未闭合动作', 'missing_action':'缺少动作'}
 
 
+def _format_control_tags(text):
+    """@brief 按固定控制标签分段排版，线性清理边界空白并保持旧展示规则。
+    @param text 已统一换行和清理控制字符的展示副本文本。
+    @return 标签独占行的字符串；保留非边界正文，去除整个展示副本首尾空白。
+    @note 仅修改日志副本；分段和边界清理不使用重叠空白正则。
+    """
+    # 正则只识别固定标签；每段只做常数次扫描，长空白或未闭合标签不会回溯。
+    parts = re.split(r'(</?(?:think|search|answer|information)>)', text)
+    for index in range(0, len(parts), 2):
+        segment = parts[index]
+        # 先消费前一标签后的空白，复用旧非重叠替换的从左到右顺序。
+        if index:
+            segment = segment.lstrip(' \t').lstrip('\n').lstrip(' \t')
+        # 逆序清理后一标签前的空白，等价于旧“空格/换行/空格”边界。
+        if index + 1 < len(parts):
+            segment = segment.rstrip(' \t').rstrip('\n').rstrip(' \t')
+            parts[index + 1] = '\n' + parts[index + 1] + '\n'
+        parts[index] = segment
+    # 空白清理只针对已命中的标签边界；未闭合标签和正文原样保留。
+    return ''.join(parts).strip()
+
+
 def display_text(value, limit):
     """@brief 整理展示副本的换行、控制字符和长度，保持原文不变。
     @param value 文本或标量；None显示未记录。
@@ -21,8 +43,7 @@ def display_text(value, limit):
     text = re.sub(r'\x1b\[[0-?]*[ -/]*[@-~]', '', text)
     text = ''.join(c for c in text if c in '\n\t' or ord(c)>=32)
     # 控制标签独占显示行，仅改副本排版，真实动作边界仍由原解析器确定。
-    text = re.sub(r'[ \t]*\n*[ \t]*(</?(?:think|search|answer|information)>)[ \t]*\n*[ \t]*',
-                  r'\n\1\n', text).strip()
+    text = _format_control_tags(text)
     # 截断只影响展示；完整原文仍由已有轨迹审计保存。
     marker = '\n[展示截断；启用原始轨迹审计可保存完整内容]'
     return text if limit is None or len(text)<=limit else text[:max(0,limit-len(marker))]+marker[:limit]

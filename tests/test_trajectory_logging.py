@@ -322,6 +322,73 @@ class TrajectoryLoggingTests(unittest.TestCase):
             self.assertEqual(output.getvalue(), path.read_text())
             self.assertIn(display_text(history, None), output.getvalue())
 
+    def test_tag_whitespace_layout_matches_previous_output(self):
+        """@brief 验证普通和交错空白排版与旧输出完全一致。
+        @return 无。
+        """
+        import re
+        # 旧正则仅用于短字符串兼容性对照，避免测试本身触发长空白回溯。
+        pattern = r'[ \t]*\n*[ \t]*(</?(?:think|search|answer|information)>)[ \t]*\n*[ \t]*'
+        spaces = ['', ' ', '\t', '\n', ' \n ', '\n \n', ' \n \n ', '\u00a0']
+        for left in spaces:
+            for right in spaces:
+                # 覆盖相邻标签、标签间正文、所有控制标签及未闭合标签。
+                for core in ['<think></think>', '<answer>Paris</answer>',
+                             '<search>x</search><information>y</information>',
+                             '<think>text<answer']:
+                    raw = 'HEAD' + left + core + right + 'TAIL'
+                    expected = re.sub(pattern, r'\n\1\n', raw).strip()
+                    with self.subTest(left=left, right=right, core=core):
+                        self.assertEqual(display_text(raw, None), expected)
+
+    def test_long_whitespace_formatting_timeout(self):
+        """@brief 在有超时保护的子进程中核验长空白和完整尾部轨迹不会卡死。
+        @return 无。
+        @note 超时只终止本测试子进程，不影响训练或测试主进程。
+        """
+        import subprocess
+        import sys
+        # 子进程防止将来的性能回归挂住整套测试；无需GPU或真实模型生成。
+        script = r"""
+from copy import deepcopy
+import time
+from verl.utils.trajectory_logging import display_text, render_trajectory
+# 从依赖导入后计时，避免把冷启动误判为日志性能退化。
+started = time.perf_counter()
+# 覆盖此次30336空白，以及更大输入、交错换行和无法闭合的标签。
+assert display_text(' ' * 30336, 800) == ''
+assert display_text(' ' * 100000, None) == ''
+assert display_text((' \t\n' * 40000) + 'END', None).endswith('END')
+assert display_text('HEAD' + (' ' * 100000) + '<answer', None).endswith('<answer')
+assert display_text(' ' * 100000 + '<answer>Paris</answer>' + ' ' * 100000, None) == '<answer>\nParis\n</answer>'
+# 完整展示报告只用于日志测试，不模拟评分或运行真实模型。
+report = dict(trace_uid='render-test', calls=[], answered=True, protocol_valid=True,
+              missing_answer=False, reasons=[], answer='Paris', accepted_answer_em=1.,
+              protocol_reward=1., events=[dict(turn=0, consumed='<answer>Paris</answer>',
+              tail=' ' * 30336, accepted=True, executed='answer')])
+record = dict(prompt='question', model_response='<answer>Paris</answer>',
+              full_response='<answer>Paris</answer>', scoring_text='<answer>Paris</answer>',
+              target=['Paris'], data_source='nq', row=0, question_id='q', uid='g',
+              meta={'trajectory_step':1}, phase='train', batch_number=1,
+              answer_mode='response_only_v1', original_em=1., returned_reward=1.,
+              format_score=0., process_report=report, reward_gate=True, penalty=.1,
+              apply_process_reward=True)
+# 验证原输入、奖励说明和完整结束标记，防止修复用截断掩盖问题。
+before = deepcopy(record)
+text = render_trajectory(record)
+assert record == before
+assert '<answer>\nParis\n</answer>' in text
+assert '本次实际返回规则奖励=1' in text and '[轨迹结束]' in text
+# 长空白和完整轨迹排版合计限5秒；总进程另有冷启动超时保护。
+assert time.perf_counter() - started < 5.0
+print('long-whitespace-ok')
+"""
+        # 总预算含依赖冷启动，实际格式化另限5秒；超时只终止测试子进程。
+        result = subprocess.run([sys.executable, '-c', script], cwd=Path(__file__).resolve().parents[1],
+                                capture_output=True, text=True, timeout=60)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertIn('long-whitespace-ok', result.stdout)
+
     def test_invalid_configuration_rejected(self):
         """@brief 非法展示配置启动时失败，避免隐式真值或无界预算。
         @return 无。
