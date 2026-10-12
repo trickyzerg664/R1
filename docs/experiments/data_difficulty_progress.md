@@ -2485,23 +2485,56 @@ CPU254项，252通过、2跳过；实际GPU环境16项全部通过，其中真�
 <!-- metax-qwen7b-tokenfix-100-20261012-v1-current -->
 
 {
-  "status": "running",
-  "phase": "parent-eval",
-  "child_pid": 3262371,
-  "gpu_current_MiB": [
-    40758,
-    41205,
-    40885,
-    15925,
-    40821,
-    41205,
-    15989,
-    41654
-  ],
+  "status": "stopped_for_fix_restart",
+  "phase": "stopped",
+  "reason": "User requested scoring mask fix and fresh original-Qwen restart",
   "trained_step": 0,
-  "checked_utc": "2026-10-12T10:28:22.381158+00:00"
+  "published_checkpoint_steps": [],
+  "checked_utc": "2026-10-12T10:52:00.169490+00:00"
 }
 
 <!-- /metax-qwen7b-tokenfix-100-20261012-v1-current -->
 
 启动实查：{"checked_utc": "2026-10-12T09:58:10.776118+00:00", "launcher_alive": true, "state": {"status": "running", "phase": "parent-eval", "child_pid": 3262371, "gpu_current_MiB": [36342, 38517, 39030, 38645, 40885, 38773, 40821, 41590], "trained_step": 0, "checked_utc": "2026-10-12T09:57:39.136323+00:00"}, "completed_parent_answers": 16, "worker_count": 8, "errors": []}；八卡rollout worker已进入生成，检索健康ready。证据startup-inspection.json。已完成训练0/100；初始评价题数以该检查值为准，后续监督器按分钟更新。
+
+
+## 2026-10-12T10:44:07.256038+00:00 运行与验证评分复核（/root）
+
+当前phase=train、status=running，已完成训练0/100、已发布checkpoint=[]。初始D256已完整唯一完成：原验证EM79/256（30.8594%），评分提取缺答案26；协议接受答案EM83/256（32.4219%），协议缺答案10。训练阶段已启动并在加载worker/模型；本次尚无train指标事件，无法评价实际梯度或反传健康。日志持续推进，检索health ready，未见OOM、Traceback、ActorDied或通信异常；启动barrier设备提示为警告，不能当作已发生故障。
+
+确认验证评分缺陷：按question_id匹配17条已作答记录的评分文本缺少</answer>，末轮存在人工重建边界；其中4条协议接受答案正确但原验证记0。main_ppo.py:119-121用info_mask构造评分文本，将用于排除人工边界梯度的掩码也用于删除评分字符。验证仍返回original_em，因此准确率低估4/256；当前训练apply_process_reward=true且reward_gate=true，main_ppo.py:146-159从协议接受答案计算candidate_score，不能将该验证提取错误直接等同于训练奖励错误。
+
+918轮原生终止均已知（stop737/length181），采样前缀错位0、文本前缀错位0、314个人工边界token已标记。模型输出质量仍需关注：粗筛49条有8词片段至少重复4次，消费文本未见至少20汉字混杂或1000连续空白；粗筛不能单独判定乱码。262个冻结Python源文件此前复核未变，本次仅只读检查并保存派生证据、更新文档，未修改训练源代码/配置/模型、未运行新测试。
+
+证据：/mnt/public/code/lyk/lzy/runs/metax-qwen7b-tokenfix-100-20261012-v1/progress-health-20261012-104407.json；parent-eval/summary.json、answers.jsonl、process-audit.jsonl，train/console.log与metrics.jsonl。下一步优先分离评分文本与梯度掩码，修复验证提取并回归验收；继续检查首步真实loss/KL/梯度与更新覆盖，不能使用当前原EM直接评价修复效果。
+
+
+2026-10-12T10:52:00.223899+00:00 用户要求修复评分掩码、提交Git并重启：已核验launcher/child启动身份后停止并清理所属Ray进程，独立检索PID2137145保持。状态stopped_for_fix_restart；完成训练0/100，checkpoint=[]。初始评价和旧冻结清单、日志全部保留，未覆盖旧manifest。证据user-fix-restart-stop-request.json、user-fix-restart-stop-result.json、status.supervisor-exit-fix-restart.json。负责人/root；下一步评分来源掩码修复与CPU/历史真实tokenizer回归。
+
+
+2026-10-12T10:56:18.648974+00:00 评分来源/梯度掩码分离准备（/root）：运行metax-qwen7b-scoremask-100-20261012-v2。共用generation只排工具观察作为评分来源，sampled_loss_mask独立屏蔽人工梯度；main_ppo补充边界约束说明，不改奖励公式。准备新增真实多轮与RewardManager回归；尚未应用生产源码、尚未验证。旧run已停止，独立检索保留。记录runs/metax-qwen7b-scoremask-100-20261012-v2.md；源码注释逐项验收待完成。
+
+
+2026-10-12T10:58:21.726647+00:00 评分来源/梯度掩码分离已应用：generation的来源矩阵保留所有模型消费字符，只屏蔽工具观察；sampled_loss_mask独立屏蔽人工梯度。main_ppo只补充接口说明。旧生产回归2项16个子场景均按预期失败（来源矩阵误删人工字符），无错误，证据regression-before-fix.log/result.json；本次全量CPU开始，结果待确认。负责人/root；生产GPU尚未重启。
+
+
+2026-10-12T11:01:02.864992+00:00 首轮全量CPU260项：既有测试通过，新增关闭协议场景因测试夹具仍配置非零过程惩罚而触发既有配置拒绝，8个子场景报错、2项GPU跳过。已将关闭协议夹具惩罚设0，生产代码未再改动；失败cpu-regression.log保留。开始第二轮全量回归，GPU尚未启动。负责人/root。
+
+
+2026-10-12T11:04:01.971249+00:00 全量CPU260项：258通过、2项GPU跳过；新增真实多轮评分回归2项16个组合通过，覆盖单字符/整个结束标签、协议开关、训练/验证、对错与工具诱饵。开始真实Qwen tokenizer全量初始评价重放；无GPU模型生成。负责人/root；失败首轮日志保留。
+
+
+2026-10-12T11:09:27.122412+00:00 初始评价CPU重放首轮已逐题完成：正式原EM84/256、缺提取8，训练候选奖励和人工梯度掩码均无变化；汇总脚本预设83/256导致断言失败，原日志与派生文件保存historical-rescore-first-attempt。逐题发现额外一题嵌套答案未被协议接受，但原验证提取规则能得到正确Sam Cooke，属于原EM与协议门控口径差异。改用独立消费字符串逐题评分参照，保留原评分公式，不用协议83作为原验证期望。生产源代码未改；重放重试待确认。负责人/root。
+
+
+## 2026-10-12T11:14:17.271993+00:00 评分来源掩码修复验收（/root）
+
+已实现：generation._update_right_side的responses_with_info_mask只排工具观察，保留完整消费的人工闭合片段；sampled_loss_mask仍独立排人工/补齐梯度，actor交集未改。main_ppo仅补充评分与梯度的接口说明，奖励公式、KL、lr及初始化未改。共用修改复用于所有检索训练和评价，默认协议关闭已覆盖。
+
+CPU260项：258通过、2需GPU跳过；真实多轮→RewardManager新增2项16个组合，覆盖跨单字符/整个标签、协议开关、训练/验证、对错和工具诱饵。首轮新夹具配置8个错误已修复、日志保留；旧生产2项16子场景按预期复现失败。验收后仅补充测试内部说明，AST与已测版本一致，无生产语义变化。
+
+真实Qwen tokenizer重放256唯一题/918轮，正式原EM84/256（32.8125%）、缺提取8，旧79/256→新84/256：5题均0变1。四题原已被协议接受；额外一题嵌套答案原EM可提取但协议未接受，因此协议接受EM仍83/256，不能将两种口径混用。314个人工边界保持屏蔽，token/文本错位0、独立消费字符串评分差异0、训练候选奖励差异0、有效梯度掩码差异0、参数更新0。汇总脚本首轮预设83失败，已改为逐题独立参照，失败文件保存historical-rescore-first-attempt；生产奖励规则没有为此改动。
+
+已验证CPU/真实tokenizer/正式奖励入口，未运行本次GPU kernel实验（算子与actor未改）、未启动8卡新训练；不能宣称已完成真实反传验收。完整重评分证据将显式冻结为新run初始评价，旧原始文件不变。证据cpu-retry.log、regression-before-fix.log、historical-rescore-retry.log/json、scoring-fix-verification.json。下一步Git提交、配置/权重/源码冻结验收，然后启动原始Qwen7B训练100步。
+
+注释范围：3个修改源/测试文件、11个函数，@brief/@param/@return及适用约束11/11完整。独立内部逻辑20/20有效中文说明；合计31/31、100%，遗漏0。函数清单：["generation._postprocess_responses", "generation._update_right_side", "generation._compose_final_output", "RewardManager.__call__", "BoundaryWorker.__init__", "BoundaryWorker.generate_sequences", "GenerationMaskTests.test_full_loop_keeps_context_and_masks_boundary", "ScoringBoundaryTests.search", "ScoringBoundaryTests.check_boundary_reward", "ScoringBoundaryTests.test_one_character_answer_boundary_scores_normally", "ScoringBoundaryTests.test_multi_token_answer_boundary_scores_normally"]；内部单元：["同向补齐的独立人工梯度掩码", "有工具观察时保留完整消费字符", "无工具观察时保留完整消费字符", "人工边界矩阵独立维护", "最终info_mask仅排观察", "评分入口禁止使用梯度掩码删字符", "夹具跨界参数保存", "夹具单字符/整个标签分支", "既有多轮来源/梯度断言", "工具诱饵答案来源", "协议开关遍历", "训练/验证遍历", "答案对错遍历", "正式多轮生成接口", "同行标准答案与来源数组", "来源保留与人工屏蔽断言", "两种观察模式损失交集", "真实RewardManager与临时审计", "奖励/提取/观察排除断言", "原EM与协议接受EM对照"]。外部CPU重放脚本3函数均带完整说明，关键逻辑包括完整行、唯一题/零更新/原初始化、逐轮原始前缀与人工掩码、文本核对、两种损失交集、同行来源、训练候选奖励不变、独立消费评分、原上下文保留、差异仅0变1、证据hash；准备脚本4函数说明完整，缓存重评分门限与三份原始文件冻结有就近中文注释。详情comment-coverage.json；无遗漏。

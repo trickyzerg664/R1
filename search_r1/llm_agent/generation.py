@@ -119,7 +119,7 @@ class LLMGenerationManager:
         ids = pad_token_rows(rows, self.tokenizer.pad_token_id, self.tokenizer.padding_side).to(responses.device)
         if not return_loss_mask:
             return ids, responses_str
-        # 与 token 使用相同补齐方向，再借用既有 info_mask 路径排除人工片段。
+        # 与 token 使用相同补齐方向；人工片段仅由独立 sampled_loss_mask 排除梯度。
         mask = pad_token_rows(sampled, 0, self.tokenizer.padding_side).to(responses.device).bool()
         masked_ids = ids.masked_fill(~mask, self.tokenizer.pad_token_id)
         return ids, responses_str, masked_ids
@@ -229,31 +229,29 @@ class LLMGenerationManager:
                           cur_responses: torch.Tensor,
                           next_obs_ids: torch.Tensor = None,
                           cur_responses_with_mask: torch.Tensor = None) -> Dict:
-        """@brief 追加本轮 token、人工边界掩码和真实观察，保留完整训练历史。
-        @param right_side 已有 responses 与 responses_with_info_mask 字典。
+        """@brief 分别追加完整模型文本、工具观察掩码与人工边界梯度掩码。
+        @param right_side 已有响应、仅排工具观察的来源矩阵及可选人工边界矩阵。
         @param cur_responses 本轮处理后的真实上下文 token。
         @param next_obs_ids 可选环境反馈矩阵。
         @param cur_responses_with_mask 可选人工边界置 pad 的本轮矩阵。
-        @return 更新后的回答和同步生成 token 掩码字典。
+        @return 完整回答、评分来源矩阵及独立人工边界梯度矩阵。
         @raises ValueError 掩码形状错位或完整历史超过上下文预算。
         """
-        # 环境反馈与人工边界都经同一拼接入口，防止二者掩码串位。
+        # 评分来源只排除工具观察，完整消费的人工闭合片段必须保留用于答案提取。
         if next_obs_ids is not None:
             responses, responses_with_info_mask = self._info_masked_concatenate_with_padding(
                     right_side['responses'],
                     right_side['responses_with_info_mask'],
                     cur_responses,
                     next_obs_ids, 
-                    pad_to_left=False,
-                    response_with_mask=cur_responses_with_mask
+                    pad_to_left=False
                 )
         else:
             responses, responses_with_info_mask = self._info_masked_concatenate_with_padding(
                     right_side['responses'],
                     right_side['responses_with_info_mask'],
                     cur_responses,
-                    pad_to_left=False,
-                    response_with_mask=cur_responses_with_mask
+                    pad_to_left=False
                 )
         # 人工边界使用独立掩码，关闭工具观察屏蔽时也绝不能给重建 token 梯度。
         _, boundary_ids = self._info_masked_concatenate_with_padding(
@@ -555,7 +553,7 @@ class LLMGenerationManager:
         @param right_side 完整回答、观察掩码与人工边界掩码字典。
         @param meta_info 原生成设置及统计信息。
         @return 用于评分、旧概率重算和训练的 DataProto。
-        @note sampled_loss_mask 只屏蔽人工/补齐位置，不改变工具观察开关语义。
+        @note info_mask 仅排工具观察用于评分；sampled_loss_mask 独立排人工梯度，二者不能混用。
         """
         final_output = right_side.copy()
         # 单独输出二值人工边界掩码；内部 token 矩阵不作为额外模型输入。
@@ -575,6 +573,7 @@ class LLMGenerationManager:
             self.tensor_fn.create_attention_mask(left_side['input_ids']),
             self.tensor_fn.create_attention_mask(final_output['responses'])
         ], dim=1)
+        # 评分保留完整模型消费文字；actor 再与 sampled_loss_mask 相交屏蔽人工梯度。
         final_output['info_mask'] = torch.cat([
             self.tensor_fn.create_attention_mask(left_side['input_ids']),
             self.tensor_fn.create_attention_mask(final_output['responses_with_info_mask'])

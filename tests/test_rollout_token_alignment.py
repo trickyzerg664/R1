@@ -1,9 +1,13 @@
 """验证原始 token 保留、人工边界掩码及融合算子的非连续标签。"""
 import unittest
+import json
+import tempfile
+from pathlib import Path
 from unittest.mock import patch
 import numpy as np
 import torch
 from verl import DataProto
+from verl.trainer.main_ppo import RewardManager
 from search_r1.llm_agent.token_alignment import preserve_sampled_prefix
 from search_r1.llm_agent.generation import GenerationConfig, LLMGenerationManager
 from verl.experimental.stability.generation_audit import token_alignment_report
@@ -137,12 +141,14 @@ class TokenPreservationTests(unittest.TestCase):
 
 class BoundaryWorker:
     """经真实 DataProto 补齐生成两轮，保留活动行与原生长度。"""
-    def __init__(self, tok):
+    def __init__(self, tok, answer_boundary_piece=None):
         """@brief 保存测试 tokenizer 及每轮实际输入。
         @param tok 片段 tokenizer 测试夹具。
+        @param answer_boundary_piece 可选 502/503 跨答案结束标签 token，用于评分边界回归。
         @return 无。
         """
         self.tok, self.inputs, self.calls = tok, [], 0
+        self.answer_boundary_piece = answer_boundary_piece
 
     def generate_sequences(self, batch):
         """@brief 首轮返回跨边界搜索，次轮返回非规范分词答案。
@@ -154,6 +160,11 @@ class BoundaryWorker:
         # 故意在 search 结束字符之后同 token 携带换行，后续未执行文字必须删除。
         ids = ([ord(c) for c in '<search>q</search'] + [501] + [ord(c) for c in 'unexecuted']
                if self.calls == 1 else [ord(c) for c in '<answer>Minnie Driver</answer>'])
+        # 单个 token 可跨最后一个字符或整个结束标签，检查评分不能删人工重建片段。
+        if self.calls > 1 and self.answer_boundary_piece is not None:
+            prefix = ('<answer>Minnie Driver</answer' if self.answer_boundary_piece == 502
+                      else '<answer>Minnie Driver')
+            ids = [ord(c) for c in prefix] + [self.answer_boundary_piece]
         metadata = np.empty(len(batch), dtype=object)
         metadata[:] = [dict(finish_reason='stop', raw_token_count=len(ids))] * len(batch)
         return DataProto.from_dict({'responses': torch.tensor(ids).repeat(len(batch), 1)},
@@ -162,7 +173,7 @@ class BoundaryWorker:
 
 class GenerationMaskTests(unittest.TestCase):
     def test_full_loop_keeps_context_and_masks_boundary(self):
-        """@brief 两轮真实生成拼接保留非规范答案，人工边界与观察都没有训练权重。
+        """@brief 两轮生成保留评分文字，人工边界与观察经独立掩码排除训练。
         @return 无。
         """
         tok = PieceTokenizer()
@@ -179,7 +190,7 @@ class GenerationMaskTests(unittest.TestCase):
         # 人工闭合字符仍在下轮输入和完整训练历史中，其梯度掩码必须为零。
         boundary = len('<search>q</search>') - 1
         self.assertEqual(out.batch['responses'][0, boundary].item(), ord('>'))
-        self.assertEqual(out.batch['info_mask'][0, prefix.shape[1] + boundary].item(), 0)
+        self.assertEqual(out.batch['info_mask'][0, prefix.shape[1] + boundary].item(), 1)
         self.assertEqual(out.batch['sampled_loss_mask'][0, boundary].item(), 0)
         # 独立掩码只排人工位置，真实观察继续由原工具开关控制。
         self.assertTrue(bool((out.batch['sampled_loss_mask'] >
@@ -213,6 +224,82 @@ class GenerationMaskTests(unittest.TestCase):
         ids, texts = manager._postprocess_responses(raw)
         self.assertEqual(texts, [text])
         self.assertEqual(ids[0].tolist(), [ord(c) for c in text])
+
+
+class ScoringBoundaryTests(unittest.TestCase):
+    def search(self, queries):
+        """@brief 返回包含诱饵答案的真实工具观察，确保评分只读取模型消费文本。
+        @param queries 本轮实际查询列表。
+        @return 每个查询对应包含错误答案标签的文档字符串。
+        """
+        return ['Doc 1(Title: Decoy) <answer>Tokyo</answer>'] * len(queries)
+
+    def check_boundary_reward(self, piece):
+        """@brief 通过真实多轮生成与奖励入口验证评分完整、观察排除和梯度屏蔽。
+        @param piece 跨字符边界的 502 或跨整个结束标签的 503 token。
+        @return 无。
+        @note 全部使用CPU夹具，协议开关、训练/验证和对错答案各自覆盖。
+        """
+        # 独立枚举协议开关、训练/验证和答案对错，避免只覆盖当前启用配置。
+        for protocol in (False, True):
+            for apply in (False, True):
+                for correct in (False, True):
+                    with self.subTest(piece=piece, protocol=protocol, apply=apply, correct=correct):
+                        # 只替代模型返回；生成上下文、工具观察归属和奖励提取均走生产入口。
+                        tok = PieceTokenizer()
+                        worker = BoundaryWorker(tok, answer_boundary_piece=piece)
+                        cfg = GenerationConfig(2, 8, 512, 128, 128, 4,
+                            observation_truncation='structured', context_policy='bounded',
+                            process_checks_enabled=protocol, record_token_diagnostics=protocol)
+                        manager = LLMGenerationManager(tok, worker, cfg)
+                        manager.batch_search = self.search
+                        prefix = torch.tensor([[ord('Q')]])
+                        batch = DataProto.from_dict(dict(input_ids=prefix,
+                            attention_mask=torch.ones_like(prefix), position_ids=torch.zeros_like(prefix)))
+                        out = manager.run_llm_loop(batch, prefix)
+                        out.non_tensor_batch['data_source'] = np.array(['nq'])
+                        target = 'Minnie Driver' if correct else 'Tokyo'
+                        out.non_tensor_batch['reward_model'] = np.array(
+                            [dict(ground_truth=dict(target=[target]))], dtype=object)
+                        # 来源矩阵保留所有闭合字符、排除工具诱饵；损失交集仍屏蔽人工位置。
+                        count = 1 if piece == 502 else len('</answer>')
+                        length = out.batch['responses'].shape[-1]
+                        out.batch['loss_mask'] = out.batch['info_mask'][:, -length:]
+                        self.assertEqual(out.batch['loss_mask'][0, -count:].tolist(), [1] * count)
+                        self.assertEqual(out.batch['sampled_loss_mask'][0, -count:].tolist(), [0] * count)
+                        for mode in (False, True):
+                            self.assertEqual(response_loss_mask(out.batch, mode)[0, -count:].tolist(), [0] * count)
+                        # 实际评价记录与训练奖励均核验，避免只检查标签矩阵掩盖提取错误。
+                        with tempfile.TemporaryDirectory() as tmp:
+                            audit = Path(tmp) / 'answers.jsonl'
+                            reward = RewardManager(tok, 0, answer_mode='response_only_v1',
+                                audit_path=str(audit), apply_process_reward=apply,
+                                process_checks={'enabled': protocol, 'reward_gate': protocol,
+                                                'missing_answer_penalty': .1 if protocol else 0.},
+                                trajectory_logging={'enabled': False})
+                            value = reward(out).sum().item()
+                            record = json.loads(audit.read_text())
+                        self.assertEqual(value, float(correct))
+                        self.assertEqual(record['extracted_answer'], 'Minnie Driver')
+                        self.assertEqual(record['model_response'],
+                            '<search>q</search><answer>Minnie Driver</answer>')
+                        self.assertNotIn('Tokyo', record['model_response'])
+                        if protocol:
+                            report = out.non_tensor_batch['process_checks'][0]
+                            self.assertEqual(report['original_em'], float(correct))
+                            self.assertEqual(report['accepted_answer_em'], float(correct))
+
+    def test_one_character_answer_boundary_scores_normally(self):
+        """@brief 单字符人工闭合边界不能导致正确答案被记零。
+        @return 无。
+        """
+        self.check_boundary_reward(502)
+
+    def test_multi_token_answer_boundary_scores_normally(self):
+        """@brief 整个结束标签被重建时评分保留全部字符、梯度仍全部屏蔽。
+        @return 无。
+        """
+        self.check_boundary_reward(503)
 
 
 class IndependentBoundaryMaskTests(unittest.TestCase):

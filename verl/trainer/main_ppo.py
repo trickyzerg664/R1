@@ -77,6 +77,7 @@ class RewardManager():
         @brief 复用原 EM 和统一奖励分量，保存可信成功标签，评价与展示保持原奖励。
         @param data 完整响应DataProto，检查开启时要求同行来源报告及轨迹ID。
         @return token级奖励矩阵；开发评价返回原EM，训练可返回门控/惩罚。
+        @note info_mask 只排工具观察；人工闭合片段属于评分文本，仅训练 sampled_loss_mask 屏蔽梯度。
         @raises ValueError 来源报告不可信、故障批次、空token负奖励或外部RM绕过检查。
         """
 
@@ -114,8 +115,9 @@ class RewardManager():
             response_ids = data_item.batch['responses']
             valid_response_length = data_item.batch['attention_mask'][prompt_length:].sum()
             valid_response_ids = response_ids[:valid_response_length]
-            # [data-difficulty] 检索观察和无效动作提示属于环境文本，不是模型答案；评分只读取生成 token。
+            # 检索观察和环境提示不进入评分；模型消费文本须保留完整的重建动作边界。
             scoring_response_ids = valid_response_ids
+            # sampled_loss_mask 控制梯度，不能用于删评分字符，否则 </answer> 会被破坏。
             if 'info_mask' in data_item.batch:
                 model_mask = data_item.batch['info_mask'][prompt_length:prompt_length + valid_response_length].bool()
                 scoring_response_ids = valid_response_ids[model_mask]
