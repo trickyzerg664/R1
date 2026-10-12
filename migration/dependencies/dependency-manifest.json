@@ -1,0 +1,84 @@
+{
+  "schema_version": 1,
+  "created_utc": "2026-10-12T11:39:39.944981+00:00",
+  "source_base": "/mnt/public/code/lyk/lzy",
+  "source_git_commit": "363fbcb69a04cf5b0790de07780f6e8f0fbc35db",
+  "scope": "fixed data splits, environment versions, retrieval launch config and public-resource provenance",
+  "files": [
+    {
+      "relative_path": "data/runs/formal-pdt-7b8-v1/P.parquet",
+      "bytes": 2579080,
+      "sha256": "c879a58dbde68e807205447fd2f1edae608e9e3224a6fff2d5c68b7b1634d7a4"
+    },
+    {
+      "relative_path": "data/runs/formal-pdt-7b8-v1/D.parquet",
+      "bytes": 275523,
+      "sha256": "27a02c6d7587105068f611a731c4aed7484d2a5384db3f52018db3d9ec85216f"
+    },
+    {
+      "relative_path": "data/runs/formal-pdt-7b8-v1/T.parquet",
+      "bytes": 520837,
+      "sha256": "ce525db5255753c61542f4318cba51002bee34566bb832917e9b2fb789d149de"
+    },
+    {
+      "relative_path": "data/runs/formal-pdt-7b8-v1/manifest.json",
+      "bytes": 4259137,
+      "sha256": "f369bbb510c1f05b7268b80a3de85c6c1548de0f65e6ca6b6246caf2fea4d50c"
+    },
+    {
+      "relative_path": "runs/metax-checkpoint-curve-d256-20261005-v2/D256.parquet",
+      "bytes": 80071,
+      "sha256": "4ba6e0289186d3ef5fb2536d098d62efaf9fa6f6fb1361f061fe9d34f0e11216"
+    },
+    {
+      "relative_path": "runs/metax-checkpoint-curve-d256-20261005-v2/selection.json",
+      "bytes": 146100,
+      "sha256": "d404a4d21104a34655759b605541d9d5b8d1bf5d93250b2ea9191c68414f02c5"
+    },
+    {
+      "relative_path": "runs/metax-process-r1-100-b32-20261008-v1/D64.parquet",
+      "bytes": 29264,
+      "sha256": "cbdaf93b48c5235997c39b830536ce5e7b6945a6786c832834229e141cc33354"
+    },
+    {
+      "relative_path": "runs/metax-process-r1-100-b32-20261008-v1/selection.json",
+      "bytes": 4949,
+      "sha256": "e00f6f3800d2f895f3ca454070bbddd9cedb69e56699a3019f2fd34a8e44acb5"
+    }
+  ],
+  "frozen_run_reference_checks": [
+    {
+      "run_id": "metax-process-r1-100-b32-gpu-20261008-v2",
+      "relative_path": "data/runs/formal-pdt-7b8-v1/P.parquet",
+      "matched": true
+    },
+    {
+      "run_id": "metax-process-r1-100-b32-gpu-20261008-v2",
+      "relative_path": "runs/metax-process-r1-100-b32-20261008-v1/D64.parquet",
+      "matched": true
+    },
+    {
+      "run_id": "metax-process-r1-100-b32-gpu-20261008-v2",
+      "relative_path": "runs/metax-checkpoint-curve-d256-20261005-v2/D256.parquet",
+      "matched": true
+    },
+    {
+      "run_id": "metax-process-r1-100-b32-gpu-20261008-v2",
+      "relative_path": "data/runs/formal-pdt-7b8-v1/manifest.json",
+      "matched": true
+    },
+    {
+      "run_id": "metax-grpo-reward-100-20261011-v2",
+      "relative_path": "data/runs/formal-pdt-7b8-v1/P.parquet",
+      "matched": true
+    },
+    {
+      "run_id": "metax-grpo-reward-100-20261011-v2",
+      "relative_path": "runs/metax-checkpoint-curve-d256-20261005-v2/D256.parquet",
+      "matched": true
+    }
+  ],
+  "raw_data_bytes": 7894961,
+  "model_weights_included": false,
+  "private_credentials_included": false
+}

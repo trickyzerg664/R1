@@ -1,0 +1,39 @@
+{
+  "argv": [
+    "/mnt/public/code/lyk/lzy/envs/retriever-metax/bin/python",
+    "search_r1/search/retrieval_server.py",
+    "--index_path",
+    "/mnt/public/code/lyk/lzy/data/retrieval/e5-index/e5_Flat.index",
+    "--corpus_path",
+    "/mnt/public/code/lyk/lzy/data/retrieval/corpus/wiki-18.jsonl",
+    "--retriever_model",
+    "/mnt/public/model/intfloat/e5-base-v2",
+    "--retriever_name",
+    "e5",
+    "--topk",
+    "3",
+    "--search_backend",
+    "torch_gpu",
+    "--gpu_chunk_rows",
+    "262144",
+    "--gpu_query_batch_size",
+    "256",
+    "--gpu_memory_fraction",
+    "0.18",
+    "--host",
+    "0.0.0.0",
+    "--port",
+    "8000"
+  ],
+  "cwd": "/mnt/public/code/lyk/lzy/R1-vllm-metax",
+  "environment": {
+    "PATH": "/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin",
+    "LD_LIBRARY_PATH": "/opt/maca/mxshmem/lib:/opt/maca/mxshmem/lib:/opt/maca/lib:/opt/maca/mxshmem/lib:/opt/maca/ompi/lib:/opt/maca/ucx/lib:/opt/mxdriver/lib:",
+    "MACA_PATH": "/opt/maca",
+    "PYTHONPATH": "/mnt/public/code/lyk/lzy/R1-vllm-metax",
+    "HF_HOME": "/mnt/public/code/lyk/lzy/cache/retriever-metax/hf",
+    "CUDA_VISIBLE_DEVICES": "0,1,2,3,4,5,6,7",
+    "HF_DATASETS_CACHE": "/mnt/public/code/lyk/lzy/cache/retriever-metax/datasets",
+    "TMPDIR": "/mnt/public/code/lyk/lzy/cache/retriever-metax/tmp"
+  }
+}
