@@ -38,6 +38,11 @@ def verify(plan):
     for name,digest in plan['hashes'].items():
         if hashlib.sha256(Path(name).read_bytes()).hexdigest()!=digest:
             raise RuntimeError('Frozen content changed: '+name)
+    # 大权重已正式哈希验收，阶段切换核对大小与mtime，避免重复读取十余GB文件。
+    for name, expected in plan.get('parent_file_stats', {}).items():
+        stat = Path(name).stat()
+        if stat.st_size != expected['size'] or stat.st_mtime_ns != expected['mtime_ns']:
+            raise RuntimeError('Verified parent model changed: '+name)
     if not json.loads(Path(plan['parent_verification']).read_text())['successful']:
         raise RuntimeError('Parent actor verification missing')
     # Ray的Unix socket路径上限107字节；按10位PID保守估计，创建GPU子进程前拒绝。
@@ -189,10 +194,18 @@ def select_phases(plan, parent):
     @raises RuntimeError 父模型不健康、新奖励证据不足或单组设计非法。
     """
     # 沿用预先固定的父模型健康门限；不依据新结果临时挑更好父模型。
-    if parent['missing'] > 12:
+    # 原已训练父模型沿用12题门槛；原始模型单组运行可显式记录不同门槛。
+    missing_limit = plan.get('parent_missing_answer_limit', 12)
+    if type(missing_limit) is not int or not 0 <= missing_limit <= 256:
+        raise RuntimeError('Invalid parent missing-answer limit')
+    if parent['missing'] > missing_limit:
         raise RuntimeError('Parent generation failed health gate')
-    bounded = parent['native_coverage'] >= .95 and parent['stop_events'] > 0
-    if plan.get('design', 'paired_first20') == 'historical_comparison':
+    design = plan.get('design', 'paired_first20')
+    # 原始模型可能全部长度终止；已知原生length同样提供奖励所需终止元数据。
+    native_present = (parent.get('native_events', 0) > 0 if design == 'single_train'
+                      else parent['stop_events'] > 0)
+    bounded = parent['native_coverage'] >= .95 and native_present
+    if design in ('historical_comparison', 'single_train'):
         phases = plan['phases']
         # 历史运行复用既有结果；只允许父评价、一个新训练和一个冷评价。
         if len(phases) != 3 or [p['kind'] for p in phases] != ['eval', 'train', 'eval']:
@@ -305,8 +318,11 @@ def main():
             save(run/'selected-design.json',dict(bounded_reward_enabled=bounded,reason='native termination coverage gate',parent=parent))
             for phase in selected:run_phase(run,phase,plan,deadline)
             # 单训练组与历史结果比较；记录真实步数及冷评价，不复制历史训练。
-            if plan.get('design') == 'historical_comparison':
-                publish(run,dict(status='completed_historical_comparison',phase='analysis_pending',
+            if plan.get('design') in ('historical_comparison', 'single_train'):
+                # 单组原始模型独立标记，不能宣称与旧初始化做同起点比较。
+                status = ('completed_single_train' if plan['design'] == 'single_train'
+                          else 'completed_historical_comparison')
+                publish(run,dict(status=status,phase='analysis_pending',
                                  bounded_reward_enabled=bounded,historical_baseline=plan['historical_baseline'],
                                  **training_summary(Path(selected[0]['directory'])),
                                  evaluation=json.loads((Path(selected[-1]['directory'])/'summary.json').read_text()),

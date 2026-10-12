@@ -182,3 +182,52 @@ class TrialSupervisorTests(unittest.TestCase):
                 with self.assertRaisesRegex(RuntimeError,'socket path exceeds'):
                     trial.verify(dict(plan,ray_base='/tmp/grpo-reward100-20261011-v1'))
                 trial.verify(dict(plan,ray_base='/tmp/rw100v2'))
+
+    def test_single_train_untrained_parent_uses_explicit_missing_limit(self):
+        """@brief 原始模型允许初始缺答案，但必须提供原生终止记录，仍只启动一个训练组。
+        @return 无。
+        """
+        phases = [{'kind':'eval'}, {'kind':'train'}, {'kind':'eval'}]
+        plan = dict(design='single_train', phases=phases, parent_missing_answer_limit=256)
+        parent = dict(missing=256, native_coverage=1., native_events=1024, stop_events=0)
+        # 全length是合法终止证据，原始模型没有答案不能被误判为基础设施失败。
+        self.assertEqual(trial.select_phases(plan, parent), (phases[1:], True))
+        with self.assertRaisesRegex(RuntimeError, 'health gate'):
+            trial.select_phases(dict(design='single_train', phases=phases), parent)
+
+    def test_single_train_native_coverage_cannot_be_bypassed(self):
+        """@brief 允许初始缺答案不能放宽原生元数据覆盖或空事件检查。
+        @return 无。
+        """
+        plan = dict(design='single_train', phases=[{'kind':'eval'},{'kind':'train'},{'kind':'eval'}],
+                    parent_missing_answer_limit=256)
+        for coverage, events in ((.94,1024),(1.,0)):
+            with self.assertRaisesRegex(RuntimeError, 'native termination'):
+                trial.select_phases(plan, dict(missing=256,native_coverage=coverage,
+                                              native_events=events,stop_events=0))
+
+    def test_parent_missing_limit_requires_valid_integer(self):
+        """@brief 缺答案门槛拒绝负数、超过题数、浮点和布尔，不能隐式放宽。
+        @return 无。
+        """
+        for limit in (-1,257,.5,True):
+            with self.assertRaisesRegex(RuntimeError, 'Invalid parent'):
+                trial.select_phases({'parent_missing_answer_limit':limit},
+                                    dict(missing=0,native_coverage=1.,stop_events=1))
+
+    def test_verified_model_file_stats_checked_without_weight_read(self):
+        """@brief 大权重正式验收后按文件状态复核，模型变化在GPU启动前拒绝。
+        @return 无。
+        """
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            model = root/'model';model.write_bytes(b'weight')
+            verification = root/'verification.json';verification.write_text('{"successful":true}')
+            stat = model.stat()
+            plan = dict(hashes={},parent_verification=str(verification),
+                        parent_file_stats={str(model):dict(size=stat.st_size,mtime_ns=stat.st_mtime_ns)})
+            trial.verify(plan)
+            # 文件大小变化会拒绝，验收器不需要加载张量或启动模型。
+            model.write_bytes(b'changed weight')
+            with self.assertRaisesRegex(RuntimeError, 'parent model changed'):
+                trial.verify(plan)

@@ -1906,3 +1906,12 @@ CPU254项，252通过、2跳过；实际GPU环境16项全部通过，其中真�
 注释审查范围：search_r1/llm_agent/token_alignment.py, search_r1/llm_agent/generation.py, verl/utils/torch_functional.py, verl/experimental/stability/generation_audit.py, verl/workers/actor/dp_actor.py, tests/test_rollout_token_alignment.py, tests/test_grpo_difficulty.py。39处新增/修改函数的 @brief/@param/@return 及适用约束逐项通过；内部关键逻辑47项均有就近中文说明。职责与内部行为合计86/86，覆盖率100%；未发现遗漏项。函数清单与内部单元完整列表见 /mnt/public/code/lyk/lzy/runs/mx-token-alignment-fix-20261012-160713-4d19308a/comment-coverage.json。内部清单：原生长度校验与截取；尾部EOS/pad剔除；消费前缀校验与空消费；完整内容原编号返回；二分定位字符边界；精确token边界返回；跨边界安全前缀判定；UTF8临时字符回退扫描；人工片段重建及文本校验；共用协议消费边界选择；逐行原生元数据长度校验；原始编号与生成掩码同序构造；token和掩码同向补齐；响应掩码形状校验；环境反馈可选屏蔽；按完整上下文共同重排；有无观察两条完整历史拼接；独立人工边界历史维护；完整历史预算验证；最终二值人工掩码输出；审计活动行和形状校验；普通轮原始掩码还原传递；最终轮原始掩码还原传递；审计右pad与掩码同步剔除；审计左pad与掩码同步剔除；二值前缀掩码和原编号校验；人工片段审计字段记录；概率包装labels展平连续复制；直接融合入口连续保护；actor可选掩码字段选择；工具观察开关原掩码选择；人工二值掩码交集；测试词表规范合并分支；测试多字符token解码；完整与截断非规范前缀断言；单片段和多片段人工边界断言；终止长度和非法前缀拒绝断言；审计拒绝人工token冒充采样；两轮原始上下文和环境掩码验证；关闭过程协议兼容验证；动态合并二值掩码零补齐；UTF8非单调解码回退模拟；左右补齐逐行审计验证；真实actor更新中的极大人工优势及零更新断言；CPU融合接口连续布局验证；GPU多形状重算概率及梯度对照；旧活动行夹具掩码接口同步。
 
 证据：/mnt/public/code/lyk/lzy/runs/mx-token-alignment-fix-20261012-160713-4d19308a 下 cpu-acceptance.log、gpu-acceptance.log、historical-replay.json、final-verification.json、逐文件前后备份及源码SHA256。Git差异空白检查通过，当前源码保留为未提交修改，未混合提交其他工作。
+
+
+原始Qwen7B单组重启准备：metax-qwen7b-tokenfix-100-20261012-v1。用户明确更换初始化，训练超参保持；监督single_train扩展与大权重大小/mtime复核已应用，4项新增CPU回归待验证。训练0步/评分0题，GPU未启动。记录 runs/metax-qwen7b-tokenfix-100-20261012-v1.md。
+
+本轮监督扩展全量CPU回归返回码 0；证据 /mnt/public/code/lyk/lzy/runs/metax-qwen7b-tokenfix-100-20261012-v1/cpu-regression.log。模型/数据/源码冻结待完成，GPU未启动。
+
+
+metax-qwen7b-tokenfix-100-20261012-v1：single_train复用原监督/训练/检索/评估实现；可配置初始缺答案门槛，默认12兼容，原始模型本轮256；全length仅在single_train且原生事件非空/覆盖>=95%时允许。新增父资产大小/mtime阶段复核和独立完成状态。CPU258项（256通过、2需GPU跳过），新4项验证原始模型、覆盖不足拒绝、参数边界、模型变更。冻结295源码/9资产，包含未提交修复与新文件；源码版本HEAD加source-working-tree.diff及快照记录，未宣称纯提交版本。
+注释范围verify/select_phases/main及4个回归，和运行目录prepare_and_freeze.py的4个函数。函数说明11/11完备；关键逻辑19/19有中文说明（资产哈希/mtime保护、缺答案门槛、原生length覆盖、单组阶段选择/独立状态、四项拒绝回归、分块文件哈希、递归路径重定向/叶子展开、CPU与修复哈希、HF头部/分片、模型全哈希、三阶段配置重定向、差异白名单、身份/参数断言、未跟踪源码冻结、仅检查门禁）。合计30/30、覆盖100%，遗漏0；GPU真实训练阶段尚未验收。
