@@ -121,7 +121,7 @@ class DifficultyExperiment:
 
     def metrics(self, batch):
         """
-        @brief 按原EM统计正确数组，过程实数奖励和有效方差另列。
+        @brief 按原EM统计正确数组，过程奖励、有效方差与重复质量分别汇总。
         @param batch 已完成评分的完整DataProto问题组。
         @return 难度、生成成本及可选过程奖励统计字典。
         @raises ValueError 不完整组、非法原EM或非有限奖励。
@@ -151,6 +151,17 @@ class DifficultyExperiment:
             metrics['process/effective_fraction'] = sum(v > 1e-12 for v in variances)/total
             metrics['process/protocol_valid_fraction'] = sum(r['protocol_valid'] for r in reports)/len(reports)
             metrics['process/missing_answer_fraction'] = sum(r['missing_answer'] for r in reports)/len(reports)
+        # 质量统计单列，禁止将取消正奖后的分数当作验证答案正确率。
+        if reports is not None and any('repetition_version' in r for r in reports):
+            from verl.experimental.process_checks.repetition import REPETITION_VERSION
+            if any(r.get('repetition_version') != REPETITION_VERSION for r in reports):
+                raise ValueError('Mixed/missing repetition rule versions in batch')
+            metrics['quality/severe_repetition_fraction'] = sum(
+                r['repetition_level'] == 'severe' for r in reports) / len(reports)
+            metrics['quality/mild_repetition_fraction'] = sum(
+                r['repetition_level'] == 'mild' for r in reports) / len(reports)
+            metrics['quality/repetition_penalty_mean'] = sum(r['repetition_penalty'] for r in reports) / len(reports)
+            metrics['quality/task_success_fraction'] = sum(r['task_success'] for r in reports) / len(reports)
         metrics.update(batch.meta_info.get('dynamic_metrics', {}))
         metrics['difficulty/unique_questions'] = int((self.sampler.exposures > 0).sum())
         metrics['difficulty/max_exposure'] = int(self.sampler.exposures.max())

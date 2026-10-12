@@ -4,7 +4,7 @@ from importlib.metadata import version
 from omegaconf import OmegaConf, open_dict
 from .checkpoint import read_checkpoint
 from .state import model_identity, seed_all, fingerprint, file_hash
-from .eligibility import normalize_dynamic_filter
+from .eligibility import normalize_dynamic_filter, ANSWER_RANGE_MODE
 
 
 def provenance_matches(config, parent):
@@ -30,7 +30,7 @@ def prepare_config(config):
     dynamic_settings = normalize_dynamic_filter(config.get('difficulty', {}).get('dynamic_filter', {}))
     eligibility = dynamic_settings.get('eligibility', 'reward_variance')
     if not config.get('difficulty', {}).get('enabled', False):
-        if eligibility == 'task_success_mixed':
+        if eligibility != 'reward_variance':
             raise ValueError('task_success_mixed requires difficulty enabled')
         return
     d, ar = config.difficulty, config.actor_rollout_ref
@@ -43,9 +43,12 @@ def prepare_config(config):
         raise ValueError('Difficulty requires search GRPO and n=1')
     if group_size != 4 and not (dynamic and group_size == 8):
         raise ValueError('Eight trajectories require dynamic filtering; legacy scoring remains four')
+    # 固定次数规则必须在worker创建前验证G8，而非生成后才报错。
+    if eligibility == ANSWER_RANGE_MODE and group_size != 8:
+        raise ValueError('answer_correct_3_6 requires exactly eight rollouts')
     # 在线补抽不与旧离线标签配比或刷新混用，候选上限不随修复增加。
     if dynamic:
-        if eligibility == 'task_success_mixed':
+        if eligibility != 'reward_variance':
             from verl.experimental.process_checks.reward import check_config
             process = check_config(config.get('process_checks', {}))
             if not process['enabled'] or not process['reward_gate'] or config.reward_model.answer_mode != 'response_only_v1':
@@ -169,6 +172,9 @@ def provenance(config):
             c['algorithm']['process_checks'].update(reward_variant=process['reward_variant'],
                 invalid_action_penalty=process['invalid_action_penalty'],
                 process_penalty_cap=process['process_penalty_cap'])
+    # 仅开启重复时纳入完整阈值指纹，禁止变更奖励后冒用旧 checkpoint。
+    if process['repetition']['enabled']:
+        c['algorithm']['process_checks']['repetition'] = process['repetition']
     retriever = dict(c['retriever'])
     retriever.pop('url', None)
     return {'initial_model_id': c['difficulty']['initial_model_id'],

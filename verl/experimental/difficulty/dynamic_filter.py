@@ -6,7 +6,7 @@ import time
 import numpy as np
 import torch
 import torch.nn.functional as F
-from .eligibility import TASK_MIXED_VERSION, task_success_labels
+from .eligibility import TASK_MIXED_VERSION, ANSWER_RANGE_MODE, ANSWER_RANGE_VERSION, task_success_labels
 
 
 def mixed_groups(batch, group_size, seen=None, reward_mode='binary', variance_epsilon=1e-12,
@@ -17,7 +17,7 @@ def mixed_groups(batch, group_size, seen=None, reward_mode='binary', variance_ep
     @param seen 已接受的问题 ID 集合，可为空，入选后原地更新。
     @param reward_mode binary 沿用零一奖励规则；finite 允许有限实数。
     @param variance_epsilon finite 模式的非负有限奖励方差容差。
-    @param eligibility reward_variance 保持原规则；task_success_mixed 使用显式成功标签。
+    @param eligibility 原奖励方差、任务混合或 answer_correct_3_6 八次答对三至六次规则。
     @return 完整入选行索引组和含成功数、奖励方差及排除原因的组记录。
     @raises ValueError 配置、奖励、身份、完整性或成功标签不满足约束。
     """
@@ -26,12 +26,15 @@ def mixed_groups(batch, group_size, seen=None, reward_mode='binary', variance_ep
         raise ValueError('Group size must be a positive integer')
     if reward_mode not in ('binary', 'finite') or not math.isfinite(variance_epsilon) or variance_epsilon < 0:
         raise ValueError('Invalid group reward mode/variance threshold')
-    if eligibility not in ('reward_variance', 'task_success_mixed'):
+    if eligibility not in ('reward_variance', 'task_success_mixed', ANSWER_RANGE_MODE):
         raise ValueError('Unknown dynamic eligibility mode')
+    # 新规则只定义G8，禁止把其他轨迹数静默套入固定正确次数范围。
+    if eligibility == ANSWER_RANGE_MODE and group_size != 8:
+        raise ValueError('answer_correct_3_6 requires exactly eight rollouts')
     scores = batch.batch['dynamic_rewards'].sum(-1).tolist()
     reports = batch.non_tensor_batch.get('process_checks')
     success = (task_success_labels(reports, batch.non_tensor_batch.get('process_trace_uid'), len(scores))
-               if eligibility == 'task_success_mixed' else None)
+               if eligibility != 'reward_variance' else None)
     # uid 区分一次抽题实例；同题八条完整保留，question_id 控制重复曝光。
     groups = defaultdict(list)
     for i, uid in enumerate(batch.non_tensor_batch['uid']):
@@ -54,6 +57,8 @@ def mixed_groups(batch, group_size, seen=None, reward_mode='binary', variance_ep
         k = int(sum(values)) if reward_mode == 'binary' else None
         reward_mixed = 0 < k < group_size if reward_mode == 'binary' else variance > variance_epsilon
         success_k = None if success is None else sum(success[i] for i in indices)
+        answer_k = (sum(reports[i]['accepted_answer_em'] == 1. and reports[i]['protocol_gate']
+                        for i in indices) if success is not None else None)
         reasons = []
         if not reward_mixed:
             reasons.append('no_reward_variance')
@@ -61,6 +66,9 @@ def mixed_groups(batch, group_size, seen=None, reward_mode='binary', variance_ep
             reasons.append('no_task_success')
         elif success_k == group_size:
             reasons.append('all_task_success')
+        # 答对次数与质量成功数分别记录；严重重复答对仍计原答案正确，但不能独占正信号。
+        if eligibility == ANSWER_RANGE_MODE and not 3 <= answer_k <= 6:
+            reasons.append('answer_correct_outside_3_6')
         if q in seen:
             reasons.append('duplicate_question')
         valid = not reasons
@@ -72,7 +80,9 @@ def mixed_groups(batch, group_size, seen=None, reward_mode='binary', variance_ep
         records.append(dict(question_id=q, uid=uid, k=k, em_k=em_k, eligible=valid, source=source,
                             reward_mode=reward_mode, reward_mean=mean, reward_variance=variance,
                             eligibility=eligibility,
-                            eligibility_version=TASK_MIXED_VERSION if success is not None else None,
+                            eligibility_version=(ANSWER_RANGE_VERSION if eligibility == ANSWER_RANGE_MODE else
+                                                 TASK_MIXED_VERSION if success is not None else None),
+                            answer_correct_k=answer_k,
                             task_success_k=success_k, accepted_answer_em_k=accepted_em_k,
                             rejection_reasons=reasons))
         if valid:
@@ -140,7 +150,7 @@ def training_batches(loader,controller,manager,reward_fn,repeat_fn,worker,pad_id
     from verl import DataProto
     # 新模式在生成前检查标签能力，评价或旧奖励入口不能静默退回原筛选。
     eligibility = getattr(controller, 'dynamic_eligibility', 'reward_variance')
-    if eligibility == 'task_success_mixed' and getattr(reward_fn, 'task_success_enabled', False) is not True:
+    if eligibility != 'reward_variance' and getattr(reward_fn, 'task_success_enabled', False) is not True:
         raise ValueError('task_success_mixed requires gated training reward with success labels')
     iterator=iter(loader); target=controller.sampler.batch_size; group_size=controller.group_size
     while controller.completed_step<total_steps:

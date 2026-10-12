@@ -1,0 +1,28 @@
+# 叠加既有训练配置的两项新规则；必须使用新产物目录和来源指纹。
+defaults:
+  - ppo_trainer
+  - _self_
+
+actor_rollout_ref:
+  rollout:
+    n_agent: 8
+    n: 1
+algorithm:
+  adv_estimator: grpo
+reward_model:
+  answer_mode: response_only_v1
+difficulty:
+  enabled: true
+  dynamic_filter:
+    enabled: true
+    max_rounds: 16
+    eligibility: answer_correct_3_6
+process_checks:
+  enabled: true
+  reward_gate: true
+  missing_answer_penalty: 0.1
+  reward_variant: bounded_invalid_v1
+  invalid_action_penalty: 0.02
+  process_penalty_cap: 0.12
+  repetition:
+    enabled: true

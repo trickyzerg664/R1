@@ -10,7 +10,7 @@ TASK_SUCCESS_VERSION = 'task_success_v1'
 def check_config(config):
     """
     @brief 校验显式开关，拒绝未记录过程却修改奖励的配置。
-    @param config 含过程开关、缺答案惩罚、奖励版本、无效动作系数、成本上限及审计路径的映射。
+    @param config 含过程开关、缺答案惩罚、奖励版本、无效动作系数、成本上限、重复规则及审计路径的映射。
     @return 普通字典，数值与布尔字段已校验。
     @raises ValueError 非有限/负惩罚或不一致开关。
     """
@@ -45,6 +45,11 @@ def check_config(config):
         raise ValueError('Invalid-action cost requires bounded reward variant')
     result.update(invalid_action_penalty=invalid, process_penalty_cap=cap)
     result['missing_answer_penalty'] = penalty
+    from .repetition import repetition_config
+    result['repetition'] = repetition_config(result.get('repetition'))
+    # 重复成本复用有界过程公式，不允许绕过来源检查或旧奖励成本上限。
+    if result['repetition']['enabled'] and result['reward_variant'] != 'bounded_invalid_v1':
+        raise ValueError('Repetition requires bounded_invalid_v1 gated rewards')
     return result
 
 

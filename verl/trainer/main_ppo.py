@@ -38,7 +38,7 @@ class RewardManager():
     def __init__(self, tokenizer, num_examine, format_score=0., answer_mode='legacy', audit_path=None,
                  process_checks=None, apply_process_reward=True, trajectory_logging=None) -> None:
         """
-        @brief 初始化原答案评分及可选过程门控，开发评价保持原EM。
+        @brief 初始化原答案评分、过程及重复门控，开发评价保持原EM。
         @param tokenizer 共用分词器。
         @param num_examine 每来源打印示例上限。
         @param format_score 原格式分，启用检查时必须为0。
@@ -68,13 +68,15 @@ class RewardManager():
         self.task_success_enabled = (self.process_config['enabled'] and
                                      self.process_config['reward_gate'] and apply_process_reward)
         self.group_reward_mode = ('finite' if self.process_config['reward_gate'] and
-                                  self.process_config['missing_answer_penalty'] else 'binary')
+                                  (self.process_config['missing_answer_penalty'] or
+                                   self.process_config['invalid_action_penalty'] or
+                                   self.process_config['repetition']['enabled']) else 'binary')
         if self.process_config['enabled'] and (answer_mode != 'response_only_v1' or format_score != 0.):
             raise ValueError('Process checks require response_only_v1 and zero format score')
 
     def __call__(self, data: DataProto):
         """
-        @brief 复用原 EM 和统一奖励分量，保存可信成功标签，评价与展示保持原奖励。
+        @brief 复用原EM和统一奖励分量，保存协议及质量成功标签，评价保持原EM。
         @param data 完整响应DataProto，检查开启时要求同行来源报告及轨迹ID。
         @return token级奖励矩阵；开发评价返回原EM，训练可返回门控/惩罚。
         @note info_mask 只排工具观察；人工闭合片段属于评分文本，仅训练 sampled_loss_mask 屏蔽梯度。
@@ -151,6 +153,11 @@ class RewardManager():
                 # 新软罚只接可信原生终止，评价仍由原EM路径返回。
                 from verl.experimental.process_checks.bounded_reward import bounded_reward
                 components = bounded_reward(report, components, self.process_config)
+                # 复用真实 tokenizer 和可信消费事件，质量门控与筛选标签同步更新。
+                from verl.experimental.process_checks.repetition import repetition_reward
+                components = repetition_reward(report, components, self.process_config,
+                    lambda text: self.tokenizer.encode(text, add_special_tokens=False),
+                    prompt=self.tokenizer.decode(valid_prompt_ids))
                 candidate_score = components.get('training_reward', components['protocol_reward'])
                 record = dict(report, original_em=float(score), accepted_answer_em=accepted_em,
                               **components, question_id=data_item.non_tensor_batch.get('question_id'),

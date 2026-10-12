@@ -1943,3 +1943,13 @@ CPU260项：258通过、2需GPU跳过；真实多轮→RewardManager新增2项16
 已验证CPU/真实tokenizer/正式奖励入口，未运行本次GPU kernel实验（算子与actor未改）、未启动8卡新训练；不能宣称已完成真实反传验收。完整重评分证据将显式冻结为新run初始评价，旧原始文件不变。证据cpu-retry.log、regression-before-fix.log、historical-rescore-retry.log/json、scoring-fix-verification.json。下一步Git提交、配置/权重/源码冻结验收，然后启动原始Qwen7B训练100步。
 
 注释范围：3个修改源/测试文件、11个函数，@brief/@param/@return及适用约束11/11完整。独立内部逻辑20/20有效中文说明；合计31/31、100%，遗漏0。函数清单：["generation._postprocess_responses", "generation._update_right_side", "generation._compose_final_output", "RewardManager.__call__", "BoundaryWorker.__init__", "BoundaryWorker.generate_sequences", "GenerationMaskTests.test_full_loop_keeps_context_and_masks_boundary", "ScoringBoundaryTests.search", "ScoringBoundaryTests.check_boundary_reward", "ScoringBoundaryTests.test_one_character_answer_boundary_scores_normally", "ScoringBoundaryTests.test_multi_token_answer_boundary_scores_normally"]；内部单元：["同向补齐的独立人工梯度掩码", "有工具观察时保留完整消费字符", "无工具观察时保留完整消费字符", "人工边界矩阵独立维护", "最终info_mask仅排观察", "评分入口禁止使用梯度掩码删字符", "夹具跨界参数保存", "夹具单字符/整个标签分支", "既有多轮来源/梯度断言", "工具诱饵答案来源", "协议开关遍历", "训练/验证遍历", "答案对错遍历", "正式多轮生成接口", "同行标准答案与来源数组", "来源保留与人工屏蔽断言", "两种观察模式损失交集", "真实RewardManager与临时审计", "奖励/提取/观察排除断言", "原EM与协议接受EM对照"]。外部CPU重放脚本3函数均带完整说明，关键逻辑包括完整行、唯一题/零更新/原初始化、逐轮原始前缀与人工掩码、文本核对、两种损失交集、同行来源、训练候选奖励不变、独立消费评分、原上下文保留、差异仅0变1、证据hash；准备脚本4函数说明完整，缓存重评分门限与三份原始文件冻结有就近中文注释。详情comment-coverage.json；无遗漏。
+
+
+2026-10-12 重复与3–6筛选实现准备（/root）：独立工作树R1-vllm-metax-quality；新增版本answer_correct_3_6_v1，严格G8、被接受且协议门控正确次数3–6，另需质量成功/失败混合与奖励方差。重复模块仅检查逐轮consumed，正文4/8/16 gram非重叠至少4次、位置合并、最短64token、比例.15/.40；think重复开启轻罚.02，空白相邻4标签或短间隔3次重复开启重罚。重度取消正奖励并同步质量版本标签，总过程罚封顶.12。默认关闭、新指纹、未热改当前训练；本次CPU/历史重放待执行，不宣称GPU联调通过。
+
+2026-10-12 首次discover误包含既有GPU测试，进入test_fp16时已精准停止独立验收进程组3426537；没有训练重启或源码热修改。首日志cpu-first.log保留，未写成CPU通过。后续显式CUDA_VISIBLE_DEVICES空字符串，GPU测试跳过；移除新增测试对既有TestCase的重复发现。
+
+2026-10-12 CPU首轮271项：268通过、2 GPU跳过、1新增夹具构造错误（Dataset不接收参数），生产测试其余通过；已改用Dataset()并追加旧规则状态不能通过branch绕过的新恢复测试及质量统计。失败日志cpu-retry.log保留；最终回归与历史重放待验收。
+
+
+2026-10-12T13:21:44.054926+00:00 重复与3–6筛选验收（/root）：独立detached工作树，从363fbcb开始；CPU272项270通过、2GPU跳过；真实tokenizer256初始/3072候选，初始重度0、轻度7，候选重度81；384完整组90合格，重度正优势0；旧正强化样例1→-.12。已实现与未接入、误判边界、失败历史、29函数与134逻辑单元/100%注释验收见[完整实现记录](quality_controls.md)。实际运行295源哈希未变，新规则未GPU训练、未应用当前11步运行、未提交/推送。证据quality-code-verification-20261012。
