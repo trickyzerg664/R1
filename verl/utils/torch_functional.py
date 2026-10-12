@@ -47,23 +47,35 @@ def gather_from_labels(data, label):
 
 
 def logprobs_from_logits(logits, labels):
-    """
-    See: https://github.com/pytorch/pytorch/issues/563#issuecomment-330103591
+    """@brief 计算目标 token 概率，保证融合内核读取连续的标签编号。
+    @param logits 任意批次维度加词表维度的浮点张量。
+    @param labels 与 logits 批次维度相同的目标编号，可为非连续视图。
+    @return 与 labels 同形状的对数概率张量，保留原梯度。
+    @note 分块尾部只剩一个 token 时 reshape 可保留跨样本步长，必须显式复制。
     """
     if FLAH_ATTN_CROSS_ENTROPY_LOSS_AVAILABLE:
         batch_dim = logits.shape[:-1]
         last_dim = logits.shape[-1]
         logits = logits.reshape(-1, last_dim)
-        labels = labels.reshape(-1)
+        # 融合内核按 labels_ptr + row_idx 读取，不接受非单位步长。
+        labels = labels.reshape(-1).contiguous()
         output = logprobs_from_logits_flash_attn(logits, labels)
         output = output.view(*batch_dim)
     else:
+        # 无融合算子时继续复用原生 log-softmax，保持原输出形状与公式。
         output = logprobs_from_logits_naive(logits, labels)
     return output
 
 
 def logprobs_from_logits_flash_attn(logits, labels):
-    output = -cross_entropy_loss(logits, labels)[0]
+    """@brief 使用融合交叉熵计算概率，并保护直接调用的非连续标签。
+    @param logits 二维样本乘词表的浮点张量。
+    @param labels 一维目标编号，与 logits 的样本数一致。
+    @return 每个目标的对数概率，保留融合算子的反传。
+    @note 连续复制为已连续张量的无操作，也覆盖绕过上层包装的调用。
+    """
+    # 原生 kernel 不读取标签 stride，所有入口都必须满足连续布局。
+    output = -cross_entropy_loss(logits, labels.contiguous())[0]
     return output
 
 
