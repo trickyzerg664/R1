@@ -228,3 +228,6 @@
 证据目录：`/mnt/public/code/lyk/lzy/runs/quality-code-verification-20261012`。源字节范围SHA256绑定在replay-result.json，包含cpu各轮日志、Hydra日志、重复标记报告与running-source-check.json。
 
 下一步：审阅补丁；若应用训练，创建新的冻结运行，按新指纹启动并验证候选、优势及固定开发集原EM，不热改当前实验。
+
+
+2026-10-12T13:42:36.777196+00:00 用户批准合入与重启（/root）：7232ea6工作树修改已合入data-difficulty-muxi为07c59d5，运行记录b450214；合入仅进度文档冲突，保留原分支更新并追加工作树历史，生产/测试源码逐字一致。Git身份首试失败后沿用历史Codex进程身份，未改全局配置。旧训练停12步/无checkpoint，独立检索保留。新run metax-qwen7b-quality-100-20261012-v1准备，训练0/100，尚未GPU启动；新奖励指纹与旧运行区分。见runs/metax-qwen7b-quality-100-20261012-v1.md。

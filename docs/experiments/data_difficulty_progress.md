@@ -2550,10 +2550,11 @@ CPU260项：258通过、2需GPU跳过；真实多轮→RewardManager新增2项16
 <!-- metax-qwen7b-scoremask-100-20261012-v2-current -->
 
 {
-  "status": "failed",
+  "status": "stopped_for_quality_restart",
   "phase": "stopped",
-  "error": "Supervisor interrupted: 15",
-  "checked_utc": "2026-10-12T13:34:27.434911+00:00"
+  "trained_step": 12,
+  "published_checkpoint_steps": [],
+  "checked_utc": "2026-10-12T13:45:47.119882+00:00"
 }
 
 <!-- /metax-qwen7b-scoremask-100-20261012-v2-current -->
@@ -2588,3 +2589,12 @@ CPU260项：258通过、2需GPU跳过；真实多轮→RewardManager新增2项16
 
 
 2026-10-12T13:21:44.054926+00:00 重复与3–6筛选验收（/root）：独立detached工作树，从363fbcb开始；CPU272项270通过、2GPU跳过；真实tokenizer256初始/3072候选，初始重度0、轻度7，候选重度81；384完整组90合格，重度正优势0；旧正强化样例1→-.12。已实现与未接入、误判边界、失败历史、29函数与134逻辑单元/100%注释验收见[完整实现记录](quality_controls.md)。实际运行295源哈希未变，新规则未GPU训练、未应用当前11步运行、未提交/推送。证据quality-code-verification-20261012。
+
+
+2026-10-12T13:42:36.777196+00:00 用户批准合入与重启（/root）：7232ea6工作树修改已合入data-difficulty-muxi为07c59d5，运行记录b450214；合入仅进度文档冲突，保留原分支更新并追加工作树历史，生产/测试源码逐字一致。Git身份首试失败后沿用历史Codex进程身份，未改全局配置。旧训练停12步/无checkpoint，独立检索保留。新run metax-qwen7b-quality-100-20261012-v1准备，训练0/100，尚未GPU启动；新奖励指纹与旧运行区分。见runs/metax-qwen7b-quality-100-20261012-v1.md。
+
+2026-10-12T13:44:39.537618+00:00 合入后CPU272项270通过/2GPU跳过；正式RewardManager+真实tokenizer重放256唯一题/918轮，原EM84.0/256、缺提取8，训练候选新奖励改变7条，独立新公式/token/文本/人工梯度掩码/原EM参照错配均0，模型生成和更新0。证据cpu-regression.log、historical-rescore.log/json。进入模型资产与新指纹冻结验收。
+
+资产与配置验收开始；CPU全量回归通过，训练0步，原始Qwen模型进行完整文件哈希与safetensors头部验证。
+
+冻结验收通过：{"checked_utc": "2026-10-12T13:45:31.170237+00:00", "run": "/mnt/public/code/lyk/lzy/runs/metax-qwen7b-quality-100-20261012-v1", "model": "/mnt/public/model/huggingface/Qwen2.5-7B", "sources": 298, "assets": 16, "config_differences": 9, "identity": {"initial_model_id": "7c3269c21a61915411e593401dbe335b9c427a02702067f986bce261e592a76e", "reference_id": "7c3269c21a61915411e593401dbe335b9c427a02702067f986bce261e592a76e", "retrieval_id": "wiki18-e5-metax-gpu-fp32-shard8-20261008-v1", "seed": 42, "training": "0920d9cfc59c260a5b8fe798211f75dc53b0f04eecf518e91257fb6e3b5c9753", "versions": {"torch": "2.6.0+metax3.3.0.2", "transformers": "4.57.1", "vllm": "0.11.0+empty"}, "world_size": 8}, "cpu_verified": true, "gpu_started": false, "free_bytes": 2970972892160}。下一步按用户授权验收复用初始D256→100步训练→最终D256。初始化与旧Qwen运行相同；初始评价复用完整原生token的CPU重评分，训练从0开始。

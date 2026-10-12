@@ -52,10 +52,11 @@ CPU260项：258通过、2需GPU跳过；真实多轮→RewardManager新增2项16
 <!-- metax-qwen7b-scoremask-100-20261012-v2-current -->
 
 {
-  "status": "failed",
+  "status": "stopped_for_quality_restart",
   "phase": "stopped",
-  "error": "Supervisor interrupted: 15",
-  "checked_utc": "2026-10-12T13:34:27.434911+00:00"
+  "trained_step": 12,
+  "published_checkpoint_steps": [],
+  "checked_utc": "2026-10-12T13:45:47.119882+00:00"
 }
 
 <!-- /metax-qwen7b-scoremask-100-20261012-v2-current -->
