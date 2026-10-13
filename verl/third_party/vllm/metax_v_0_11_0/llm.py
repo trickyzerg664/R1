@@ -16,7 +16,7 @@ class LLM:
                  tensor_parallel_size, dtype, enforce_eager,
                  gpu_memory_utilization, skip_tokenizer_init,
                  max_model_len, load_format, max_num_batched_tokens=None,
-                 max_num_seqs=None, offload_weights_to_cpu=False):
+                 max_num_seqs=None, offload_weights_to_cpu=False, action_stop=False):
         """
         @brief 初始化单卡推理引擎并登记初始权重可用于生成。
         @param actor_module 旧接口传入的训练模型，初始推理权重由本地目录加载。
@@ -32,6 +32,7 @@ class LLM:
         @param max_num_batched_tokens 每次调度的 token 上限，None 保留原生默认。
         @param max_num_seqs 同时调度的序列数上限，None 保留原生默认。
         @param offload_weights_to_cpu 生成调用间是否卸载推理权重到CPU，默认关闭。
+        @param action_stop 是否仅在合法完整动作后用 EOS 结束本轮，默认关闭。
         @return 无。
         @raises ValueError 并行数、本地路径、休眠配置或调度预算无效时抛出。
         @note 后续权重同步和缓存失效均完成后才恢复生成资格。
@@ -62,6 +63,12 @@ class LLM:
                 if isinstance(value, bool) or not isinstance(value, int) or value <= 0:
                     raise ValueError(f'{key} must be a positive integer')
                 scheduler_kwargs[key] = value
+        # 使用 V1 公开 processor 接口，不修改原生引擎或绕过正式解析器。
+        if not isinstance(action_stop, bool):
+            raise ValueError('action_stop must be boolean')
+        if action_stop:
+            scheduler_kwargs['logits_processors'] = [
+                'verl.third_party.vllm.metax_v_0_11_0.action_stop:ActionBoundaryLogitsProcessor']
         self.engine = NativeLLM(
             model=model_path,
             tokenizer=model_path,

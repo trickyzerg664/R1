@@ -96,7 +96,12 @@ class vLLMRollout(BaseRollout):
             "model context length should be greater than total sequence length"
         # 仅接通已验证支持此接口的 MetaX 路径；缺省值仍交给原生引擎。
         scheduler_kwargs = {}
+        # 停止优化仅接入已确认支持公开 V1 扩展的 MetaX 后端，其他版本不得静默忽略。
+        action_stop = config.get('action_stop', False)
+        if action_stop and vllm_version != '0.11.0':
+            raise ValueError('action_stop requires MetaX vLLM 0.11.0')
         if vllm_version == '0.11.0':
+            scheduler_kwargs['action_stop'] = action_stop
             for key in ('max_num_batched_tokens', 'max_num_seqs', 'offload_weights_to_cpu'):
                 if config.get(key) is not None:
                     scheduler_kwargs[key] = config.get(key)
@@ -132,6 +137,12 @@ class vLLMRollout(BaseRollout):
             if hasattr(SamplingParams(), str(k)):
                 kwargs[k] = config.get(k)
 
+        # 每个请求显式启用；闭合前保持采样参数和概率，闭合后只产生被掩码排除的EOS。
+        if action_stop:
+            if config.ignore_eos or tokenizer.eos_token_id is None:
+                raise ValueError('action_stop requires enabled EOS termination')
+            kwargs['extra_args'] = {'search_r1_action_stop_v1': True,
+                                    'search_r1_action_eos': int(tokenizer.eos_token_id)}
         print(f"kwargs: {kwargs}")
         self.sampling_params = SamplingParams(**kwargs)
 
