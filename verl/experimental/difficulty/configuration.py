@@ -8,7 +8,7 @@ from .eligibility import normalize_dynamic_filter, ANSWER_RANGE_MODE
 
 
 def provenance_matches(config, parent):
-    """@brief 核对父来源，只允许优化器设备放置与显式授权的采样恢复变更。
+    """@brief 核对父来源，仅放行优化器放置及显式授权的采样和动作停止适配。
     @param config 完整 Hydra 配置，不修改调用方对象。
     @param parent 父 checkpoint 的来源指纹字典。
     @return 布尔值；是否兼容父来源，当前新策略仍记录自己的指纹。
@@ -19,12 +19,19 @@ def provenance_matches(config, parent):
     for adaptation in (False, True):
         if adaptation:
             dynamic = candidate.difficulty.get('dynamic_filter', {})
-            if (candidate.difficulty.get('resume_sampling_adaptation') != 'refill_7_8_v1'
-                    or dynamic.get('on_exhaustion') != 'refill_7_8_v1'):
-                continue
-            # 只去除明确授权的恢复字段来匹配父来源，禁止顺带放宽其他参数。
+            adapted = False
+            # 两项适配分别显式声明；新来源仍保留自己的生成和筛选指纹。
             with open_dict(candidate):
-                del candidate.difficulty.dynamic_filter.on_exhaustion
+                if (candidate.difficulty.get('resume_sampling_adaptation') == 'refill_7_8_v1'
+                        and dynamic.get('on_exhaustion') == 'refill_7_8_v1'):
+                    del candidate.difficulty.dynamic_filter.on_exhaustion
+                    adapted = True
+                if (candidate.difficulty.get('resume_generation_adaptation') == 'action_stop_v1'
+                        and candidate.actor_rollout_ref.rollout.get('action_stop') is True):
+                    candidate.actor_rollout_ref.rollout.action_stop = False
+                    adapted = True
+            if not adapted:
+                continue
         if provenance(candidate) == parent:
             return True
         # 复用既有 Adam 设备放置白名单，不放宽学习率或其他训练字段。
@@ -163,6 +170,9 @@ def provenance(config):
     ar['model'].pop('path')
     ar['ref'].pop('model_path')
     ar['actor']['optim'].pop('total_training_steps', None)
+    # 默认关闭与历史缺省得到同一指纹；开启后纳入新版本，恢复只能经上方显式适配。
+    if not ar['rollout'].get('action_stop', False):
+        ar['rollout'].pop('action_stop', None)
     # 只读稳定性记录不改变训练身份，关闭新开关仍兼容原 checkpoint。
     ar['actor'].pop('stability_diagnostics', None)
     data = c['data']

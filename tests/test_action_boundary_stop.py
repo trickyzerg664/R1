@@ -150,6 +150,23 @@ class ActionStopTests(unittest.TestCase):
         self.assertEqual(ids, raw)
         self.assertTrue(all(mask))
 
+    def test_generation_adaptation_whitelist(self):
+        """@brief 开启生成版本需显式适配，学习率等不相关变更继续拒绝。
+        @return 无。
+        """
+        config = fixtures.TaskSuccessTests.config(self)
+        with patch('verl.experimental.difficulty.configuration.model_identity', return_value='fixture'):
+            parent = provenance(config)
+            changed = copy.deepcopy(config)
+            with open_dict(changed):
+                changed.actor_rollout_ref.rollout.action_stop = True
+            self.assertFalse(provenance_matches(changed, parent))
+            with open_dict(changed):
+                changed.difficulty.resume_generation_adaptation = 'action_stop_v1'
+            self.assertTrue(provenance_matches(changed, parent))
+            self.assertNotEqual(provenance(changed), parent)
+            changed.actor_rollout_ref.actor.optim.lr *= 2
+            self.assertFalse(provenance_matches(changed, parent))
 
 
 if __name__ == '__main__':
