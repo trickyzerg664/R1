@@ -14,6 +14,14 @@ def normalize_dynamic_filter(settings):
     """
     result = dict(settings or {})
     mode = result.get('eligibility', 'reward_variance')
+    # 恢复行为必须显式配置；关闭时保持历史指纹和硬上限退出行为。
+    exhaustion = result.get('on_exhaustion', 'error')
+    if exhaustion not in ('error', 'refill_7_8_v1'):
+        raise ValueError('Unsupported exhaustion policy')
+    if exhaustion == 'refill_7_8_v1' and (mode != ANSWER_RANGE_MODE or not result.get('enabled')):
+        raise ValueError('Refill recovery requires enabled answer_correct_3_6')
+    if exhaustion == 'error':
+        result.pop('on_exhaustion', None)
     # 新模式必须显式启用；关闭时保留旧配置的完整语义。
     if mode not in ('reward_variance', 'task_success_mixed', ANSWER_RANGE_MODE):
         raise ValueError('Unknown dynamic eligibility mode')

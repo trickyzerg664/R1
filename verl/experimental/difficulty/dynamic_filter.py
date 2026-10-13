@@ -10,7 +10,7 @@ from .eligibility import TASK_MIXED_VERSION, ANSWER_RANGE_MODE, ANSWER_RANGE_VER
 
 
 def mixed_groups(batch, group_size, seen=None, reward_mode='binary', variance_epsilon=1e-12,
-                 eligibility='reward_variance'):
+                 eligibility='reward_variance', fallback_counts=()):
     """@brief 保留完整同题组；可选要求门控后任务成功与失败同时存在。
     @param batch 含 dynamic_rewards、uid、question_id 和可选成功报告的 DataProto。
     @param group_size 每个问题的完整轨迹数，必须为正整数。
@@ -18,6 +18,7 @@ def mixed_groups(batch, group_size, seen=None, reward_mode='binary', variance_ep
     @param reward_mode binary 沿用零一奖励规则；finite 允许有限实数。
     @param variance_epsilon finite 模式的非负有限奖励方差容差。
     @param eligibility 原奖励方差、任务混合或 answer_correct_3_6 八次答对三至六次规则。
+    @param fallback_counts 补入时允许的正确次数，仅支持 7 和 8；默认不放宽资格。
     @return 完整入选行索引组和含成功数、奖励方差及排除原因的组记录。
     @raises ValueError 配置、奖励、身份、完整性或成功标签不满足约束。
     """
@@ -28,6 +29,9 @@ def mixed_groups(batch, group_size, seen=None, reward_mode='binary', variance_ep
         raise ValueError('Invalid group reward mode/variance threshold')
     if eligibility not in ('reward_variance', 'task_success_mixed', ANSWER_RANGE_MODE):
         raise ValueError('Unknown dynamic eligibility mode')
+    # 备用资格仍要求完整轨迹、有限奖励和非零奖励方差。
+    if any(k not in (7, 8) for k in fallback_counts) or (fallback_counts and eligibility != ANSWER_RANGE_MODE):
+        raise ValueError('Fallback requires answer_correct_3_6 and counts 7/8')
     # 新规则只定义G8，禁止把其他轨迹数静默套入固定正确次数范围。
     if eligibility == ANSWER_RANGE_MODE and group_size != 8:
         raise ValueError('answer_correct_3_6 requires exactly eight rollouts')
@@ -64,10 +68,11 @@ def mixed_groups(batch, group_size, seen=None, reward_mode='binary', variance_ep
             reasons.append('no_reward_variance')
         if success_k == 0:
             reasons.append('no_task_success')
-        elif success_k == group_size:
+        # 备用8次正确组只允许靠真实奖励差异提供信号，原策略仍排除全成功组。
+        elif success_k == group_size and answer_k not in fallback_counts:
             reasons.append('all_task_success')
         # 答对次数与质量成功数分别记录；严重重复答对仍计原答案正确，但不能独占正信号。
-        if eligibility == ANSWER_RANGE_MODE and not 3 <= answer_k <= 6:
+        if eligibility == ANSWER_RANGE_MODE and not (3 <= answer_k <= 6 or answer_k in fallback_counts):
             reasons.append('answer_correct_outside_3_6')
         if q in seen:
             reasons.append('duplicate_question')
@@ -141,10 +146,10 @@ def training_batches(loader,controller,manager,reward_fn,repeat_fn,worker,pad_id
     @param worker 原actor概率计算worker。
     @param pad_id 原补齐token。
     @param total_steps 完成更新周期上限。
-    @param max_rounds 每周期候选补抽上限。
+    @param max_rounds 默认硬上限；恢复模式下表示每次尝试补齐的轮数间隔。
     @return 按原规则产出完整DataProto批次的迭代器。
     @raises ValueError 组或奖励非法。
-    @raises RuntimeError 候选耗尽，禁止部分更新。
+    @raises RuntimeError 默认策略在耗尽后失败，不执行不完整批次的更新。
     """
     # 只有凑齐完整有效批才yield并更新参数；候选消费与训练步数分别保存，禁止小批降级。
     from verl import DataProto
@@ -153,13 +158,31 @@ def training_batches(loader,controller,manager,reward_fn,repeat_fn,worker,pad_id
     if eligibility != 'reward_variance' and getattr(reward_fn, 'task_success_enabled', False) is not True:
         raise ValueError('task_success_mixed requires gated training reward with success labels')
     iterator=iter(loader); target=controller.sampler.batch_size; group_size=controller.group_size
+    recovery = controller.settings.get('dynamic_filter', {}).get('on_exhaustion') == 'refill_7_8_v1'
     while controller.completed_step<total_steps:
         # 本段已训练问题不再入选，保证100步覆盖800个不同的有效问题。
         step=controller.completed_step+1; parts=[]; seen=set(controller.accepted_question_ids); candidates=0; started=time.monotonic()
+        # 恢复模式可能无限补抽；题池剩余独立问题不足时立即拒绝，避免无法完成的循环。
+        if recovery and len(controller.rows) - len(seen) < target:
+            raise ValueError('Insufficient untrained questions for a complete dynamic batch')
         candidate_tokens=0; candidate_searches=0
         rejection_counts = Counter()
-        for round_index in range(max_rounds):
-            candidate=DataProto.from_single_dict(next(iterator))
+        # 同一更新期间权重不变，缓存真实备用轨迹；每轮优先接纳 3–6 组。
+        reserves = {}; fallback_used = Counter(); fallback_selected = []; round_index = -1
+        while len(parts) < target:
+            round_index += 1
+            if not recovery and round_index >= max_rounds:
+                break
+            try:
+                candidate_dict = next(iterator)
+            except StopIteration:
+                if not recovery:
+                    raise
+                # 扩展候选预算，不重置随机流、曝光记录或已完成的训练步骤。
+                controller.extend_candidate_budget(max_rounds)
+                iterator = iter(loader)
+                candidate_dict = next(iterator)
+            candidate=DataProto.from_single_dict(candidate_dict)
             candidate=repeat_fn(candidate,group_size)
             gen=candidate.pop(batch_keys=['input_ids','attention_mask','position_ids'])
             controller.attach_seeds(gen,step,candidate_round=round_index)
@@ -186,6 +209,48 @@ def training_batches(loader,controller,manager,reward_fn,repeat_fn,worker,pad_id
             print(f'[动态筛选] step={step} round={round_index+1}/{max_rounds} candidates={candidates} mixed={len(accepted)} retained={min(target,len(parts)+len(accepted))}/{target}',flush=True)
             for indices in accepted:
                 if len(parts)<target:parts.append(take_rows(candidate,indices))
+            if recovery and len(parts) < target:
+                # 正常组先入选后删除其旧备用，避免占用有限缓存容量或重复入选。
+                reserves = {q: item for q, item in reserves.items() if q not in seen}
+                # 备用组仍执行原奖励及方差校验；全对同分组不会产生学习信号。
+                backup, backup_records = mixed_groups(candidate, group_size, set(seen),
+                    reward_mode=getattr(reward_fn, 'group_reward_mode', 'binary'),
+                    eligibility=eligibility, fallback_counts=(7, 8))
+                by_uid = {record['uid']: record for record in backup_records}
+                for indices in backup:
+                    record = by_uid[str(candidate.non_tensor_batch['uid'][indices[0]])]
+                    q, k = record['question_id'], record['answer_correct_k']
+                    if k not in (7, 8) or q in seen:
+                        continue
+                    # 同题后出现的七次组也应优先；同优先级保留首次真实轨迹以保证确定性。
+                    if q in reserves:
+                        if k < reserves[q][0]:
+                            reserves[q] = (k, take_rows(candidate, indices))
+                        continue
+                    if len(reserves) >= target:
+                        # 容量已满时，允许新出现的 7 次正确组替换优先级较低的 8 次组。
+                        replaceable = next((key for key, value in reserves.items() if value[0] > k), None)
+                        if replaceable is None:
+                            continue
+                        del reserves[replaceable]
+                    reserves[q] = (k, take_rows(candidate, indices))
+                if (round_index + 1) % max_rounds == 0:
+                    # 达到补齐边界时先接纳 7 次组，再接纳有奖励方差的 8 次组。
+                    for q, (k, reserved) in sorted(reserves.items(), key=lambda item: item[1][0]):
+                        if len(parts) == target:
+                            break
+                        if q not in seen:
+                            parts.append(reserved); seen.add(q); fallback_used[k] += 1
+                            # 记录备用实际入选身份，便于与原候选审计逐组对齐。
+                            fallback_selected.append({'question_id': q, 'answer_correct_k': k,
+                                'uid': str(reserved.non_tensor_batch['uid'][0]),
+                                'candidate_round': reserved.meta_info['trajectory_candidate_round']})
+                    reserves.clear()
+                    controller.record({'event': 'filter_recovery', 'step': step,
+                        'rounds': round_index + 1, 'retained': len(parts), 'target': target,
+                        'fallback_counts': dict(fallback_used), 'selected': list(fallback_selected),
+                        'continued': len(parts) < target})
+                    print(f'[筛选恢复] step={step} rounds={round_index+1} retained={len(parts)}/{target} fallback={dict(fallback_used)}', flush=True)
             if len(parts)==target:break
         if len(parts)!=target:
             controller.record({'event':'filter_exhausted','step':step,'retained':len(parts),'target':target,'candidates':candidates})
@@ -200,6 +265,12 @@ def training_batches(loader,controller,manager,reward_fn,repeat_fn,worker,pad_id
             'dynamic/retained_fraction':target/candidates,'dynamic/rounds':round_index+1,
             'dynamic/candidate_trajectories':candidates*group_size,'dynamic/retained_trajectories':target*group_size,
             'dynamic/candidate_generated_tokens':candidate_tokens,'dynamic/candidate_search_queries':candidate_searches}
+        # 独立记录实际备用组数量，避免将新策略结果混报为严格 3–6 筛选。
+        if recovery:
+            batch.meta_info['dynamic_metrics'].update({
+                'dynamic/fallback_k7_groups': fallback_used[7],
+                'dynamic/fallback_k8_groups': fallback_used[8],
+                'dynamic/extended_rounds': max(0, round_index + 1 - max_rounds)})
         for reason, count in rejection_counts.items():
             batch.meta_info['dynamic_metrics']['dynamic/rejected_' + reason + '_groups'] = count
         for source in set(batch.non_tensor_batch['data_source']):

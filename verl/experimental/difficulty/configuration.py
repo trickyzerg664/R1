@@ -8,15 +8,32 @@ from .eligibility import normalize_dynamic_filter, ANSWER_RANGE_MODE
 
 
 def provenance_matches(config, parent):
-    """严格校验父来源，仅允许 Adam 状态的 CPU/GPU 放置变化。"""
-    if provenance(config) == parent:
-        return True
-    saved = config.actor_rollout_ref.actor.fsdp_config.optimizer_offload
-    try:
-        config.actor_rollout_ref.actor.fsdp_config.optimizer_offload = not saved
-        return provenance(config) == parent
-    finally:
-        config.actor_rollout_ref.actor.fsdp_config.optimizer_offload = saved
+    """@brief 核对父来源，只允许优化器设备放置与显式授权的采样恢复变更。
+    @param config 完整 Hydra 配置，不修改调用方对象。
+    @param parent 父 checkpoint 的来源指纹字典。
+    @return 布尔值；是否兼容父来源，当前新策略仍记录自己的指纹。
+    @note 数据、模型、学习率、轨迹数和分布式拓扑仍须一致。
+    """
+    # 独立复制配置，兼容性试探不得修改调用方的模型或优化器设置。
+    candidate = OmegaConf.create(OmegaConf.to_container(config, resolve=True))
+    for adaptation in (False, True):
+        if adaptation:
+            dynamic = candidate.difficulty.get('dynamic_filter', {})
+            if (candidate.difficulty.get('resume_sampling_adaptation') != 'refill_7_8_v1'
+                    or dynamic.get('on_exhaustion') != 'refill_7_8_v1'):
+                continue
+            # 只去除明确授权的恢复字段来匹配父来源，禁止顺带放宽其他参数。
+            with open_dict(candidate):
+                del candidate.difficulty.dynamic_filter.on_exhaustion
+        if provenance(candidate) == parent:
+            return True
+        # 复用既有 Adam 设备放置白名单，不放宽学习率或其他训练字段。
+        saved = candidate.actor_rollout_ref.actor.fsdp_config.optimizer_offload
+        candidate.actor_rollout_ref.actor.fsdp_config.optimizer_offload = not saved
+        if provenance(candidate) == parent:
+            return True
+        candidate.actor_rollout_ref.actor.fsdp_config.optimizer_offload = saved
+    return False
 
 
 def prepare_config(config):

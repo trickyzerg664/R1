@@ -70,6 +70,21 @@ class DifficultyExperiment:
         atomic_json(self.output_dir/'run.json', {'schema_version': 1, 'settings': settings,
                     'seed': seed, 'pool_hash': pool_hash(rows), 'provenance': provenance})
 
+    def extend_candidate_budget(self, rounds):
+        """@brief 扩展候选批预算，保留随机流、曝光和目标训练步数。
+        @param rounds 需要追加的正整数候选批数。
+        @return 无。
+        @raises ValueError 未启用恢复策略或追加预算非法。
+        """
+        # bool 虽是 int 子类，也不能表示候选预算；非法输入不得改变采样状态。
+        if (self.settings.get('dynamic_filter', {}).get('on_exhaustion') != 'refill_7_8_v1'
+                or isinstance(rounds, bool) or not isinstance(rounds, int) or rounds < 1):
+            raise ValueError('Extension requires explicit refill recovery')
+        # sampler.steps 表示候选预算，优化器更新目标仍由训练总步数约束。
+        self.sampler.steps = max(self.sampler.steps, self.sampler.cursor) + rounds
+        self.record({'event': 'candidate_budget_extended', 'cursor': self.sampler.cursor,
+                     'candidate_budget': self.sampler.steps, 'completed_step': self.completed_step})
+
     def score(self, generate_and_score, output, step=0, version='initial'):
         # 只在明确的步骤边界评估，评分种子与训练抽样 RNG 分离。
         """评分只生成标签，不更新模型，训练 RNG 隔离由调用适配层负责。
@@ -228,10 +243,10 @@ class DifficultyExperiment:
         @param state 完整更新边界保存的实验状态。
         @param branch 是否显式切换标签或配比，不能切换任务资格规则。
         @param scoring 是否只恢复用于评价的状态。
-        @param compatible_provenance 已验证仅设备放置差异的兼容来源，可为空。
+        @param compatible_provenance 已验证仅设备放置或授权采样恢复差异的兼容来源，可为空。
         @return 无；成功时恢复完成步数、曝光、随机流及成本。
         @raises ValueError 状态版本、资格、来源、采样或曝光完整性不一致。
-        @note 资格变化需要共同权重重启的新实验，不能通过 branch 绕过。
+        @note branch 不允许切换资格；显式授权只允许添加 refill_7_8_v1 恢复策略。
         """
         if state['schema_version'] != 1:
             raise ValueError('Unsupported difficulty checkpoint version')
@@ -244,22 +259,33 @@ class DifficultyExperiment:
         # 模型、参考模型、题池和训练关键参数必须保持一致。
         if state['provenance'] != self.provenance and state['provenance'] != compatible_provenance:
             raise ValueError('Resume provenance differs (reference/model/training/retrieval settings)')
-        if not branch and not scoring and state['strategy'] != self.strategy:
+        # 比较去除新增恢复字段后的策略，其他评分与刷新字段仍必须完全一致。
+        adapted = dict(self.strategy)
+        recovery = current_dynamic.get('on_exhaustion') == 'refill_7_8_v1'
+        authorized = self.settings.get('resume_sampling_adaptation') == 'refill_7_8_v1'
+        if recovery and authorized:
+            adapted['dynamic_filter'] = dict(current_dynamic)
+            adapted['dynamic_filter'].pop('on_exhaustion', None)
+        if not branch and not scoring and state['strategy'] != self.strategy and not (
+                recovery and authorized and state['strategy'] == adapted):
             raise ValueError('Continue mode requires the same refresh and scoring strategy')
         # 严格续训恢复父标签；评分使用父策略，显式配比分支保留当前设置。
         if not branch or scoring:
             self.label_payload = state['labels']
             self.sampler.configure(state['strategy']['ratios'] if scoring else self.sampler.ratios,
                                    None if self.label_payload is None else validate_labels(self.label_payload, self.rows))
+        # 恢复已扩展的候选游标，仍由采样器校验随机流、曝光与固定题池。
+        if recovery and state['sampler']['cursor'] > self.sampler.steps:
+            self.sampler.steps = state['sampler']['cursor'] + self.max_candidate_rounds
         self.sampler.load_state_dict(state['sampler'], branch=branch)
         self.completed_step = state['completed_step']
         self.accepted_question_ids=set(state.get('accepted_question_ids', []))
         if self.dynamic and (len(self.accepted_question_ids)!=self.completed_step*self.sampler.batch_size
                 or not self.accepted_question_ids <= {r['question_id'] for r in self.rows}):
             raise ValueError('Invalid dynamic trained-question exposure state')
-        # 动态模式每更新消费1至max_rounds个候选批；只允许完整更新边界恢复。
+        # 默认策略限制候选轮数；恢复策略可扩展游标，仍要求完整更新和有效曝光。
         if self.dynamic:
-            if not self.completed_step <= self.sampler.cursor <= self.completed_step*self.max_candidate_rounds:
+            if not (self.completed_step <= self.sampler.cursor and ((recovery and self.completed_step > 0) or self.sampler.cursor <= self.completed_step*self.max_candidate_rounds)):
                 raise ValueError('Dynamic candidate cursor differs from completed update boundary')
         elif self.sampler.cursor != self.completed_step:
             raise ValueError('Sampler cursor and completed training step differ')
