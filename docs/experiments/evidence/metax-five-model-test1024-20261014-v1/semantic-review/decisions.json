@@ -14857,6 +14857,3682 @@
       "answer": "Howard Golden",
       "reviewer": "Codex逐题审阅",
       "reviewed_utc": "2026-10-14T13:54:10.672790+00:00"
+    },
+    "df4da87b7a6be41b31829d3585f82e956459e7aad59f32e29ec4f8160df00d34": {
+      "verdict": "uncertain",
+      "reason": "精度、关键字段、上下级范围或合法替代答案存在歧义，未确认等价，暂不加分。",
+      "question_id": "e75177df68288bbc90b659b9b65468f25378a4ce106267a12894788a60e1841b",
+      "question": "wal-mart is a prime example of which type organization?",
+      "target": [
+        "multinational retail corporation"
+      ],
+      "answer": "retail organization",
+      "reviewer": "Codex逐题审阅",
+      "reviewed_utc": "2026-10-14T14:13:02.887305+00:00"
+    },
+    "0fccd7cc130fd269c5fe07fbaa6f6226fbf80443d4234a3fa95e2f8b7e038139": {
+      "verdict": "incorrect",
+      "reason": "逐题审阅最终答案与标准：bone marrow / [\"B cells\", \"lymph\"]；实体、数值、时间或所問字段不一致，维持错误。",
+      "question_id": "7bb09db17d235a537ab6671006dc5c0d4071a618d53145b03e1563478ee6f16b",
+      "question": "where are antibodies made and by what type of lymphocyte?",
+      "target": [
+        "B cells",
+        "lymph"
+      ],
+      "answer": "bone marrow",
+      "reviewer": "Codex逐题审阅",
+      "reviewed_utc": "2026-10-14T14:13:02.887344+00:00"
+    },
+    "9d4ceabc164cd98ad8b7f0267ea230dfac712c41ee7e09932743e7b65cf397a3": {
+      "verdict": "incorrect",
+      "reason": "逐题审阅最终答案与标准：70,000 / [\"79,540 (2015)\", \"79,540\"]；实体、数值、时间或所問字段不一致，维持错误。",
+      "question_id": "ce48ab89fd2d1f8473bdde8680feb6f40e0a9426c35fdd93c90f266da8b38cf0",
+      "question": "number of employees in the department of health and human services?",
+      "target": [
+        "79,540 (2015)",
+        "79,540"
+      ],
+      "answer": "70,000",
+      "reviewer": "Codex逐题审阅",
+      "reviewed_utc": "2026-10-14T14:13:02.887356+00:00"
+    },
+    "c5d82a55572f982762c09b998ed882740e04260bcd73a3f239c005524c819f68": {
+      "verdict": "equivalent",
+      "reason": "Saint Dominic直接指标准的patron saint Saint Dominic；不要求重复patron saint修饰。",
+      "question_id": "3bef9d71e3e4880239b332a3eac45205218ccf57c7b7d557e930da35d117246d",
+      "question": "how did the dominican republic get its name?",
+      "target": [
+        "patron saint, Saint Dominic"
+      ],
+      "answer": "Saint Dominic",
+      "reviewer": "Codex逐题审阅",
+      "reviewed_utc": "2026-10-14T14:13:02.887366+00:00"
+    },
+    "3bbdd23bae7f43a5960404a30dc43b603a146e21d214f9982b8c468ad82e037c": {
+      "verdict": "incorrect",
+      "reason": "逐题审阅最终答案与标准：1977 / [\"2009\", \"2017\"]；实体、数值、时间或所問字段不一致，维持错误。",
+      "question_id": "253df535ba25d8dce2d297b687aac4706697b27531154b693eb2d9edf1442a76",
+      "question": "when was the last time an american won the new york marathon?",
+      "target": [
+        "2009",
+        "2017"
+      ],
+      "answer": "1977",
+      "reviewer": "Codex逐题审阅",
+      "reviewed_utc": "2026-10-14T14:13:02.887374+00:00"
+    },
+    "000f53052c8f7901075299bfe9a584119f26f469560a75d4f8ad23b5371ef7bc": {
+      "verdict": "equivalent",
+      "reason": "Republicans与Republican均指同一共和党阵营，单复数形式不同。",
+      "question_id": "b170a8ba44b811d769e4e102633a1b57c8eb9dda234421c44ba4777d19b82dee",
+      "question": "who has majority in the house and senate?",
+      "target": [
+        "Republican"
+      ],
+      "answer": "Republicans",
+      "reviewer": "Codex逐题审阅",
+      "reviewed_utc": "2026-10-14T14:13:02.887382+00:00"
+    },
+    "5494e8e660c663dca2816dc237d8fb96572e4fa92b299cfda70c14ba19800f30": {
+      "verdict": "uncertain",
+      "reason": "精度、关键字段、上下级范围或合法替代答案存在歧义，未确认等价，暂不加分。",
+      "question_id": "5029a3ffee81a84f40c1c29ead246f95ca2fa07ab178863662b3ab1841de1681",
+      "question": "list of strict nature reserve in the philippines?",
+      "target": [
+        "Palawan",
+        "Lake Malimanga",
+        "Olango Island",
+        "Calauit Safari Park",
+        "Lake Buluan",
+        "Calavite and FB Harrison"
+      ],
+      "answer": "Palawan Biosphere Reserve",
+      "reviewer": "Codex逐题审阅",
+      "reviewed_utc": "2026-10-14T14:13:02.887392+00:00"
+    },
+    "1627bf360b49e3f1888c7e193415c1c0e664b210d1915505bc0dc3fb6a32888e": {
+      "verdict": "incorrect",
+      "reason": "逐题审阅最终答案与标准：Little Lord Fauntleroy / [\"Donald Duck\", \"Donald Fauntleroy Duck\"]；实体、数值、时间或所問字段不一致，维持错误。",
+      "question_id": "9a28b86b7cba5771628a2fc4c451e996f35559b0b595e2fdee6d1ffeb3aa5d9f",
+      "question": "what disney cartoon character's middle name is fauntleroy?",
+      "target": [
+        "Donald Duck",
+        "Donald Fauntleroy Duck"
+      ],
+      "answer": "Little Lord Fauntleroy",
+      "reviewer": "Codex逐题审阅",
+      "reviewed_utc": "2026-10-14T14:13:02.887400+00:00"
+    },
+    "cf247e7fcae08d00e3ba3d19c4d8f3cba034bb1af3baf408628859b4a7ee5d08": {
+      "verdict": "incorrect",
+      "reason": "逐题审阅最终答案与标准：ecosystem / [\"species\", \"habitat\"]；实体、数值、时间或所問字段不一致，维持错误。",
+      "question_id": "3e4237825f71765c5eb0467d97ff58321fff649d0f183be9d679bdd34b591f51",
+      "question": "communities of similar organisms found in a particular environment are called?",
+      "target": [
+        "species",
+        "habitat"
+      ],
+      "answer": "ecosystem",
+      "reviewer": "Codex逐题审阅",
+      "reviewed_utc": "2026-10-14T14:13:02.887408+00:00"
+    },
+    "588cf968c022a8db92d77c7bc4e97c794453e22ba073efe39e3a427d33a200ca": {
+      "verdict": "incorrect",
+      "reason": "逐题审阅最终答案与标准：Eocene / [\"1820s\", \"~3.5 million years old\", \"about 3.5 mya\"]；实体、数值、时间或所問字段不一致，维持错误。",
+      "question_id": "ea2b6392eca713141f762f6f653fb798b9d69b5ecef7a3a3b554082d99b82c0f",
+      "question": "when did equus first appear in fossil record?",
+      "target": [
+        "1820s",
+        "~3.5 million years old",
+        "about 3.5 mya"
+      ],
+      "answer": "Eocene",
+      "reviewer": "Codex逐题审阅",
+      "reviewed_utc": "2026-10-14T14:13:02.887417+00:00"
+    },
+    "6a86f8807ab41f926befb725704e49db94a122601477ddc79e5784a0d0559a0d": {
+      "verdict": "incorrect",
+      "reason": "逐题审阅最终答案与标准：Episode 88 / [\"165\", \"180\"]；实体、数值、时间或所問字段不一致，维持错误。",
+      "question_id": "039b4af2cf71ab26f624ebe4142af3919a121f8ffc5600e98e3f27acca3c32b5",
+      "question": "what episode does goku give up against cell?",
+      "target": [
+        "165",
+        "180"
+      ],
+      "answer": "Episode 88",
+      "reviewer": "Codex逐题审阅",
+      "reviewed_utc": "2026-10-14T14:13:02.887425+00:00"
+    },
+    "9aa7042edc7064bce9a2cd41abccfdbb39342858353412ade49278b2ebc8646a": {
+      "verdict": "incorrect",
+      "reason": "逐题审阅最终答案与标准：Forrest Parry / [\"Helmut Gröttrup\", \"Jürgen Dethloff\"]；实体、数值、时间或所問字段不一致，维持错误。",
+      "question_id": "176a350b810b00749657860720f002df21ca8a6cd5299a3f31fe3f158f037dda",
+      "question": "who invented the chip in. debit cards?",
+      "target": [
+        "Helmut Gröttrup",
+        "Jürgen Dethloff"
+      ],
+      "answer": "Forrest Parry",
+      "reviewer": "Codex逐题审阅",
+      "reviewed_utc": "2026-10-14T14:13:02.887433+00:00"
+    },
+    "07563d04e66841ab32f53831aee57a0aee67aec40daf1b4c390188d305643315": {
+      "verdict": "incorrect",
+      "reason": "逐题审阅最终答案与标准：military reasons / [\"a royal residence\", \"as a royal residence\"]；实体、数值、时间或所問字段不一致，维持错误。",
+      "question_id": "f54b930703c1807336d75c7446a30e2e0dc604780a24c16c3d1ff9057b51d7dd",
+      "question": "what was the tower of london originally used for?",
+      "target": [
+        "a royal residence",
+        "as a royal residence"
+      ],
+      "answer": "military reasons",
+      "reviewer": "Codex逐题审阅",
+      "reviewed_utc": "2026-10-14T14:13:02.887442+00:00"
+    },
+    "21c2bf72e154e534aa1dbcf0036f6d6079bd478e3cb30b552a454b9c35c86bd1": {
+      "verdict": "uncertain",
+      "reason": "精度、关键字段、上下级范围或合法替代答案存在歧义，未确认等价，暂不加分。",
+      "question_id": "e19d380d64a14a9d761bc89beba12e5378638dbd93681b008b2f5f1b2116f336",
+      "question": "what type of boundary was the mexico earthquake?",
+      "target": [
+        "a subduction zone"
+      ],
+      "answer": "convergent",
+      "reviewer": "Codex逐题审阅",
+      "reviewed_utc": "2026-10-14T14:13:02.887450+00:00"
+    },
+    "dff4e29d60ae844b26f67282a471c8839d8e9c144b939612fd1bb9bec1498550": {
+      "verdict": "incorrect",
+      "reason": "逐题审阅最终答案与标准：Los Angeles Stadium at Hollywood Park / [\"Minneapolis, Minnesota\"]；实体、数值、时间或所問字段不一致，维持错误。",
+      "question_id": "9d9ae5cad88bc16d716896085bc3aed4a264ed5aabf80c5a3934b58a8ed5bd8d",
+      "question": "where are they playing the superbowl at this year?",
+      "target": [
+        "Minneapolis, Minnesota"
+      ],
+      "answer": "Los Angeles Stadium at Hollywood Park",
+      "reviewer": "Codex逐题审阅",
+      "reviewed_utc": "2026-10-14T14:13:02.887459+00:00"
+    },
+    "5595ed72459c239ef12634210b82b893a532aa092bcb2bc2a05223b8be57e1ee": {
+      "verdict": "incorrect",
+      "reason": "逐题审阅最终答案与标准：Elvis / [\"The Beatles\"]；实体、数值、时间或所問字段不一致，维持错误。",
+      "question_id": "286c098105b4a6b65529aa4e1582ec9d230ae6cd1e3faacdbcb765ffabc2013d",
+      "question": "who sold the most records elvis or the beatles?",
+      "target": [
+        "The Beatles"
+      ],
+      "answer": "Elvis",
+      "reviewer": "Codex逐题审阅",
+      "reviewed_utc": "2026-10-14T14:13:02.887467+00:00"
+    },
+    "bd73a218a5a101379eca2b12f5fa9260cba8303176db09851af18b1687e61475": {
+      "verdict": "incorrect",
+      "reason": "逐题审阅最终答案与标准：13 / [\"18\"]；实体、数值、时间或所問字段不一致，维持错误。",
+      "question_id": "f517f7d3221db8e8ef3a797cf68aa8008306dfef925befb4e379c8f33621ce24",
+      "question": "how many episodes of season 5 of curse of oak island?",
+      "target": [
+        "18"
+      ],
+      "answer": "13",
+      "reviewer": "Codex逐题审阅",
+      "reviewed_utc": "2026-10-14T14:13:02.887475+00:00"
+    },
+    "f0cb24807de5f4986625f9b0c66a58ec86824c2a79cf20149c1a1b6c28007d1f": {
+      "verdict": "uncertain",
+      "reason": "精度、关键字段、上下级范围或合法替代答案存在歧义，未确认等价，暂不加分。",
+      "question_id": "a6715a09f1d90a28f1d9422aa580d1ab5afe94d88e7b79a8b0b1b58eebc24d2c",
+      "question": "where is a simple gear train used in real life?",
+      "target": [
+        "Automobile drivetrains"
+      ],
+      "answer": "bicycle",
+      "reviewer": "Codex逐题审阅",
+      "reviewed_utc": "2026-10-14T14:13:02.887482+00:00"
+    },
+    "d16fc53f02afcc64ce143d9742143c5a0cb62a3227781598500702ef83c3d1d9": {
+      "verdict": "incorrect",
+      "reason": "未交出合法最终答案，不从think或工具文段补出答案。",
+      "question_id": "c9b5b79e3bef9c79cc35405296fae7a2efcd9821d61718826a5933f33c064dea",
+      "question": "who plays charles on have and have nots?",
+      "target": [
+        "Nick Sager",
+        "Nick Sagar"
+      ],
+      "answer": null,
+      "reviewer": "Codex逐题审阅",
+      "reviewed_utc": "2026-10-14T14:13:02.887490+00:00"
+    },
+    "7e03f8c45babcbf179301ca0d03c317572ce14fe54c74c72be49a72302762f6d": {
+      "verdict": "uncertain",
+      "reason": "精度、关键字段、上下级范围或合法替代答案存在歧义，未确认等价，暂不加分。",
+      "question_id": "470b09d7bb8a7bd42e0f4f525f5d80fe69bba8721d550e89daabff568f8d20a3",
+      "question": "when is the publishers clearing house sweepstakes drawing?",
+      "target": [
+        "just after the Super Bowl"
+      ],
+      "answer": "Super Bowl",
+      "reviewer": "Codex逐题审阅",
+      "reviewed_utc": "2026-10-14T14:13:02.887497+00:00"
+    },
+    "e561c1279f7d8c316c22459b9327e76443398c59fc47f4a8ee55dea7b5ae7a63": {
+      "verdict": "incorrect",
+      "reason": "逐题审阅最终答案与标准：Tika Sumpter / [\"Kathy Najimy\"]；实体、数值、时间或所問字段不一致，维持错误。",
+      "question_id": "9545a91f71a8a4b79324251391532800c8d676088b5fe90db2643afcb57aefed",
+      "question": "who plays connor's mom in madeas christmas?",
+      "target": [
+        "Kathy Najimy"
+      ],
+      "answer": "Tika Sumpter",
+      "reviewer": "Codex逐题审阅",
+      "reviewed_utc": "2026-10-14T14:13:02.887504+00:00"
+    },
+    "7e5fbdccf7c4a9061385154f3dfc2cf2a2c1aea891fd09942699fa5a6f4ee437": {
+      "verdict": "incorrect",
+      "reason": "逐题审阅最终答案与标准：Louisiana / [\"the Texas Panhandle\"]；实体、数值、时间或所問字段不一致，维持错误。",
+      "question_id": "f73f4f4f1b65b12f77f355a124283faaea10d33a4e67cca8af26f9a07e19d52d",
+      "question": "where does the red river start and end in louisiana?",
+      "target": [
+        "the Texas Panhandle"
+      ],
+      "answer": "Louisiana",
+      "reviewer": "Codex逐题审阅",
+      "reviewed_utc": "2026-10-14T14:13:02.887512+00:00"
+    },
+    "59b3de5dfbfdd5acb60aaa1a074010b0eb323c519dbfc5123cb1917e4f28de5b": {
+      "verdict": "incorrect",
+      "reason": "逐题审阅最终答案与标准：100th / [\"12 / 225\", \"12\"]；实体、数值、时间或所問字段不一致，维持错误。",
+      "question_id": "93c66f527ee9bdf6e196aeb4bfde13cc86958e7a4c10f85360170801cad27241",
+      "question": "what is the rank of india in economic growth?",
+      "target": [
+        "12 / 225",
+        "12"
+      ],
+      "answer": "100th",
+      "reviewer": "Codex逐题审阅",
+      "reviewed_utc": "2026-10-14T14:13:02.887519+00:00"
+    },
+    "a8ce54cb39488d5c87e2cf340974412a78db4826819b7d2a32f1abf7bf62c989": {
+      "verdict": "incorrect",
+      "reason": "逐题审阅最终答案与标准：Dedh Ishqiya / [\"Yeh Raaste Hain Pyaar Ke\"]；实体、数值、时间或所問字段不一致，维持错误。",
+      "question_id": "97ef99b53c0bb87535d22454f3547d77ea8868ef6f52d02e68b39a499992c6c7",
+      "question": "ajay devgan preity zinta and madhuri dixit movie?",
+      "target": [
+        "Yeh Raaste Hain Pyaar Ke"
+      ],
+      "answer": "Dedh Ishqiya",
+      "reviewer": "Codex逐题审阅",
+      "reviewed_utc": "2026-10-14T14:13:02.887527+00:00"
+    },
+    "6adb0d90f009fd10a7b504b23ebd38322957f776bc6edecf5fb5197a3102680c": {
+      "verdict": "incorrect",
+      "reason": "逐题审阅最终答案与标准：Alamodome / [\"Wichita State University\", \"Boise State University\", \"Duquesne University\", \"Big 12 Conference\"]；实体、数值、时间或所問字段不一致，维持错误。",
+      "question_id": "176850620ae4309525435ffe9798b52000339938d4c70d952a8435a5135114d4",
+      "question": "where will the first round of march madness be played?",
+      "target": [
+        "Wichita State University",
+        "Boise State University",
+        "Duquesne University",
+        "Big 12 Conference"
+      ],
+      "answer": "Alamodome",
+      "reviewer": "Codex逐题审阅",
+      "reviewed_utc": "2026-10-14T14:13:02.887536+00:00"
+    },
+    "5070539033880862810a7340490c2eb86ba85b81346490c8e43bef7c1b76cd37": {
+      "verdict": "incorrect",
+      "reason": "逐题审阅最终答案与标准：Earth / [\"Mariana Trench\"]；实体、数值、时间或所問字段不一致，维持错误。",
+      "question_id": "b3ea60b10c2979539d29595c3e83edf77f351763e26ea5581a33e155f3ca8fc8",
+      "question": "where can you find convergent boundaries on earth?",
+      "target": [
+        "Mariana Trench"
+      ],
+      "answer": "Earth",
+      "reviewer": "Codex逐题审阅",
+      "reviewed_utc": "2026-10-14T14:13:02.887543+00:00"
+    },
+    "bc506c088543892e44ff735686f7d2ddc4316003f3e72d10824f539038ed0860": {
+      "verdict": "uncertain",
+      "reason": "精度、关键字段、上下级范围或合法替代答案存在歧义，未确认等价，暂不加分。",
+      "question_id": "263c5522bf52e086b7d555a871c299f6d39f6030e5f3f5d1585bc004c0e10df0",
+      "question": "what is the central idea of the poem the rime of ancient mariner?",
+      "target": [
+        "a violation of nature"
+      ],
+      "answer": "punishment and redemption",
+      "reviewer": "Codex逐题审阅",
+      "reviewed_utc": "2026-10-14T14:13:02.887551+00:00"
+    },
+    "238d222a8e0b2437fb11c1c3842bb7634b011b88014ccfaf2b841429577e4d08": {
+      "verdict": "incorrect",
+      "reason": "逐题审阅最终答案与标准：Alan Rickman / [\"Barbara Windsor\"]；实体、数值、时间或所問字段不一致，维持错误。",
+      "question_id": "1831be4010367910c7628541c8e2e865748b9ae177208219c5071f4dbacbee63",
+      "question": "who plays the mouse in alice in wonderland?",
+      "target": [
+        "Barbara Windsor"
+      ],
+      "answer": "Alan Rickman",
+      "reviewer": "Codex逐题审阅",
+      "reviewed_utc": "2026-10-14T14:13:02.887558+00:00"
+    },
+    "0f96cb52e358dfc2003250d9c9c338055e425fb19876f5cd06c08cb6dc9b84de": {
+      "verdict": "uncertain",
+      "reason": "精度、关键字段、上下级范围或合法替代答案存在歧义，未确认等价，暂不加分。",
+      "question_id": "daa95ce4b986f5591361316bc59ced0b4d1e1c80566f53f7c655219fc1c10a07",
+      "question": "who made the movie fifty shades of grey?",
+      "target": [
+        "Universal Pictures and Focus Features",
+        "Sam Taylor-Johnson"
+      ],
+      "answer": "Universal Pictures",
+      "reviewer": "Codex逐题审阅",
+      "reviewed_utc": "2026-10-14T14:13:02.887566+00:00"
+    },
+    "9ab1d1a4ddf7430616e2702e168faf4830bba2ec3f1ec8ee5949bd9a5d034d14": {
+      "verdict": "uncertain",
+      "reason": "精度、关键字段、上下级范围或合法替代答案存在歧义，未确认等价，暂不加分。",
+      "question_id": "9df2f2b25e1f855aab451c7d00af9ccda96f7ffe9d1929940b2034b696292efd",
+      "question": "what song did the titanic band play when it sank?",
+      "target": [
+        "\"Autumn\""
+      ],
+      "answer": "Nearer, My God, to Thee",
+      "reviewer": "Codex逐题审阅",
+      "reviewed_utc": "2026-10-14T14:13:02.887573+00:00"
+    },
+    "74af7d122f7a9ade0907e6d269681b798a91da3c8fa11909392c7ff8304a66e9": {
+      "verdict": "uncertain",
+      "reason": "精度、关键字段、上下级范围或合法替代答案存在歧义，未确认等价，暂不加分。",
+      "question_id": "1085843cd1dbfb1cdde18f99734eb2c57f04aa5c71b4b33a2c79d56403411041",
+      "question": "when do willow and tara get back together?",
+      "target": [
+        "Entropy",
+        "Seeing Red"
+      ],
+      "answer": "season 6",
+      "reviewer": "Codex逐题审阅",
+      "reviewed_utc": "2026-10-14T14:13:02.887580+00:00"
+    },
+    "f646095c471a82ed6125f53a9b5d2434c50d0c34343bb99076075c4bf055b769": {
+      "verdict": "incorrect",
+      "reason": "逐题审阅最终答案与标准：February 2005 / [\"2010\"]；实体、数值、时间或所問字段不一致，维持错误。",
+      "question_id": "b94925d3b17a1d89411b1e685ea029a7f5fb6a74c157945f7ad29a7f9517dc73",
+      "question": "when was the bridge over the hoover dam built?",
+      "target": [
+        "2010"
+      ],
+      "answer": "February 2005",
+      "reviewer": "Codex逐题审阅",
+      "reviewed_utc": "2026-10-14T14:13:02.887587+00:00"
+    },
+    "dd87f3e2dac270a64506ba85996b31d0f284a95d736037fee56d86693566f4b4": {
+      "verdict": "incorrect",
+      "reason": "逐题审阅最终答案与标准：Feste / [\"Malvolio\", \"letter that Maria wrote\"]；实体、数值、时间或所問字段不一致，维持错误。",
+      "question_id": "bb71ba31307ac124641e5682e1884bd3456e9f8851888552999e0bd067c5ffea",
+      "question": "who said some are born great in twelfth night?",
+      "target": [
+        "Malvolio",
+        "letter that Maria wrote"
+      ],
+      "answer": "Feste",
+      "reviewer": "Codex逐题审阅",
+      "reviewed_utc": "2026-10-14T14:13:02.887594+00:00"
+    },
+    "264551623f867980d64cff194d2233796d8eab8c2101f5cab7d13a5b7e480798": {
+      "verdict": "equivalent",
+      "reason": "问题限定Edinburgh Fringe Festival，Edinburgh为标准Edinburgh, Scotland中的同一城市。",
+      "question_id": "5ab7c45a1e5f23b8e5f036b0442a96b4561ecec855beead75ab42c962796bb35",
+      "question": "where does the edinburgh fringe festival take place?",
+      "target": [
+        "in Edinburgh, Scotland"
+      ],
+      "answer": "Edinburgh",
+      "reviewer": "Codex逐题审阅",
+      "reviewed_utc": "2026-10-14T14:13:02.887602+00:00"
+    },
+    "f8c7116e95f74aaf6739674c759da1662e75bac836cf6da09d597c53cc621807": {
+      "verdict": "uncertain",
+      "reason": "精度、关键字段、上下级范围或合法替代答案存在歧义，未确认等价，暂不加分。",
+      "question_id": "e23942b63f663b88c03f388558b00bd565d0a008600df8fe4592a44c5603a0db",
+      "question": "what is the job of the whip in congress?",
+      "target": [
+        "to ensure party discipline"
+      ],
+      "answer": "leader",
+      "reviewer": "Codex逐题审阅",
+      "reviewed_utc": "2026-10-14T14:13:02.887609+00:00"
+    },
+    "eb0ae95e8d37720ab3719cd44dbd185d4212ea9bd6328fff4bc1f20ed208bd1e": {
+      "verdict": "equivalent",
+      "reason": "puzzle book与puzzle在书籍类型问题中同义，附加类别单位。",
+      "question_id": "0a1cb8e6cf1dee5fb1c6d8fb0a3fc05ab12313b6c140ca7aa6757ea479f37456",
+      "question": "what kind of book is where's waldo?",
+      "target": [
+        "puzzle"
+      ],
+      "answer": "puzzle book",
+      "reviewer": "Codex逐题审阅",
+      "reviewed_utc": "2026-10-14T14:13:02.887616+00:00"
+    },
+    "17616fd3b60cbc81723f54be2905fd9c4de6fc58417f209a940aba04bf474e48": {
+      "verdict": "incorrect",
+      "reason": "逐题审阅最终答案与标准：Aretha Franklin / [\"Kid Creole and the Coconuts\", \"Kid Creole & The Coconuts\"]；实体、数值、时间或所問字段不一致，维持错误。",
+      "question_id": "f26241976c8720d1ca9168c382cbfb0124d30b6f4e0f85f1f95542085142ae08",
+      "question": "who sang oh annie i not your daddy?",
+      "target": [
+        "Kid Creole and the Coconuts",
+        "Kid Creole & The Coconuts"
+      ],
+      "answer": "Aretha Franklin",
+      "reviewer": "Codex逐题审阅",
+      "reviewed_utc": "2026-10-14T14:13:02.887624+00:00"
+    },
+    "14f14b42450c8e96fe9f02154ae5d590fa0df1d060cc21459ea07d7bdd8d530f": {
+      "verdict": "incorrect",
+      "reason": "逐题审阅最终答案与标准：Ultimate Alien / [\"Duped\"]；实体、数值、时间或所問字段不一致，维持错误。",
+      "question_id": "befb16b0b3aa7ade5c7653ba5ec09e53df007be15a2dc1972a736270ee08df51",
+      "question": "ben 10 ultimate alien episode 2 season 1?",
+      "target": [
+        "Duped"
+      ],
+      "answer": "Ultimate Alien",
+      "reviewer": "Codex逐题审阅",
+      "reviewed_utc": "2026-10-14T14:13:02.887631+00:00"
+    },
+    "dba76d70e491920ed4bd4d109eb1afb0b8b8a311ce66f82c06b80975c2f4e6fb": {
+      "verdict": "incorrect",
+      "reason": "逐题审阅最终答案与标准：Adam Levine / [\"Keegan-Michael Key\"]；实体、数值、时间或所問字段不一致，维持错误。",
+      "question_id": "b4df24e2b8e43190adbde0f9e62244b2ccd11c13f4a685953b1e2a54dc883e04",
+      "question": "who played the music producer in pitch perfect 2?",
+      "target": [
+        "Keegan-Michael Key"
+      ],
+      "answer": "Adam Levine",
+      "reviewer": "Codex逐题审阅",
+      "reviewed_utc": "2026-10-14T14:13:02.887638+00:00"
+    },
+    "7a4c63e9d5c78aa5ab8036a248b245bdc92d9dfcc87d9b663d95966ca47cddd0": {
+      "verdict": "incorrect",
+      "reason": "逐题审阅最终答案与标准：blood tests / [\"Aspirin\"]；实体、数值、时间或所問字段不一致，维持错误。",
+      "question_id": "2d9c16c855716a502a61d19df56eadacda4b2f7b40185d9b012afca0ff3de487",
+      "question": "for complaints of sudden chest pain patients should take a?",
+      "target": [
+        "Aspirin"
+      ],
+      "answer": "blood tests",
+      "reviewer": "Codex逐题审阅",
+      "reviewed_utc": "2026-10-14T14:13:02.887645+00:00"
+    },
+    "eccc616c69d07ee0e3e3c92a0b495837854d5d47b9954519d526519f1f22df1a": {
+      "verdict": "incorrect",
+      "reason": "逐题审阅最终答案与标准：Katy Perry / [\"Childish Gambino\"]；实体、数值、时间或所問字段不一致，维持错误。",
+      "question_id": "966c4c0b33da59d5f8b25946888ce51a7acc2330bdf4a49cfa8780ed290d9515",
+      "question": "who sang last night on saturday night live?",
+      "target": [
+        "Childish Gambino"
+      ],
+      "answer": "Katy Perry",
+      "reviewer": "Codex逐题审阅",
+      "reviewed_utc": "2026-10-14T14:13:02.887653+00:00"
+    },
+    "f8c550196e0c4ce0036bdecd27b231b51a4e17482ac0078a358dcff29b5161f4": {
+      "verdict": "equivalent",
+      "reason": "Haruka Tenoh为标准Haruka同一角色完整名；标准已把Haruka作为可接受单项答案。",
+      "question_id": "a5c487e69111af16265b892e5f382d50813af1740574839ab01f24928af6b117",
+      "question": "who has the talismans in sailor moon s?",
+      "target": [
+        "Haruka and Michiru",
+        "Haruka",
+        "Michiru",
+        "Sailor Pluto"
+      ],
+      "answer": "Haruka Tenoh",
+      "reviewer": "Codex逐题审阅",
+      "reviewed_utc": "2026-10-14T14:13:02.887660+00:00"
+    },
+    "bea12126bd01a027e96a307e1a969c6adf1b014a18a2348474cae3698e7d18c1": {
+      "verdict": "incorrect",
+      "reason": "逐题审阅最终答案与标准：Georges Danton / [\"Convention\", \"France's Legislative Assembly\"]；实体、数值、时间或所問字段不一致，维持错误。",
+      "question_id": "5a02cf3838ffc4e72e899ef2ee7c41b11d03260df5275c3a488a696c1d306c8d",
+      "question": "who abolished the monarchy and declared france a republic?",
+      "target": [
+        "Convention",
+        "France's Legislative Assembly"
+      ],
+      "answer": "Georges Danton",
+      "reviewer": "Codex逐题审阅",
+      "reviewed_utc": "2026-10-14T14:13:02.887668+00:00"
+    },
+    "9a9883e860f131368a679eb4cc6e0ec45ee2e482a656084f237bd14f701b99c8": {
+      "verdict": "incorrect",
+      "reason": "未交出合法最终答案，不从think或工具文段补出答案。",
+      "question_id": "29a7c98eff6743f2928315673758242752dabb4edb05c9ca64a5e293e0d26025",
+      "question": "who played ice queen in chronicles of narnia?",
+      "target": [
+        "Tilda Swinton",
+        "Laura Brent"
+      ],
+      "answer": null,
+      "reviewer": "Codex逐题审阅",
+      "reviewed_utc": "2026-10-14T14:13:02.887675+00:00"
+    },
+    "b8b62923e6ea65244ec335958cb0a62dcfe5c1d4c4b385e20ccf8b4e02bab89d": {
+      "verdict": "incorrect",
+      "reason": "逐题审阅最终答案与标准：Syngman Rhee / [\"the Korean Empire\", \"Empire of Japan\", \"Taft\", \"Korean Empire\"]；实体、数值、时间或所問字段不一致，维持错误。",
+      "question_id": "76837c9f97e1a2c8e11429216270b041b6ef59c5d8d2d288dcb8656e905b6212",
+      "question": "who negotiated an agreement with japan concerning the future of korea?",
+      "target": [
+        "the Korean Empire",
+        "Empire of Japan",
+        "Taft",
+        "Korean Empire"
+      ],
+      "answer": "Syngman Rhee",
+      "reviewer": "Codex逐题审阅",
+      "reviewed_utc": "2026-10-14T14:13:02.887683+00:00"
+    },
+    "a2497f6c7e849f427a7c487caa07755f288584bdac17cd25f74bcf4aec248340": {
+      "verdict": "uncertain",
+      "reason": "精度、关键字段、上下级范围或合法替代答案存在歧义，未确认等价，暂不加分。",
+      "question_id": "3f3b2faf5dd655b9ac336271aaa31f0a74fc35b50a483bbd05b2b08cea41a5cd",
+      "question": "who used to present i'm a celebrity now?",
+      "target": [
+        "Ant & Dec"
+      ],
+      "answer": "Vicky Pattison",
+      "reviewer": "Codex逐题审阅",
+      "reviewed_utc": "2026-10-14T14:13:02.887690+00:00"
+    },
+    "6b70a7e3f5c6ca7b7530dcaeeef73c9e44c0506f69484117d7c32ff2985d8caf": {
+      "verdict": "incorrect",
+      "reason": "逐题审阅最终答案与标准：I. Marlene King / [\"CeCe Drake\"]；实体、数值、时间或所問字段不一致，维持错误。",
+      "question_id": "1124dd15b2ea60ee47b177a15d6f14222c4aee4c44967b488ebcc9d713563dba",
+      "question": "who is the head a in pretty little liars?",
+      "target": [
+        "CeCe Drake"
+      ],
+      "answer": "I. Marlene King",
+      "reviewer": "Codex逐题审阅",
+      "reviewed_utc": "2026-10-14T14:13:02.887698+00:00"
+    },
+    "2a98ee554dce9bcdbd55ce45fdd13fbf71b6caf733058ea91ac16481b4196bf8": {
+      "verdict": "incorrect",
+      "reason": "未交出合法最终答案，不从think或工具文段补出答案。",
+      "question_id": "b6068ffdaf6100568ad47878bb24c085997d2cac1dc4ebd6248cca318ade6a91",
+      "question": "what are the 5 prohibitions of yom kippur?",
+      "target": [
+        "No marital relations",
+        "No wearing of leather shoes",
+        "No eating and drinking",
+        "No bathing or washing"
+      ],
+      "answer": null,
+      "reviewer": "Codex逐题审阅",
+      "reviewed_utc": "2026-10-14T14:13:02.887707+00:00"
+    },
+    "15f702fef4ce4174eeb35bfc7e04ad63cee7fe869d6582f65fdaec570a414ea6": {
+      "verdict": "incorrect",
+      "reason": "逐题审阅最终答案与标准：straight-line distance / [\"displacement\"]；实体、数值、时间或所問字段不一致，维持错误。",
+      "question_id": "1bf97f908f418e4543d432b416c4875c42d0a001c204431fd84488db056f6c44",
+      "question": "the length and direction of a straight line between two locations or positions?",
+      "target": [
+        "displacement"
+      ],
+      "answer": "straight-line distance",
+      "reviewer": "Codex逐题审阅",
+      "reviewed_utc": "2026-10-14T14:13:02.887715+00:00"
+    },
+    "43e34c987630d0ca75d98783c53fed8a73f372628feb99b1a3df685c45829e63": {
+      "verdict": "incorrect",
+      "reason": "逐题审阅最终答案与标准：GET / [\"A request line\", \"the status line\"]；实体、数值、时间或所問字段不一致，维持错误。",
+      "question_id": "79b2806d4286626989961aebd1f4ffbb43835a9b8441c07c3ac1d39cf89a9cd0",
+      "question": "what is the first line of an http request to the server?",
+      "target": [
+        "A request line",
+        "the status line"
+      ],
+      "answer": "GET",
+      "reviewer": "Codex逐题审阅",
+      "reviewed_utc": "2026-10-14T14:13:02.887723+00:00"
+    },
+    "d70c6b7398b3700b427bede6f7acf0d26a403c7e35c50f98a0498ebbacb2607b": {
+      "verdict": "incorrect",
+      "reason": "逐题审阅最终答案与标准：point guard / [\"Triple threat\"]；实体、数值、时间或所問字段不一致，维持错误。",
+      "question_id": "4873e522e756d1be1e5b25d7a91212365504445c986a4040676afb35e58d50b1",
+      "question": "a player that can shoot pass or dribble is considered to be?",
+      "target": [
+        "Triple threat"
+      ],
+      "answer": "point guard",
+      "reviewer": "Codex逐题审阅",
+      "reviewed_utc": "2026-10-14T14:13:02.887730+00:00"
+    },
+    "5bd413043327a1acfd235d1f3d2297e6616fbf9029bec7191b3d99c56f268728": {
+      "verdict": "uncertain",
+      "reason": "精度、关键字段、上下级范围或合法替代答案存在歧义，未确认等价，暂不加分。",
+      "question_id": "59586b7efb339b0315e753e7d889dd0d27ef8231db0e2396c1ed22599c4d6303",
+      "question": "what level is a city and guilds qualification?",
+      "target": [
+        "entry level to level 7"
+      ],
+      "answer": "level 2",
+      "reviewer": "Codex逐题审阅",
+      "reviewed_utc": "2026-10-14T14:13:02.887737+00:00"
+    },
+    "b76b695e782abf28aa5805c80a57eacb5b60df8c4082e96fa69430f266896076": {
+      "verdict": "uncertain",
+      "reason": "精度、关键字段、上下级范围或合法替代答案存在歧义，未确认等价，暂不加分。",
+      "question_id": "d742bb7df77a8c9451ee22dafffc83685700d2c36dcc7b8fc6fb5f9944d283ec",
+      "question": "where is iodine found in the periodic table?",
+      "target": [
+        "heaviest of the stable halogens"
+      ],
+      "answer": "group 17",
+      "reviewer": "Codex逐题审阅",
+      "reviewed_utc": "2026-10-14T14:13:02.887744+00:00"
+    },
+    "a261cecce1576189bb30df445347693469cf7424db9e4dc68557536e66900fa5": {
+      "verdict": "uncertain",
+      "reason": "精度、关键字段、上下级范围或合法替代答案存在歧义，未确认等价，暂不加分。",
+      "question_id": "e5b787bd59ccb2034e750b59c550e9c89704571dfb0aabd7101f517ff839fe4c",
+      "question": "what is the job of justice of the peace?",
+      "target": [
+        "dispense summary justice"
+      ],
+      "answer": "preside over cases",
+      "reviewer": "Codex逐题审阅",
+      "reviewed_utc": "2026-10-14T14:13:02.887752+00:00"
+    },
+    "13bd48f6a6c03230757b648d9a37441a17ae04d5b4eda6ef81f3cb99c8e904f2": {
+      "verdict": "incorrect",
+      "reason": "逐题审阅最终答案与标准：Ashwiny Iyer Tiwari / [\"Nitesh Tiwari\"]；实体、数值、时间或所問字段不一致，维持错误。",
+      "question_id": "a7dcf4a5de5954fb66eb76386e3861f6b18dcd1fdc7eca018ca3fa53a630152e",
+      "question": "who is the best director in bollywood 2017?",
+      "target": [
+        "Nitesh Tiwari"
+      ],
+      "answer": "Ashwiny Iyer Tiwari",
+      "reviewer": "Codex逐题审阅",
+      "reviewed_utc": "2026-10-14T14:13:02.887760+00:00"
+    },
+    "566d3a9bb6654de4149b3a6a963a368ffda8d89c59ef3ccd60191d4de558683a": {
+      "verdict": "incorrect",
+      "reason": "逐题审阅最终答案与标准：2018 / [\"2016\"]；实体、数值、时间或所問字段不一致，维持错误。",
+      "question_id": "c736ff8ff68b6d31725756279a29ebc414a299f971be4800611aae6adec42611",
+      "question": "when was the cleveland browns last winning game?",
+      "target": [
+        "2016"
+      ],
+      "answer": "2018",
+      "reviewer": "Codex逐题审阅",
+      "reviewed_utc": "2026-10-14T14:13:02.887766+00:00"
+    },
+    "ccff48a78b5b5d8183c49b2e913d95bc71c98aad60b2ad913e0d5f614ddb3d02": {
+      "verdict": "incorrect",
+      "reason": "逐题审阅最终答案与标准：judiciary / [\"Congress\"]；实体、数值、时间或所問字段不一致，维持错误。",
+      "question_id": "471366ce252ca41fc1531028ba52a947d84b65e44f2b463e83ac4685e62bd91d",
+      "question": "who is in charge of new issues not mentioned in the constitution?",
+      "target": [
+        "Congress"
+      ],
+      "answer": "judiciary",
+      "reviewer": "Codex逐题审阅",
+      "reviewed_utc": "2026-10-14T14:13:02.887774+00:00"
+    },
+    "01df4bcf2a87707728a908bb90f7364504bd007301bb89120a5e72fabcb57d41": {
+      "verdict": "uncertain",
+      "reason": "精度、关键字段、上下级范围或合法替代答案存在歧义，未确认等价，暂不加分。",
+      "question_id": "2d721b6d9f071f5d9344bbf08457931fe1e72d75e9b85c4a855ed1e1739b289f",
+      "question": "what color is the golden gate bridge in san francisco?",
+      "target": [
+        "orange vermilion called international orange",
+        "red",
+        "International Orange"
+      ],
+      "answer": "orange",
+      "reviewer": "Codex逐题审阅",
+      "reviewed_utc": "2026-10-14T14:13:02.887782+00:00"
+    },
+    "90f67b137357eef4d9db27dcaf91e9bac701ff0fecec0da5b51709b4fb57f02c": {
+      "verdict": "uncertain",
+      "reason": "精度、关键字段、上下级范围或合法替代答案存在歧义，未确认等价，暂不加分。",
+      "question_id": "b62b54bf18d7956efb1c5b6e1b247e757038a1b9702b24a45821ddf65ee20a11",
+      "question": "when was the peak to peak gondola built?",
+      "target": [
+        "in 2007 and 2008"
+      ],
+      "answer": "2007",
+      "reviewer": "Codex逐题审阅",
+      "reviewed_utc": "2026-10-14T14:13:02.887789+00:00"
+    },
+    "d5a3ece4e51e2bd28a5e3c4dc310e1e9f865a65f8d0378758bfb4ccc88159c8b": {
+      "verdict": "incorrect",
+      "reason": "逐题审阅最终答案与标准：November 27, 2011 / [\"September 9, 2012\"]；实体、数值、时间或所問字段不一致，维持错误。",
+      "question_id": "ab9bae9ef15c80e5b6f0cae6bd9faae43d10c5c3c75082e35ede6a7954c1c0a9",
+      "question": "when did david akers kick the 63 yard field goal?",
+      "target": [
+        "September 9, 2012"
+      ],
+      "answer": "November 27, 2011",
+      "reviewer": "Codex逐题审阅",
+      "reviewed_utc": "2026-10-14T14:13:02.887797+00:00"
+    },
+    "2b0450d3261b935ed0dcbe490f530382e377a83256b952ab4d2e18e647b09082": {
+      "verdict": "uncertain",
+      "reason": "精度、关键字段、上下级范围或合法替代答案存在歧义，未确认等价，暂不加分。",
+      "question_id": "3c574a46c278816f02ae84775f3375f67f37c29fa92587f6ee23baae1481174a",
+      "question": "when did the first battle of ypres end?",
+      "target": [
+        "22 November 1914"
+      ],
+      "answer": "mid-November 1914",
+      "reviewer": "Codex逐题审阅",
+      "reviewed_utc": "2026-10-14T14:13:02.887804+00:00"
+    },
+    "e6a9db86486391ce9025f5f5ada9c9acce7c2def0284caa83cf20c99a7ac1281": {
+      "verdict": "label_issue",
+      "reason": "标准把任期two years与Speaker of the House职位混在允许集合；回答职位未答任期，单列标签类型问题不加分。",
+      "question_id": "34d23dac18724bc26aace3c2b324e64d67dfa21b7ded9408d1b2d8dcd845c187",
+      "question": "what is the term of an official in the house of representatives?",
+      "target": [
+        "two-year",
+        "Speaker of the House",
+        "Two years",
+        "Representatives"
+      ],
+      "answer": "Speaker of the United States House of Representatives",
+      "reviewer": "Codex逐题审阅",
+      "reviewed_utc": "2026-10-14T14:13:02.887812+00:00"
+    },
+    "3138628699908afb5e9be93439f3315ffeabcec737b9c537ef246e9eca0302b5": {
+      "verdict": "incorrect",
+      "reason": "逐题审阅最终答案与标准：abaya / [\"hijab\"]；实体、数值、时间或所問字段不一致，维持错误。",
+      "question_id": "da7384961a76b3b55607263e0b5a089788f0cc69b661087aeba33a5c3374f3ef",
+      "question": "what is the name of the muslim dress?",
+      "target": [
+        "hijab"
+      ],
+      "answer": "abaya",
+      "reviewer": "Codex逐题审阅",
+      "reviewed_utc": "2026-10-14T14:13:02.887819+00:00"
+    },
+    "3f9f880c05afd4834be000f958e19992d3366d6e5a2b687a0559ae38b102de50": {
+      "verdict": "uncertain",
+      "reason": "精度、关键字段、上下级范围或合法替代答案存在歧义，未确认等价，暂不加分。",
+      "question_id": "2c5b7264b2067076f973b71417f639989064e5fa2666306b78f7cfa4a672bb40",
+      "question": "when did michael jordan return to the nba?",
+      "target": [
+        "2001",
+        "1995",
+        "March 1995",
+        "in March 1995"
+      ],
+      "answer": "summer of 2001",
+      "reviewer": "Codex逐题审阅",
+      "reviewed_utc": "2026-10-14T14:13:02.887828+00:00"
+    },
+    "3bd60a0c7d6eb45b04f7b39b78ac44d1c37b8f3d75b775c44ef2f06a77f11d10": {
+      "verdict": "incorrect",
+      "reason": "逐题审阅最终答案与标准：1990 / [\"1984\"]；实体、数值、时间或所問字段不一致，维持错误。",
+      "question_id": "bdebd203eb467b20640434072a88e58ffb88c1328a54de67f303a0c69bf0898c",
+      "question": "when did teenage mutant ninja turtles come out?",
+      "target": [
+        "1984"
+      ],
+      "answer": "1990",
+      "reviewer": "Codex逐题审阅",
+      "reviewed_utc": "2026-10-14T14:13:02.887835+00:00"
+    },
+    "e4de70e5ed274e908a9dd3004327c2a610305a318c855a3cdb08b742aa958158": {
+      "verdict": "incorrect",
+      "reason": "逐题审阅最终答案与标准：3 / [\"six\", \"two\"]；实体、数值、时间或所問字段不一致，维持错误。",
+      "question_id": "e9835127c3f91dd1b8cc9ff9e3465ff308f7a5b3b97d2a5af1b453d0fa85be85",
+      "question": "number of degree of freedom for plane mechanism?",
+      "target": [
+        "six",
+        "two"
+      ],
+      "answer": "3",
+      "reviewer": "Codex逐题审阅",
+      "reviewed_utc": "2026-10-14T14:13:02.887843+00:00"
+    },
+    "2e7cedb7b2143233201951868da48aba0ef88dac59cfa45130dd5a25b6d70470": {
+      "verdict": "equivalent",
+      "reason": "southern Mesopotamia为标准Mesopotamia的具体地区限定，地点指代不冲突。",
+      "question_id": "769d2724d9c69f959037cd1dd32e12eedf7d69e8ea9d62b04d7f47fe8de6d29c",
+      "question": "where is the oldest civilization known to man?",
+      "target": [
+        "Mesopotamia"
+      ],
+      "answer": "southern Mesopotamia",
+      "reviewer": "Codex逐题审阅",
+      "reviewed_utc": "2026-10-14T14:13:02.887850+00:00"
+    },
+    "4d1ebbc79cdd670f1a9c855e8d130ecbd2be736200061a0bc962c8ecfe2e6f3c": {
+      "verdict": "incorrect",
+      "reason": "未交出合法最终答案，不从think或工具文段补出答案。",
+      "question_id": "8fa992a37aa0d5feeda54f6e292d39b836b3951095a7d2e7548195cf80024eef",
+      "question": "name three large lakes other than the great lakes in the united states?",
+      "target": [
+        "Iliamna Lake",
+        "Great Salt Lake",
+        "Lake of the Woods"
+      ],
+      "answer": null,
+      "reviewer": "Codex逐题审阅",
+      "reviewed_utc": "2026-10-14T14:13:02.887858+00:00"
+    },
+    "29c24004b4dfcca015103c16d833106fac3be5e83e43306bb7e1c3d00e0114d0": {
+      "verdict": "uncertain",
+      "reason": "精度、关键字段、上下级范围或合法替代答案存在歧义，未确认等价，暂不加分。",
+      "question_id": "bcc4815fd21177c007f724cc773071262851d0d677506cf98ae189b4a115b169",
+      "question": "tools made from high-speed tool steel are generally used for what type of machining operations?",
+      "target": [
+        "milling"
+      ],
+      "answer": "cutting operations",
+      "reviewer": "Codex逐题审阅",
+      "reviewed_utc": "2026-10-14T14:13:02.887865+00:00"
+    },
+    "2181b8e0d00046df497e08799e3421e6e1fbc5550a8866149fb64cc5e98b6904": {
+      "verdict": "incorrect",
+      "reason": "逐题审阅最终答案与标准：October 10, 2018 / [\"March 11, 2018\"]；实体、数值、时间或所問字段不一致，维持错误。",
+      "question_id": "01d0ca6a3fb90a66ffd69ea5381c96424faae8a319d6fa38962ce7beae9ff770",
+      "question": "when does season 3 of the riveras start?",
+      "target": [
+        "March 11, 2018"
+      ],
+      "answer": "October 10, 2018",
+      "reviewer": "Codex逐题审阅",
+      "reviewed_utc": "2026-10-14T14:13:02.887873+00:00"
+    },
+    "8faceb92e9452edfcaeaf7c1b833f27a3da9441e54af197301d6cfaa32c1415c": {
+      "verdict": "uncertain",
+      "reason": "精度、关键字段、上下级范围或合法替代答案存在歧义，未确认等价，暂不加分。",
+      "question_id": "718107e0a840a64a594d19076fd122a2e55a060dfe94bc5d81b498bdd14d9889",
+      "question": "which central american nations border the pacific ocean and the caribbean sea?",
+      "target": [
+        "Nicaragua",
+        "Costa Rica"
+      ],
+      "answer": "Panama",
+      "reviewer": "Codex逐题审阅",
+      "reviewed_utc": "2026-10-14T14:13:02.887880+00:00"
+    },
+    "4c9cc4de7cd12c2fff065d71b8d83d1948e347a54595f0cf208ac04a69f1f848": {
+      "verdict": "incorrect",
+      "reason": "逐题审阅最终答案与标准：Gustave Ponton d'Amécourt / [\"originally designated HU-1\"]；实体、数值、时间或所問字段不一致，维持错误。",
+      "question_id": "0dec0f33874d67352feb2f69cce432025d4e6282dd2c605b631d0d5b39d16a3c",
+      "question": "where did the name huey helicopter come from?",
+      "target": [
+        "originally designated HU-1"
+      ],
+      "answer": "Gustave Ponton d'Amécourt",
+      "reviewer": "Codex逐题审阅",
+      "reviewed_utc": "2026-10-14T14:13:02.887888+00:00"
+    },
+    "cdada333052297395ae750103e7f163f79ccca42eb20ac3fea7120faa4ea6753": {
+      "verdict": "incorrect",
+      "reason": "逐题审阅最终答案与标准：Nazi German Wehrmacht / [\"naval bases\", \"warships\"]；实体、数值、时间或所問字段不一致，维持错误。",
+      "question_id": "3a77d51d6691404e71696db1a787d3bb73af7cb21bbba7e555b73fbe68cc0826",
+      "question": "who used morse code in world war 2?",
+      "target": [
+        "naval bases",
+        "warships"
+      ],
+      "answer": "Nazi German Wehrmacht",
+      "reviewer": "Codex逐题审阅",
+      "reviewed_utc": "2026-10-14T14:13:02.887895+00:00"
+    },
+    "9bf29acccd63dcb1a594456a4bf0011c36c0d8997d8206936d44dd10250abdbf": {
+      "verdict": "incorrect",
+      "reason": "逐题审阅最终答案与标准：British soldiers / [\"Americans acting under orders\"]；实体、数值、时间或所問字段不一致，维持错误。",
+      "question_id": "74031d16567c27b8bacee3e1ebc623a9474676498ab1044186ae5ed6e4ba3d51",
+      "question": "who shot first in the shot heard around the world?",
+      "target": [
+        "Americans acting under orders"
+      ],
+      "answer": "British soldiers",
+      "reviewer": "Codex逐题审阅",
+      "reviewed_utc": "2026-10-14T14:13:02.887902+00:00"
+    },
+    "1a81619e0a2abf1f2f15e6335eac7ae2d1821a1457b413c6950eb3ab71d42cb8": {
+      "verdict": "incorrect",
+      "reason": "逐题审阅最终答案与标准：palm leaves / [\"Pope Gregory I the Great\"]；实体、数值、时间或所問字段不一致，维持错误。",
+      "question_id": "49b4e10ad2a845d78f99af8db40954cc69ad0728f99981b7cb628cb1d90f21f7",
+      "question": "where did the ashes from ash wednesday originate?",
+      "target": [
+        "Pope Gregory I the Great"
+      ],
+      "answer": "palm leaves",
+      "reviewer": "Codex逐题审阅",
+      "reviewed_utc": "2026-10-14T14:13:02.887909+00:00"
+    },
+    "b3fcc30e694f0814f534d4eb91b5038e194e12fd01fd4b5e53cd61f695f1e3ce": {
+      "verdict": "incorrect",
+      "reason": "逐题审阅最终答案与标准：598–668 / [\"By 1770 BC\", \"7th century\"]；实体、数值、时间或所問字段不一致，维持错误。",
+      "question_id": "77479db4d409cdcc010990d1c6e218369f03eeb0bca87be3a89af82b20df076b",
+      "question": "when was zero first used in mathematical operations?",
+      "target": [
+        "By 1770 BC",
+        "7th century"
+      ],
+      "answer": "598–668",
+      "reviewer": "Codex逐题审阅",
+      "reviewed_utc": "2026-10-14T14:13:02.887918+00:00"
+    },
+    "c209b18c87b6dc381ad55566f28a0b9f88b2bad00dcab7a01e16fc30ee13f1d3": {
+      "verdict": "uncertain",
+      "reason": "精度、关键字段、上下级范围或合法替代答案存在歧义，未确认等价，暂不加分。",
+      "question_id": "572e03051933af28deb2ac52ddf15e75cbea00b76feac36ffb42617f77ce9bf7",
+      "question": "who sings far from the home i love in fiddler on the roof?",
+      "target": [
+        "Hodel"
+      ],
+      "answer": "Michele Marsh",
+      "reviewer": "Codex逐题审阅",
+      "reviewed_utc": "2026-10-14T14:13:02.887925+00:00"
+    },
+    "544d514b5a89e49b3fbaf61bd83dd9bb705fc71a82628847b839d14cec7050e1": {
+      "verdict": "incorrect",
+      "reason": "逐题审阅最终答案与标准：Brían F. O'Byrne / [\"Stephen Graham\"]；实体、数值、时间或所問字段不一致，维持错误。",
+      "question_id": "b820a93d37a426da5dbe5c217f5c191874c45793a79b4091f98885847191b803",
+      "question": "who played the detective in little boy blue?",
+      "target": [
+        "Stephen Graham"
+      ],
+      "answer": "Brían F. O'Byrne",
+      "reviewer": "Codex逐题审阅",
+      "reviewed_utc": "2026-10-14T14:13:02.887932+00:00"
+    },
+    "f4be82c74cf4fb630cb2ba3e4f17b7a6e37da0f82e09d80ff7ac959492dfd27c": {
+      "verdict": "incorrect",
+      "reason": "逐题审阅最终答案与标准：Chief Judge / [\"District Judge\"]；实体、数值、时间或所問字段不一致，维持错误。",
+      "question_id": "e6fd7d402dde732daa1ef41d2a1326ad2aafdc90360a29129b3d79f5f037fa0b",
+      "question": "who presides over the highest criminal court in a district?",
+      "target": [
+        "District Judge"
+      ],
+      "answer": "Chief Judge",
+      "reviewer": "Codex逐题审阅",
+      "reviewed_utc": "2026-10-14T14:13:02.887939+00:00"
+    },
+    "935bd7e47ace96bc0e28cc11c474f307e93c2df0e57de1e74c20159a01606498": {
+      "verdict": "incorrect",
+      "reason": "逐题审阅最终答案与标准：124 / [\"Around 1200\"]；实体、数值、时间或所問字段不一致，维持错误。",
+      "question_id": "b4389678cf33dbfbbb44ff74f082f6a70ce8ed0db215190d3cdb48e08eab1883",
+      "question": "when did the first immigrants come to hawaii?",
+      "target": [
+        "Around 1200"
+      ],
+      "answer": "124",
+      "reviewer": "Codex逐题审阅",
+      "reviewed_utc": "2026-10-14T14:13:02.887946+00:00"
+    },
+    "bb0089feeeb2d43ee8c1273eb37b493ed2dbd6a93cbd464dc3339feead71e424": {
+      "verdict": "uncertain",
+      "reason": "精度、关键字段、上下级范围或合法替代答案存在歧义，未确认等价，暂不加分。",
+      "question_id": "3cd1c7a5617b6032755017cd8922f36650943feebce80184aaccedd1bd7a9c90",
+      "question": "architectural elements forming rib vaults eg wells cathedral?",
+      "target": [
+        "an armature of piped masonry",
+        "barrel vaults",
+        "two to three barrel vaults"
+      ],
+      "answer": "lierne ribs",
+      "reviewer": "Codex逐题审阅",
+      "reviewed_utc": "2026-10-14T14:13:02.887955+00:00"
+    },
+    "6becffef94437dca53b2c88179c34cb79390d089790481c2e9f83f5ce0d42c3a": {
+      "verdict": "incorrect",
+      "reason": "逐题审阅最终答案与标准：yes / [\"no\"]；实体、数值、时间或所問字段不一致，维持错误。",
+      "question_id": "c9cf333b8722424840763d80ef850a416854b2d2706e6b3a305b35290ab83910",
+      "question": "Are Leopold Lummerstorfer and Valeria Sarmiento both authors?",
+      "target": [
+        "no"
+      ],
+      "answer": "yes",
+      "reviewer": "Codex逐题审阅",
+      "reviewed_utc": "2026-10-14T14:13:02.887962+00:00"
+    },
+    "567e8f6356dbfc75fa5c81a78920e9a2626b429c8ddac9bf2563dc4cfe2f5375": {
+      "verdict": "incorrect",
+      "reason": "逐题审阅最终答案与标准：Raposa / [\"Rooster\"]；实体、数值、时间或所問字段不一致，维持错误。",
+      "question_id": "0d1a6b47f61211efd7b23198e69eb7fe58a29f5d6d4c5c414e4f792fcd57f5ee",
+      "question": "What is the colloquial name of the professional football team in which striker Frederico Chaves Guedos played?",
+      "target": [
+        "Rooster"
+      ],
+      "answer": "Raposa",
+      "reviewer": "Codex逐题审阅",
+      "reviewed_utc": "2026-10-14T14:13:02.887969+00:00"
+    },
+    "5b776bc4f931fb3d75bf3c8b81ab3e14bcb1a1552c6c1b0436636db3ab5c5661": {
+      "verdict": "incorrect",
+      "reason": "逐题审阅最终答案与标准：Stephen King / [\"J. R. R. Tolkien\"]；实体、数值、时间或所問字段不一致，维持错误。",
+      "question_id": "182408ae35b3878647fdc233dc6ac2caac5a2163ec16fef7613bfa940a3a3970",
+      "question": "Who wrote the book that inspired the name of the CD/DVD \"Here at the End of All Things\"?",
+      "target": [
+        "J. R. R. Tolkien"
+      ],
+      "answer": "Stephen King",
+      "reviewer": "Codex逐题审阅",
+      "reviewed_utc": "2026-10-14T14:13:02.887976+00:00"
+    },
+    "048993465116cb47fd7c550a6c835bb50eba4491648442c78463d26650fcdd17": {
+      "verdict": "incorrect",
+      "reason": "逐题审阅最终答案与标准：Citi Field / [\"Central Park\"]；实体、数值、时间或所問字段不一致，维持错误。",
+      "question_id": "8d90f0f4156b67e3b94f9dc9984ab6b9c7757756da5a1d438b6b54031011e413",
+      "question": "What park is just south of the location where the New York Jets played prior to moving to Shea Stadium?",
+      "target": [
+        "Central Park"
+      ],
+      "answer": "Citi Field",
+      "reviewer": "Codex逐题审阅",
+      "reviewed_utc": "2026-10-14T14:13:02.887983+00:00"
+    },
+    "e44a6f2e010b6b08b0ffb2bc78bdf09df0d155fcc1776a6867489fb0aa2529f4": {
+      "verdict": "incorrect",
+      "reason": "逐题审阅最终答案与标准：Mitch Kupchak / [\"Earvin \\\"Magic\\\" Johnson Jr.\"]；实体、数值、时间或所問字段不一致，维持错误。",
+      "question_id": "e543d546b1ea36d0979f99579306cb9e6964d1be7f5b5dc6085306d4ed0f1978",
+      "question": "William Novac co-wrote the memoir of what American retired professional basketball player who is current president of basketball operations for the Los Angeles Lakers?",
+      "target": [
+        "Earvin \"Magic\" Johnson Jr."
+      ],
+      "answer": "Mitch Kupchak",
+      "reviewer": "Codex逐题审阅",
+      "reviewed_utc": "2026-10-14T14:13:02.887991+00:00"
+    },
+    "e7a6eb84ab9e8603f2222bb308702038b1e7e1f18c45e952d1e8f750e8505a35": {
+      "verdict": "label_issue",
+      "reason": "原标签实体类型或事实关系疑误，单列保留原EM，不增加等价正确数。",
+      "question_id": "3747d2f901242a176b3f7a41bba782ba11415d75e4ca9717a36405d57f0df9cb",
+      "question": "How old was William DuVall when Black Gives Way to Blue was certified gold by the RIAA?",
+      "target": [
+        "William Bradley DuVall (born September 6, 1967)"
+      ],
+      "answer": "79",
+      "reviewer": "Codex逐题审阅",
+      "reviewed_utc": "2026-10-14T14:13:02.887999+00:00"
+    },
+    "02298414e492a1535b6abcefeeb41cef49cbe04ebfa1024adb4f74e7f9bf6691": {
+      "verdict": "uncertain",
+      "reason": "精度、关键字段、上下级范围或合法替代答案存在歧义，未确认等价，暂不加分。",
+      "question_id": "2bb734ff4ad0132d02f5ac03db0cbb90037f8cc7b7b5d664d806f82d3e6b7541",
+      "question": "Ali Eren Balıkel started a restaurant which hosted a number of famous figures including an English actor who won three consecutive what?",
+      "target": [
+        "BAFTA Awards for Best Actress"
+      ],
+      "answer": "BAFTA Film Award",
+      "reviewer": "Codex逐题审阅",
+      "reviewed_utc": "2026-10-14T14:13:02.888006+00:00"
+    },
+    "ddb7d78f07eb3f3e8dc93c0e87283c1dfcc2d97f60b2dacfdea69589f3eb3db9": {
+      "verdict": "incorrect",
+      "reason": "未交出合法最终答案，不从think或工具文段补出答案。",
+      "question_id": "898a809bb27d0374c4e79616542da36f2b009d3ecc4a713c99420e8ad78d5e8e",
+      "question": "Who was the secretary to the Winter Queen?",
+      "target": [
+        "Sir Francis Nethersole"
+      ],
+      "answer": null,
+      "reviewer": "Codex逐题审阅",
+      "reviewed_utc": "2026-10-14T14:13:02.888013+00:00"
+    },
+    "41fa642fdcb3d81150ed90eb5d80fe488643911b7aa06533edee85061e9c3515": {
+      "verdict": "incorrect",
+      "reason": "逐题审阅最终答案与标准：shuffle / [\"characterised by a moderately fast to very fast tempo\"]；实体、数值、时间或所問字段不一致，维持错误。",
+      "question_id": "70d78ace8fb90eb03f446f3f2ce31c05354cbb367ad9d65db3e4543b06c14c91",
+      "question": "James Stuart became a specialist of a rhythmic pattern charecterised by what?",
+      "target": [
+        "characterised by a moderately fast to very fast tempo"
+      ],
+      "answer": "shuffle",
+      "reviewer": "Codex逐题审阅",
+      "reviewed_utc": "2026-10-14T14:13:02.888021+00:00"
+    },
+    "e8a9264999118cc537eb28c5362e83c12c3f1e003417f5881155aacde83548b4": {
+      "verdict": "equivalent",
+      "reason": "题目只问century，18th century完整提取长标准late eighteenth century中的世纪。",
+      "question_id": "eabe21bf92aaa18e934b0500788517329223cb4959e1df70bdb2899a12a7b89c",
+      "question": "Cave-In-Rock, Illinois was a stronghold for serial killer/bandit brothers who operated in which century?",
+      "target": [
+        "who operated in Tennessee, Kentucky, Illinois, and Mississippi, in the late eighteenth century."
+      ],
+      "answer": "18th century",
+      "reviewer": "Codex逐题审阅",
+      "reviewed_utc": "2026-10-14T14:13:02.888029+00:00"
+    },
+    "bcf7a749396fd860d737bb5ade645d23472970bee978346716e740aada09ccbe": {
+      "verdict": "incorrect",
+      "reason": "逐题审阅最终答案与标准：Giorgio Simonelli / [\"Orson Welles\"]；实体、数值、时间或所問字段不一致，维持错误。",
+      "question_id": "393b1630ec880a9786ead1b42077b7e45726a11f7de93efd4d1cd776c65cf642",
+      "question": "Angelo Francesco Lavignino scored a 1965 English-language Spanish-Swiss co-produced film that was directed by and also starred who?",
+      "target": [
+        "Orson Welles"
+      ],
+      "answer": "Giorgio Simonelli",
+      "reviewer": "Codex逐题审阅",
+      "reviewed_utc": "2026-10-14T14:13:02.888036+00:00"
+    },
+    "a6035997ec7b30a0429d60c8a36a680508a41ed185f2ddc5b38f56d1d9a40e0c": {
+      "verdict": "incorrect",
+      "reason": "逐题审阅最终答案与标准：Lithuanian / [\"Lithuanian-born French\"]；实体、数值、时间或所問字段不一致，维持错误。",
+      "question_id": "30a832f0594ef73aa192c0ad0bdd854a2d9f8859d3802c6ec4de080c9cef6e9d",
+      "question": "Jacques Sernas, actor in Fugitive in Trieste, was of what nationality?",
+      "target": [
+        "Lithuanian-born French"
+      ],
+      "answer": "Lithuanian",
+      "reviewer": "Codex逐题审阅",
+      "reviewed_utc": "2026-10-14T14:13:02.888044+00:00"
+    },
+    "4ee295dc7074a31868e80aaaa69c4cae2378c77a46d4e3c3e8c7a3b7747e7e2d": {
+      "verdict": "equivalent",
+      "reason": "more than 330 million与more than 330 million people同一数量下界，单位由题目限定。",
+      "question_id": "d82e712e07f9c79a6575fd91b866d1d73d5f7c5c704469f6c43aeaf477936e65",
+      "question": "The languages Hussein Ali Mahfouz studied are spoken by how many people?",
+      "target": [
+        "more than 330 million people"
+      ],
+      "answer": "more than 330 million",
+      "reviewer": "Codex逐题审阅",
+      "reviewed_utc": "2026-10-14T14:13:02.888052+00:00"
+    },
+    "67d4d376a5d803c32419b74187d6750d56297c907ebaf22a55a2b8e50ecf01c7": {
+      "verdict": "incorrect",
+      "reason": "逐题审阅最终答案与标准：sports / [\"American\"]；实体、数值、时间或所問字段不一致，维持错误。",
+      "question_id": "0028c7afff0a1493ceba4cb55debc4908312a5583f9f648beb8ca24aa9e84c79",
+      "question": "What is common between Matt Vasgersian and Michael Casey?",
+      "target": [
+        "American"
+      ],
+      "answer": "sports",
+      "reviewer": "Codex逐题审阅",
+      "reviewed_utc": "2026-10-14T14:13:02.888059+00:00"
+    },
+    "e39aaad4c0e649a45f20875089e92e0277adfb5c05418dd71dfa5372d41b3a9e": {
+      "verdict": "uncertain",
+      "reason": "精度、关键字段、上下级范围或合法替代答案存在歧义，未确认等价，暂不加分。",
+      "question_id": "7d4ea584fbbb5a93783c048935764308538e0ce4cb5ab68e8b9c5f3e432ae1c9",
+      "question": "What languages did the son of Sacagawea speak?",
+      "target": [
+        "French and English"
+      ],
+      "answer": "French",
+      "reviewer": "Codex逐题审阅",
+      "reviewed_utc": "2026-10-14T14:13:02.888067+00:00"
+    },
+    "e1e697c1fc8152ad793f5c87925aeca3f9d567ae3586fe3cfe40f76a3bcc6e2e": {
+      "verdict": "incorrect",
+      "reason": "未交出合法最终答案，不从think或工具文段补出答案。",
+      "question_id": "d0984cbabd99e1fd93bc1ad74c6b3bacf90255221057f41e18ca0a74950356b0",
+      "question": "Not About Angels was used in the film adaptation of what novel by John Green?",
+      "target": [
+        "The Fault in Our Stars"
+      ],
+      "answer": null,
+      "reviewer": "Codex逐题审阅",
+      "reviewed_utc": "2026-10-14T14:13:02.888074+00:00"
+    },
+    "8470ecba6a3e0aab87fceca40cff0787254ed81bee9160e0c5e2c17b5a51ea02": {
+      "verdict": "incorrect",
+      "reason": "逐题审阅最终答案与标准：The Hunt for Red October / [\"\\\"Hacksaw Ridge\\\"\"]；实体、数值、时间或所問字段不一致，维持错误。",
+      "question_id": "faefa458b182c70730397b6a8e9732cd92784f0d7acff804469a3249eaee6c66",
+      "question": "What film did the sound editor for a 2013 Hong Kong-Chinese martial arts drama film based on the life story of the Wing Chun grandmaster Ip Man win two Academy Awards for?",
+      "target": [
+        "\"Hacksaw Ridge\""
+      ],
+      "answer": "The Hunt for Red October",
+      "reviewer": "Codex逐题审阅",
+      "reviewed_utc": "2026-10-14T14:13:02.888081+00:00"
+    },
+    "783b0b845010c5492a23557e9c644d79c66a382f82cf6b7f8fc8d3911e71cec4": {
+      "verdict": "equivalent",
+      "reason": "Preston North End F.C.与Preston North End同一足球俱乐部，附加后缀。",
+      "question_id": "712ff58a34d45f239799beb2ee889edde2c5ca269708903d710b95f5319430c7",
+      "question": "What Deepdale area football club did Andy Pilling play for?",
+      "target": [
+        "Preston North End"
+      ],
+      "answer": "Preston North End F.C.",
+      "reviewer": "Codex逐题审阅",
+      "reviewed_utc": "2026-10-14T14:13:02.888088+00:00"
+    },
+    "f618b20d108ce2453f4dd1668a0f2ccec68b2c46c63400f338225fbfeb1f98b9": {
+      "verdict": "label_issue",
+      "reason": "原标签实体类型或事实关系疑误，单列保留原EM，不增加等价正确数。",
+      "question_id": "76c6f1b4d84a2ba147cae1550c1f9a81b241ab51c70db293d25eeee66034cce1",
+      "question": "Were Maurice Tourneur and Greg Mottola both American film directors?",
+      "target": [
+        "French film director"
+      ],
+      "answer": "no",
+      "reviewer": "Codex逐题审阅",
+      "reviewed_utc": "2026-10-14T14:13:02.888095+00:00"
+    },
+    "272e27b875215cc1a72d7f8b28164567a5125f64ffbbe8a1ceee0e7f64e6998c": {
+      "verdict": "incorrect",
+      "reason": "逐题审阅最终答案与标准：28 October 1980 / [\"10 June 1921\"]；实体、数值、时间或所問字段不一致，维持错误。",
+      "question_id": "d60512cdbb15e4fd88ccb7114c40565412d5b7efe2c0cc994fd64d39ac2c4406",
+      "question": "What is the birthday of the Earl of Merioneth?",
+      "target": [
+        "10 June 1921"
+      ],
+      "answer": "28 October 1980",
+      "reviewer": "Codex逐题审阅",
+      "reviewed_utc": "2026-10-14T14:13:02.888102+00:00"
+    },
+    "0c11f8f691fb8c106ef7d154ea90ae12c20080274bcc4b327b7ea2045e02aab0": {
+      "verdict": "incorrect",
+      "reason": "逐题审阅最终答案与标准：veterinarian / [\"film director\"]；实体、数值、时间或所問字段不一致，维持错误。",
+      "question_id": "e0a20e33c4288cc155f15960d6a8301465b1adc400a7919ee12b3b6c2809531e",
+      "question": "What profession did Alan Crosland and Kurt Voss both hold?",
+      "target": [
+        "film director"
+      ],
+      "answer": "veterinarian",
+      "reviewer": "Codex逐题审阅",
+      "reviewed_utc": "2026-10-14T14:13:02.888109+00:00"
+    },
+    "2c5c53c7d28cfa04933ff3fa6ff9eb6e953c85d89cb16da0f2e7ba32974d9cba": {
+      "verdict": "equivalent",
+      "reason": "Newport County A.F.C.与Newport County同一足球俱乐部，附加后缀。",
+      "question_id": "62ce68f46ba5c6c4c2b38a5d3959229397b44e6b52b1dc56b904a70cfaa72f7b",
+      "question": "Which team based in South Wales participated in a final game of 1980 Welsh Cup Final?",
+      "target": [
+        "Newport County"
+      ],
+      "answer": "Newport County A.F.C.",
+      "reviewer": "Codex逐题审阅",
+      "reviewed_utc": "2026-10-14T14:13:02.888116+00:00"
+    },
+    "f2aa4703811de03c2987fd1abee8939cf07be9e9f16469cbce8600d690127f42": {
+      "verdict": "incorrect",
+      "reason": "逐题审阅最终答案与标准：Jason Hochberg / [\"Mike Greenwell\"]；实体、数值、时间或所問字段不一致，维持错误。",
+      "question_id": "83a14c8e97ae4557e467ef2bf066a89b5f83aaf628a59ef390b0c9c0314e0508",
+      "question": "What man, born in 1963, was instrumental in bringing the Boston Red Sox to the stadium City of Palms Park in Fort Myers, Florida?",
+      "target": [
+        "Mike Greenwell"
+      ],
+      "answer": "Jason Hochberg",
+      "reviewer": "Codex逐题审阅",
+      "reviewed_utc": "2026-10-14T14:13:02.888123+00:00"
+    },
+    "9b41b700a55a3cdcfc8dd82a999939d431fe14b3852e2818b5074ce4b39b2cae": {
+      "verdict": "equivalent",
+      "reason": "Micky Dolenz与George Michael Dolenz同一音乐人的常用名和出生名。",
+      "question_id": "ff0b52e754b3baa4284d93ec90fbf61de8aa7af3c4d530b86c8464be0cd5f48d",
+      "question": "Which musician's band contains more letters in it's name, Micky Dolenz or Jesse James Dupree?",
+      "target": [
+        "George Michael Dolenz"
+      ],
+      "answer": "Micky Dolenz",
+      "reviewer": "Codex逐题审阅",
+      "reviewed_utc": "2026-10-14T14:13:02.888130+00:00"
+    },
+    "d358771035de84b041eaf3ff168c6af01135ae68279b6290f38113d43eb3994d": {
+      "verdict": "uncertain",
+      "reason": "精度、关键字段、上下级范围或合法替代答案存在歧义，未确认等价，暂不加分。",
+      "question_id": "0fa4cd307451d1f46a9ccb3d689f0ff6ca6c104fd94f8044bc84675bccaf4632",
+      "question": "Tui Flower and Julia child were both known for what?",
+      "target": [
+        "Cooking"
+      ],
+      "answer": "food writing",
+      "reviewer": "Codex逐题审阅",
+      "reviewed_utc": "2026-10-14T14:13:02.888137+00:00"
+    },
+    "f3b072b56da01447c4182cfd86b7010a5a6906ced15a80214735ae172bcc041a": {
+      "verdict": "uncertain",
+      "reason": "精度、关键字段、上下级范围或合法替代答案存在歧义，未确认等价，暂不加分。",
+      "question_id": "c3b8dd3738042ddc2c4c30fbb431082b6f65f58ee3651e57462379214592a54d",
+      "question": "What are some foods that may have been served at the Hawaiin Cottage?",
+      "target": [
+        "poi, Kalua pig, poke, lomi salmon, opihi, haupia"
+      ],
+      "answer": "laulau",
+      "reviewer": "Codex逐题审阅",
+      "reviewed_utc": "2026-10-14T14:13:02.888144+00:00"
+    },
+    "2f7eb2a6c70556433d99f853f7117d4378ab2ef87f6443e96033734e5c6a2093": {
+      "verdict": "incorrect",
+      "reason": "逐题审阅最终答案与标准：South Saskatchewan River / [\"Bow River\"]；实体、数值、时间或所問字段不一致，维持错误。",
+      "question_id": "4542be5c70ff9ead1b58d418dc3388e2a009af1f08fc90f66ab32203366dca10",
+      "question": "What surrounding river in a Canadian province was Erin Wall born near?",
+      "target": [
+        "Bow River"
+      ],
+      "answer": "South Saskatchewan River",
+      "reviewer": "Codex逐题审阅",
+      "reviewed_utc": "2026-10-14T14:13:02.888151+00:00"
+    },
+    "8e94151d7724e7c2d3404e97e0d9d3451fa84afda05c0979d3403c0dc383026d": {
+      "verdict": "incorrect",
+      "reason": "逐题审阅最终答案与标准：Benjamin Franklin / [\"Thomas Jefferson\"]；实体、数值、时间或所問字段不一致，维持错误。",
+      "question_id": "475eabcd5cef80a438b9ca1a9a0134053329d15a0c2c4b1df1c92e11a5aaacf4",
+      "question": "Who was this American Founding Father, a proponent of democracy, republicanism, and individual rights, examined Ice Age fossils of Kentucky's Big Bone Lick?",
+      "target": [
+        "Thomas Jefferson"
+      ],
+      "answer": "Benjamin Franklin",
+      "reviewer": "Codex逐题审阅",
+      "reviewed_utc": "2026-10-14T14:13:02.888157+00:00"
+    },
+    "67000f7a5b651b653a4516731f1e013639c8ec656ffb3a2f3f82365e7313d3b2": {
+      "verdict": "incorrect",
+      "reason": "未交出合法最终答案，不从think或工具文段补出答案。",
+      "question_id": "cb2f2a8d8fc79c62052526087122b584b19d9bb8c5d153151747b9f43dc0aa43",
+      "question": "Nikhil Nanda is the son of the insurance advisor in what business?",
+      "target": [
+        "life insurance"
+      ],
+      "answer": null,
+      "reviewer": "Codex逐题审阅",
+      "reviewed_utc": "2026-10-14T14:13:02.888164+00:00"
+    },
+    "0691a916507c6b2cc70d6d2ff7ebc2932ffb74811343cb95d528b3b1aaee02e1": {
+      "verdict": "incorrect",
+      "reason": "逐题审阅最终答案与标准：Henry Janeway Hardenbergh / [\"architect Michael Graves\"]；实体、数值、时间或所問字段不一致，维持错误。",
+      "question_id": "9b324caf3de52c60c3a12f626678dea211cad24a1b23a30bb301d6a30aa48da9",
+      "question": "Who designed the hotel that held the IFBB professional bodybuilding competition in September 1991?",
+      "target": [
+        "architect Michael Graves"
+      ],
+      "answer": "Henry Janeway Hardenbergh",
+      "reviewer": "Codex逐题审阅",
+      "reviewed_utc": "2026-10-14T14:13:02.888171+00:00"
+    },
+    "57d19bb7d92e37ef2176cb19f47cead7b1f199e16243568340d9582cda0a1192": {
+      "verdict": "incorrect",
+      "reason": "逐题审阅最终答案与标准：Goblin Explosioneers / [\"Orc characters\"]；实体、数值、时间或所問字段不一致，维持错误。",
+      "question_id": "bae5bdb348c0af71a96d9590bce95bfb7f5791b057e7ab00c5e3b0bf826eb166",
+      "question": "Which characters are akin to goblins and were added to a Tilted Mill Entertainment video game in 2009?",
+      "target": [
+        "Orc characters"
+      ],
+      "answer": "Goblin Explosioneers",
+      "reviewer": "Codex逐题审阅",
+      "reviewed_utc": "2026-10-14T14:13:02.888178+00:00"
+    },
+    "252b4b8cc10b5f49ab25f1cc5b1bb072dc1bd608e9f41b6359f53c6396c82e7c": {
+      "verdict": "incorrect",
+      "reason": "逐题审阅最终答案与标准：Myrtaceae / [\"flowers\"]；实体、数值、时间或所問字段不一致，维持错误。",
+      "question_id": "862abe401fe1157ef01740f3615515740778158e30fe1b43dcb3a806adb6274c",
+      "question": "what species of plants are Chamelaucium and Vanilla derived from?",
+      "target": [
+        "flowers"
+      ],
+      "answer": "Myrtaceae",
+      "reviewer": "Codex逐题审阅",
+      "reviewed_utc": "2026-10-14T14:13:02.888185+00:00"
+    },
+    "2487af9ba7d2951a509fbc54d7a41656d72b03d05e26b103ef90367fd2a12cd0": {
+      "verdict": "incorrect",
+      "reason": "逐题审阅最终答案与标准：Oldřich Černý / [\"Mossad\"]；实体、数值、时间或所問字段不一致，维持错误。",
+      "question_id": "3b960bc8dffa875cd0c51d703cfd5ba562f2e69cdc6545a7422d924aca2635f4",
+      "question": "What is the name of one the ex-security officials that means The Institute?",
+      "target": [
+        "Mossad"
+      ],
+      "answer": "Oldřich Černý",
+      "reviewer": "Codex逐题审阅",
+      "reviewed_utc": "2026-10-14T14:13:02.888193+00:00"
+    },
+    "a75a7085b64497ea4f8bd7724d507eaa4696aeda911793c6d3b8c0852e0c0231": {
+      "verdict": "incorrect",
+      "reason": "未交出合法最终答案，不从think或工具文段补出答案。",
+      "question_id": "127b79e543ed87eb12c52559ad5bf454fbec4ea3053f9b2d732058744b5e9632",
+      "question": "How many albums have been released by the same band that released the \"Trance\" EP?",
+      "target": [
+        "4 albums"
+      ],
+      "answer": null,
+      "reviewer": "Codex逐题审阅",
+      "reviewed_utc": "2026-10-14T14:13:02.888200+00:00"
+    },
+    "e4086fc45ee9510788b1faab159d09cf310559aae618e110b87d36ed4e98dfc3": {
+      "verdict": "incorrect",
+      "reason": "逐题审阅最终答案与标准：TRS-80 Micro Computer System / [\"TRS-80 Color Computer\"]；实体、数值、时间或所問字段不一致，维持错误。",
+      "question_id": "775cd98880e20ef81f443ef94f5b1f6ef3d47cf3f3de96dfb0ab1e4dc99085d9",
+      "question": "Radio shack made a line of computers in the 1980's which was marketed as the TRS-80 Color Computer or the Interact Home Computer?",
+      "target": [
+        "TRS-80 Color Computer"
+      ],
+      "answer": "TRS-80 Micro Computer System",
+      "reviewer": "Codex逐题审阅",
+      "reviewed_utc": "2026-10-14T14:13:02.888207+00:00"
+    },
+    "1519d85806cd10c61b3f694c670be4365295db88388a758d0c8378ffa8d6bc1c": {
+      "verdict": "incorrect",
+      "reason": "逐题审阅最终答案与标准：Lorain County / [\"Mahoning County\"]；实体、数值、时间或所問字段不一致，维持错误。",
+      "question_id": "50c621896cd25c9d5d328feb27892993fef2fcefd085e5244b0b55908664e2d5",
+      "question": "The team that would become the Little Giants was located in the county seat of which Ohio county?",
+      "target": [
+        "Mahoning County"
+      ],
+      "answer": "Lorain County",
+      "reviewer": "Codex逐题审阅",
+      "reviewed_utc": "2026-10-14T14:13:02.888214+00:00"
+    },
+    "ee32e891ea96393b9e990d676c4ee8ba16c9f2f959136f0b725a6bf423e497ad": {
+      "verdict": "incorrect",
+      "reason": "逐题审阅最终答案与标准：retail / [\"artists' lofts\"]；实体、数值、时间或所問字段不一致，维持错误。",
+      "question_id": "626f4dc3c8e1966f9ef892df5540147e6c23c967da5a1c7a27d64474308fc54d",
+      "question": "Thor Equities owns properties in Soho, which became known for what type of rental properties?",
+      "target": [
+        "artists' lofts"
+      ],
+      "answer": "retail",
+      "reviewer": "Codex逐题审阅",
+      "reviewed_utc": "2026-10-14T14:13:02.888221+00:00"
+    },
+    "a582198c509184c9ae9793f2e2cbf9aee7f06148f29747502d02bf0243ec9191": {
+      "verdict": "incorrect",
+      "reason": "逐题审阅最终答案与标准：the actor in the future / [\"his most brilliant student\"]；实体、数值、时间或所問字段不一致，维持错误。",
+      "question_id": "6d8a93885ac0318bc60e9225c1e32ae85d3f3e782423380c7ebc0cb7c190944b",
+      "question": "Psycho-physical Awareness was developed into an original and dependable method by a Russian-American actor who was referred to by Konstantin Stanislavski as what?",
+      "target": [
+        "his most brilliant student"
+      ],
+      "answer": "the actor in the future",
+      "reviewer": "Codex逐题审阅",
+      "reviewed_utc": "2026-10-14T14:13:02.888228+00:00"
+    },
+    "53d4c8922c3632088d9c71e139ad633a13f59aee3071c726e677ffda86f10a27": {
+      "verdict": "equivalent",
+      "reason": "Bigg Boss 10与the tenth season同一节目季数。",
+      "question_id": "df88c162666c99e9b2e112da7b8d0a40c4ae07606fae51889cfdc536dcabffbe",
+      "question": "What season of the Indian reality TV series \"Big Boss\" did the model Lopamundra Raut compete in?",
+      "target": [
+        "the tenth season"
+      ],
+      "answer": "Bigg Boss 10",
+      "reviewer": "Codex逐题审阅",
+      "reviewed_utc": "2026-10-14T14:13:02.888235+00:00"
+    },
+    "e2a7ae46013815c2c7ec41d745b9ae8efe2292a0312a7c3795133f1245e358ef": {
+      "verdict": "uncertain",
+      "reason": "精度、关键字段、上下级范围或合法替代答案存在歧义，未确认等价，暂不加分。",
+      "question_id": "1e58af75fc9f5ec6d80a244d407c29d963fb8a189f6730a51fb5d3a3b9dc8d3f",
+      "question": "What career titles do Ed Wood and Fernand Rivers share?",
+      "target": [
+        "actor, writer, producer, and director"
+      ],
+      "answer": "film director",
+      "reviewer": "Codex逐题审阅",
+      "reviewed_utc": "2026-10-14T14:13:02.888242+00:00"
+    },
+    "d2f9010058bcfbf8116da97a072c41351275df94e6cecd3610ad154f214e7e57": {
+      "verdict": "incorrect",
+      "reason": "逐题审阅最终答案与标准：944 / [\"924\"]；实体、数值、时间或所問字段不一致，维持错误。",
+      "question_id": "c5c2adaedac663756752fe072667da72e65eec4b569dc453e95b1242945c65c9",
+      "question": "The Porsche 968 was the last in a line of front-engined sports cars following the 944 and which earlier model?",
+      "target": [
+        "924"
+      ],
+      "answer": "944",
+      "reviewer": "Codex逐题审阅",
+      "reviewed_utc": "2026-10-14T14:13:02.888249+00:00"
+    },
+    "af9345bbfe65244902158cd2035519779d0deadfb49acf85941d8f160c0c4c48": {
+      "verdict": "incorrect",
+      "reason": "逐题审阅最终答案与标准：Italy / [\"Austria\"]；实体、数值、时间或所問字段不一致，维持错误。",
+      "question_id": "2027a615181b517e39961f2e50851b82f139d53e50a531e745a311f856455751",
+      "question": "In what country did Gildo Siopaes win a bronze medal for bobsledding in the 1964 Winter Olympics?",
+      "target": [
+        "Austria"
+      ],
+      "answer": "Italy",
+      "reviewer": "Codex逐题审阅",
+      "reviewed_utc": "2026-10-14T14:13:02.888256+00:00"
+    },
+    "8b72a71622eb483e4725a4e5b769d6e124926ee62406f7995c64df211ab6529e": {
+      "verdict": "incorrect",
+      "reason": "逐题审阅最终答案与标准：1922 / [\"1961\"]；实体、数值、时间或所問字段不一致，维持错误。",
+      "question_id": "fc6364351e7c626f58d899d11b892db8aefbff281800f2c65ad3af91cf0df6e2",
+      "question": "The subject of the biography \"Name Dropper\" was born in what year?",
+      "target": [
+        "1961"
+      ],
+      "answer": "1922",
+      "reviewer": "Codex逐题审阅",
+      "reviewed_utc": "2026-10-14T14:13:02.888262+00:00"
+    },
+    "a717e6afcec3ace3262b0e3464ee8c866ca145d6eedf7c9fe04d9d278c707f79": {
+      "verdict": "equivalent",
+      "reason": "Vilyam Genrikhovich Fisher与Rudolf Abel为同一人的本名和化名，ckpt80轨迹明确Fisher/Abel身份。",
+      "question_id": "85ec3aab3c009bf3d9680df82804fe4a765c5de52a6edcb22f1d81f15bd6f7f4",
+      "question": "Bridge of Spies stars a Soviet intelligence officer with what name?",
+      "target": [
+        "Rudolf Abel"
+      ],
+      "answer": "Vilyam Genrikhovich Fisher",
+      "reviewer": "Codex逐题审阅",
+      "reviewed_utc": "2026-10-14T14:13:02.888270+00:00"
+    },
+    "48493be61c91736bdb3efa0634148b3af04bd4b7bc7208ed6a55b40906ced67f": {
+      "verdict": "incorrect",
+      "reason": "逐题审阅最终答案与标准：three / [\"four\"]；实体、数值、时间或所問字段不一致，维持错误。",
+      "question_id": "53320c6a48fd4343a5cc8bbc4850c417c52a92b06a60a61ca78e5795f56086db",
+      "question": "How many albums had been recorded by Talking Heads by November, 1980?",
+      "target": [
+        "four"
+      ],
+      "answer": "three",
+      "reviewer": "Codex逐题审阅",
+      "reviewed_utc": "2026-10-14T14:13:02.888276+00:00"
+    },
+    "d539b5f8533d9be5db54405e4b4194d4ef03800c1393e75b4f46efc45b1a0eef": {
+      "verdict": "incorrect",
+      "reason": "逐题审阅最终答案与标准：Italian passport / [\"Italian nationality law\"]；实体、数值、时间或所問字段不一致，维持错误。",
+      "question_id": "cf37662b4af90c822e48df5bda3c1a155d6aa4e9250a5649fb3849b01c558785",
+      "question": "What is Diego Tonetto's Italian passport called?",
+      "target": [
+        "Italian nationality law"
+      ],
+      "answer": "Italian passport",
+      "reviewer": "Codex逐题审阅",
+      "reviewed_utc": "2026-10-14T14:13:02.888283+00:00"
+    },
+    "90e62f237612d96599cf13c8187f5d727e6631594475e3a44c1aa721c58878dd": {
+      "verdict": "incorrect",
+      "reason": "逐题审阅最终答案与标准：Los Angeles / [\"Chicago, IL\"]；实体、数值、时间或所問字段不一致，维持错误。",
+      "question_id": "b71e3f6919683c35e006269809d620fabe76df20df1d9f9e91171a3c50590890",
+      "question": "What city did the musician whose debut album shares its title with the 1959 Alfred Hitchcock hail from?",
+      "target": [
+        "Chicago, IL"
+      ],
+      "answer": "Los Angeles",
+      "reviewer": "Codex逐题审阅",
+      "reviewed_utc": "2026-10-14T14:13:02.888290+00:00"
+    },
+    "3f9cb18bb3866f824d19d5b149625f76a58592598e8dadea8a3b6336b120aaec": {
+      "verdict": "incorrect",
+      "reason": "逐题审阅最终答案与标准：Charles Thake / [\"Dan Rowan\"]；实体、数值、时间或所問字段不一致，维持错误。",
+      "question_id": "5e436630f95c50b923855823bde14a22d7513a6269a823c2812bdf27ecc54d50",
+      "question": "Which star in the Maltese Bippy died in 1987?",
+      "target": [
+        "Dan Rowan"
+      ],
+      "answer": "Charles Thake",
+      "reviewer": "Codex逐题审阅",
+      "reviewed_utc": "2026-10-14T14:13:02.888297+00:00"
+    },
+    "12ce590340c6b6c78698a915e4d3a1c349c34f603d28cbb1f5b8e3a3d26b1254": {
+      "verdict": "equivalent",
+      "reason": "Netherlands与Dutch在country of origin字段指同一国家。",
+      "question_id": "4985cd6a3f7c77eaeaa54cd32f2c1db7630ada447f92ccec04b94786e9767b10",
+      "question": "What country of origin does Eric Lucassen and Party for Freedom have in common?",
+      "target": [
+        "Dutch"
+      ],
+      "answer": "Netherlands",
+      "reviewer": "Codex逐题审阅",
+      "reviewed_utc": "2026-10-14T14:13:02.888304+00:00"
+    },
+    "2a309ad5e64556984a0186affe1c074a328e667c985477a77b13bc9fdfa5aa98": {
+      "verdict": "incorrect",
+      "reason": "逐题审阅最终答案与标准：India / [\"Iran\"]；实体、数值、时间或所問字段不一致，维持错误。",
+      "question_id": "3c1394c60d20261a60edae05f3428163be7675b9f4b11213e00b35001e72dbe7",
+      "question": "The historical Nimavar school in the Nimavar Bazaar, or bazar, is located in which country?",
+      "target": [
+        "Iran"
+      ],
+      "answer": "India",
+      "reviewer": "Codex逐题审阅",
+      "reviewed_utc": "2026-10-14T14:13:02.888310+00:00"
+    },
+    "fba269a55a974a35986f2973d63dc82ab3a329a6ac77294370ac6d27ebeba4b2": {
+      "verdict": "incorrect",
+      "reason": "逐题审阅最终答案与标准：Theodore Mondale / [\"President John F. Kennedy\"]；实体、数值、时间或所問字段不一致，维持错误。",
+      "question_id": "6b9c86206ac0a2aabfd2677b82a4eaf521307db8c89ffc736f321fc8fcce36ec",
+      "question": "Who was the brother of the wife of the Democratic Party nomination for Vice President in 1972?",
+      "target": [
+        "President John F. Kennedy"
+      ],
+      "answer": "Theodore Mondale",
+      "reviewer": "Codex逐题审阅",
+      "reviewed_utc": "2026-10-14T14:13:02.888317+00:00"
+    },
+    "694bb2d1475db7d192e4a1502d5b193985074e90f3e86247bc2ca58c9951d2f7": {
+      "verdict": "incorrect",
+      "reason": "逐题审阅最终答案与标准：Jody Turner / [\"Maria Brink\"]；实体、数值、时间或所問字段不一致，维持错误。",
+      "question_id": "9647a17e02fef3f41c7422fc9c886ad6b275dbc180f2f263315987e1563f53e9",
+      "question": "What is the name of  rocker, who was awarded \"Rock Goddess of the Year\" in the Annual Loudwide Music Awards, who sang with high pitched screams in her band's albums?",
+      "target": [
+        "Maria Brink"
+      ],
+      "answer": "Jody Turner",
+      "reviewer": "Codex逐题审阅",
+      "reviewed_utc": "2026-10-14T14:13:02.888324+00:00"
+    },
+    "fa6ede558a1e943606fdf3d58d72850d18106c4e268b3b30eaa5783f40fa2ce7": {
+      "verdict": "uncertain",
+      "reason": "精度、关键字段、上下级范围或合法替代答案存在歧义，未确认等价，暂不加分。",
+      "question_id": "95ee290c0eca5def610712abd22be8842b787303d175036ecca4c6ac34a69a36",
+      "question": "What were the nations after 1722 that composed a culture that was extensively studied by William N. Fenton?",
+      "target": [
+        "Mohawk, Onondaga, Oneida, Cayuga, Seneca, and Tuscarora"
+      ],
+      "answer": "Mohawk",
+      "reviewer": "Codex逐题审阅",
+      "reviewed_utc": "2026-10-14T14:13:02.888331+00:00"
+    },
+    "96c91c27c7a9ca1da19f561f392cd48b09e7bf4e4e87a5747c708852773c08f4": {
+      "verdict": "uncertain",
+      "reason": "精度、关键字段、上下级范围或合法替代答案存在歧义，未确认等价，暂不加分。",
+      "question_id": "ecd50ed143bbd181b5e87cf1aa56910f6aef90a4dcf4cca697ce234027adc80c",
+      "question": "Where is the company that owns thanKing Horse pub restaurant chain based ?",
+      "target": [
+        "Bury St Edmunds,"
+      ],
+      "answer": "United Kingdom",
+      "reviewer": "Codex逐题审阅",
+      "reviewed_utc": "2026-10-14T14:13:02.888338+00:00"
+    },
+    "beefc19658f43b06b69a142426e16ec64c8ff442f69fd444f1d4d0e7075b4190": {
+      "verdict": "incorrect",
+      "reason": "逐题审阅最终答案与标准：Louisiana / [\"West Lafayette, Indiana\"]；实体、数值、时间或所問字段不一致，维持错误。",
+      "question_id": "ca42c8b9cc1b176bd2cc2b6f45badb228be19cf43c85094905334da3dfb4b18c",
+      "question": "Where is the University Joe Odom played football for located?",
+      "target": [
+        "West Lafayette, Indiana"
+      ],
+      "answer": "Louisiana",
+      "reviewer": "Codex逐题审阅",
+      "reviewed_utc": "2026-10-14T14:13:02.888345+00:00"
+    },
+    "a475a21fd82d86246b95ac476e1caa4b4209191a2515e5ab194eb38c3da16ef8": {
+      "verdict": "incorrect",
+      "reason": "逐题审阅最终答案与标准：homosexual sexual behavior / [\"bisexual\"]；实体、数值、时间或所問字段不一致，维持错误。",
+      "question_id": "b23760476de99c4ba6445ab0e800a2dcc111080689c8b27bcc38e5de535c4e01",
+      "question": "In the animal kingdom what type of sexuality is described as sexual behavior toward both male and females?",
+      "target": [
+        "bisexual"
+      ],
+      "answer": "homosexual sexual behavior",
+      "reviewer": "Codex逐题审阅",
+      "reviewed_utc": "2026-10-14T14:13:02.888353+00:00"
+    },
+    "f7cc261bc56863df4d15a4ad26d433cd502513119cbbdba20f1b948df32b5e41": {
+      "verdict": "uncertain",
+      "reason": "精度、关键字段、上下级范围或合法替代答案存在歧义，未确认等价，暂不加分。",
+      "question_id": "0e1b0167c559d2f141c8d6b72bf4e04f8768aeeeb4501c6b08d7aaa7530412c3",
+      "question": "What Swedish songwriter worked with Taylor Swift?",
+      "target": [
+        "Shellback"
+      ],
+      "answer": "Jörgen Elofsson",
+      "reviewer": "Codex逐题审阅",
+      "reviewed_utc": "2026-10-14T14:13:02.888360+00:00"
+    },
+    "7c580ea00908f4bee975d3e7c762d96b350f0513b0c33bf51657c6ea6134f675": {
+      "verdict": "incorrect",
+      "reason": "逐题审阅最终答案与标准：Late Registration / [\"My Beautiful Dark Twisted Fantasy\"]；实体、数值、时间或所問字段不一致，维持错误。",
+      "question_id": "ef53788e5a71520c3aa3a501cf3beb23bdeb06b2dc30c10aca3aba9e3452c2f9",
+      "question": "What studio album did Kanye West record with Roc-A-Fella Records and soul singer Dwele?",
+      "target": [
+        "My Beautiful Dark Twisted Fantasy"
+      ],
+      "answer": "Late Registration",
+      "reviewer": "Codex逐题审阅",
+      "reviewed_utc": "2026-10-14T14:13:02.888367+00:00"
+    },
+    "142602181ecb533785b5e716d6708bead0b32163e13ab3ed39527b15e978154c": {
+      "verdict": "incorrect",
+      "reason": "未交出合法最终答案，不从think或工具文段补出答案。",
+      "question_id": "46d772b1aa971b2b99b061e272b4869cc76e545e9aac4fbe6086f27ba44af6d1",
+      "question": "What year did a Russian soprano opera singer born in October 1926 leave Russia with her cellist husband and daughter?",
+      "target": [
+        "1974"
+      ],
+      "answer": null,
+      "reviewer": "Codex逐题审阅",
+      "reviewed_utc": "2026-10-14T14:13:02.888374+00:00"
+    },
+    "cca8c902efbb6d9c60964cdc0f3b18d4f943f0bbb3bcd70e7d5572832ab3efb0": {
+      "verdict": "incorrect",
+      "reason": "逐题审阅最终答案与标准：August / [\"January\"]；实体、数值、时间或所問字段不一致，维持错误。",
+      "question_id": "3c12d13e76e70d20b4512dccc0618db0b1e8f5e9b67ce8eeb7c496d7ba571065",
+      "question": "What month did the an online adult website whose last print magazine was published in the summer of 2007 recognize Nikita Gross?",
+      "target": [
+        "January"
+      ],
+      "answer": "August",
+      "reviewer": "Codex逐题审阅",
+      "reviewed_utc": "2026-10-14T14:13:02.888381+00:00"
+    },
+    "1d3563da392c20b45650f5d52e50d50d23afd8fc25e050c5a4e35f841327bf1a": {
+      "verdict": "incorrect",
+      "reason": "逐题审阅最终答案与标准：Juju / [\"Everything Is Wrong\"]；实体、数值、时间或所問字段不一致，维持错误。",
+      "question_id": "4a3a6cc47a90797b70a97691f3abf71b766d33186fa1a8dfb2836f6353fb6154",
+      "question": "What was the third studio album released by Richard Melville Hall?",
+      "target": [
+        "Everything Is Wrong"
+      ],
+      "answer": "Juju",
+      "reviewer": "Codex逐题审阅",
+      "reviewed_utc": "2026-10-14T14:13:02.888388+00:00"
+    },
+    "9b8e3a0c54f64d7918665c619968cc4468107303b52414c8be7659ba0e3c610b": {
+      "verdict": "incorrect",
+      "reason": "逐题审阅最终答案与标准：Tokyo / [\"Broadcasting House in London\"]；实体、数值、时间或所問字段不一致，维持错误。",
+      "question_id": "0caddba71fd6070934a701912c0b17ec469790fb1d0ac4deb2c00e3f8e82af91",
+      "question": "Where is the headquarters for the service broadcaster the show Tenko is on?",
+      "target": [
+        "Broadcasting House in London"
+      ],
+      "answer": "Tokyo",
+      "reviewer": "Codex逐题审阅",
+      "reviewed_utc": "2026-10-14T14:13:02.888395+00:00"
+    },
+    "889df4f2bef407ede77febeaea0f666c33cb30ede9743cecd2009fb8ddaa6b15": {
+      "verdict": "incorrect",
+      "reason": "逐题审阅最终答案与标准：Kenny Barron / [\"Esperanza Spalding\"]；实体、数值、时间或所問字段不一致，维持错误。",
+      "question_id": "bc5591c6ec6c8c1502122fe9dc3aa9b1b6b6e48428b78d9313888127b7a34061",
+      "question": "Francisco Mela performed with which American Jazz bassist and singer born in 1984 ?",
+      "target": [
+        "Esperanza Spalding"
+      ],
+      "answer": "Kenny Barron",
+      "reviewer": "Codex逐题审阅",
+      "reviewed_utc": "2026-10-14T14:13:02.888401+00:00"
+    },
+    "504f218396bc2e7b3882c7ac5e08cb0d410688cd09e02ec1eb19d5865e112dfe": {
+      "verdict": "uncertain",
+      "reason": "精度、关键字段、上下级范围或合法替代答案存在歧义，未确认等价，暂不加分。",
+      "question_id": "23a03451aa588cc61d625ffbc6e9ef7eb0d14d393646b45c8e23db099e949b6d",
+      "question": "Where is the closest relative to the whale located?",
+      "target": [
+        "sub-Saharan Africa"
+      ],
+      "answer": "Africa",
+      "reviewer": "Codex逐题审阅",
+      "reviewed_utc": "2026-10-14T14:13:02.888408+00:00"
+    },
+    "f08d964fb4a434cdb9f719134c821f958531f37aca621bd4a9c98ec2393fa7b6": {
+      "verdict": "incorrect",
+      "reason": "逐题审阅最终答案与标准：LGBT / [\"people working in film and the performing arts\"]；实体、数值、时间或所問字段不一致，维持错误。",
+      "question_id": "f60084dde0a04ea2c32fffb64ca6ff9cad189ee859a9ecc3bb97fd9045dd5062",
+      "question": "Christopher Oscar Pena was recognized by an entertainment-industry brand aimed at what?",
+      "target": [
+        "people working in film and the performing arts"
+      ],
+      "answer": "LGBT",
+      "reviewer": "Codex逐题审阅",
+      "reviewed_utc": "2026-10-14T14:13:02.888416+00:00"
+    },
+    "621f0ee97495a52a857301f546a917f27ab2e5a4072e1ef1304acc021aec7be0": {
+      "verdict": "uncertain",
+      "reason": "精度、关键字段、上下级范围或合法替代答案存在歧义，未确认等价，暂不加分。",
+      "question_id": "12e598c6e330fb4848c9f3f6e9d25cd6c4e697fbc2b36316570106e401113251",
+      "question": "Umi-a-Liloa inherited authority of a kind which is a belief in what?",
+      "target": [
+        "belief in many deities and spirits"
+      ],
+      "answer": "Hawaiian religion",
+      "reviewer": "Codex逐题审阅",
+      "reviewed_utc": "2026-10-14T14:13:02.888424+00:00"
+    },
+    "92591d027bc167c023f911142a6afafc444d0f4553cd45ea72f1528d6e0d3a4a": {
+      "verdict": "equivalent",
+      "reason": "professional wrestling与wrestling在职业摔跤人物语境中同一运动。",
+      "question_id": "90430bbe815d451b3fd4016035be211fd87a715d3e9f2d83836b807faaba0f75",
+      "question": "What sport do The Basham Brothers and Doug Basham have in common?",
+      "target": [
+        "wrestling"
+      ],
+      "answer": "professional wrestling",
+      "reviewer": "Codex逐题审阅",
+      "reviewed_utc": "2026-10-14T14:13:02.888431+00:00"
+    },
+    "0ad11398bea41f440b5980075d87fe49e0c8f91a9ff6d48ace7290f642775afe": {
+      "verdict": "incorrect",
+      "reason": "逐题审阅最终答案与标准：Filmation Productions / [\"9Lives\"]；实体、数值、时间或所問字段不一致，维持错误。",
+      "question_id": "4550b8411aba93c4c5afaba5650191269f615ca38aaf8549a17ccb59f91b42b6",
+      "question": "Which company used a voice actor who also voiced He-Man?",
+      "target": [
+        "9Lives"
+      ],
+      "answer": "Filmation Productions",
+      "reviewer": "Codex逐题审阅",
+      "reviewed_utc": "2026-10-14T14:13:02.888438+00:00"
+    },
+    "1e8edf6d033dfbc16df7c5f171204754cac3f5688b2436375ace1f37ae69b4fe": {
+      "verdict": "equivalent",
+      "reason": "Midland, Michigan与Midland, Michigan, United States同一总部城市，省略国家。",
+      "question_id": "5de44ff95fd3192a66865247c87a19a22dbde8162b23262dd122b9b4c7a55b54",
+      "question": "Where is the headquarter of the American multinational chemical corporation who's part is Dow AgroSciences?",
+      "target": [
+        "Midland, Michigan, United States"
+      ],
+      "answer": "Midland, Michigan",
+      "reviewer": "Codex逐题审阅",
+      "reviewed_utc": "2026-10-14T14:13:02.888445+00:00"
+    },
+    "8fe98f3a89f94bd2a6824028225d95f171b88fb82096037602ade9ce336b3168": {
+      "verdict": "incorrect",
+      "reason": "逐题审阅最终答案与标准：1951 / [\"December 23, 1977\"]；实体、数值、时间或所問字段不一致，维持错误。",
+      "question_id": "6abe2796cbe52cada651a52ea4334be36b50396489b4a808683110bcdd7d55c0",
+      "question": "When was the movie released that starred an American male actor born on February 28, 1923 and was written by Christopher Knopf?",
+      "target": [
+        "December 23, 1977"
+      ],
+      "answer": "1951",
+      "reviewer": "Codex逐题审阅",
+      "reviewed_utc": "2026-10-14T14:13:02.888456+00:00"
+    },
+    "ba9aa77e9bf05faee22edac42dfab8c4e64ee56ec92ef34afb8dffb15c3d577d": {
+      "verdict": "incorrect",
+      "reason": "逐题审阅最终答案与标准：Nick Robinson / [\"Devon Bostick\"]；实体、数值、时间或所問字段不一致，维持错误。",
+      "question_id": "8e3cd2de06b2d335e1998bfb2ab9de9f553f6213f0d58d44fe73d6a6ca69406c",
+      "question": "The 2015 American drama film, Being Charlie, stars which Canadian actor that appeared in \"Adoration\" and \"Saw VI\"?",
+      "target": [
+        "Devon Bostick"
+      ],
+      "answer": "Nick Robinson",
+      "reviewer": "Codex逐题审阅",
+      "reviewed_utc": "2026-10-14T14:13:02.888464+00:00"
+    },
+    "040c9c93ab4db85a3ab4d3d308e4bd0899cbe811b2b19fff4b976f31e461d2b9": {
+      "verdict": "equivalent",
+      "reason": "NCAA Division I与Division I同一大学体育分级，附加联盟限定。",
+      "question_id": "75d2fd89c0f2efbeae7448c639ebb1ac40f68782a1d9631b6f2d726a8c223f1f",
+      "question": "What collegiate division does the team coached by P.W. Underwood play in?",
+      "target": [
+        "Division I"
+      ],
+      "answer": "NCAA Division I",
+      "reviewer": "Codex逐题审阅",
+      "reviewed_utc": "2026-10-14T14:13:02.888472+00:00"
+    },
+    "41e5b93ced9a4346ab17ec4aa8bc87a56930761ab248923b9079bdb6beb1227c": {
+      "verdict": "incorrect",
+      "reason": "逐题审阅最终答案与标准：10th / [\"world's 16th largest city\"]；实体、数值、时间或所問字段不一致，维持错误。",
+      "question_id": "61690463a97340a6d8b9ddec9f02be318b33809292edc126b55392658a124ee7",
+      "question": "What is the global rank by population of the city that Daewoong Pharmaceutical Co., Ltd is based in?",
+      "target": [
+        "world's 16th largest city"
+      ],
+      "answer": "10th",
+      "reviewer": "Codex逐题审阅",
+      "reviewed_utc": "2026-10-14T14:13:02.888479+00:00"
+    },
+    "044a4742576e4f9f86cee2d696dddf9f217cd1946b5ec7d82819cc8d904ab9f3": {
+      "verdict": "incorrect",
+      "reason": "逐题审阅最终答案与标准：Charlie / [\"Josh\"]；实体、数值、时间或所問字段不一致，维持错误。",
+      "question_id": "24f0f7a56a9414171bcaf7fe766bfb8697d2e0d378abd2cb2522d5fb531ed536",
+      "question": "The producer of \"Live By NIght\" began his film career playing what role in \"Critters 3\"?",
+      "target": [
+        "Josh"
+      ],
+      "answer": "Charlie",
+      "reviewer": "Codex逐题审阅",
+      "reviewed_utc": "2026-10-14T14:13:02.888486+00:00"
+    },
+    "00f478dbf7ee71b52c8a7d26088e5ebe985ad4d6bbd51c8706dd75b2f03f3c86": {
+      "verdict": "incorrect",
+      "reason": "逐题审阅最终答案与标准：The Mary Tyler Moore Show / [\"The Jeffersons\"]；实体、数值、时间或所問字段不一致，维持错误。",
+      "question_id": "d20f65b88cf637fb73b65ccb13d3b305fd3866775c09f1a9bc19a302e3069e9b",
+      "question": "An actress in Strange Fruit was better known for a role in CBS sitcom.  Which sitcom is this actress better known for than her role in Strange Fruit?",
+      "target": [
+        "The Jeffersons"
+      ],
+      "answer": "The Mary Tyler Moore Show",
+      "reviewer": "Codex逐题审阅",
+      "reviewed_utc": "2026-10-14T14:13:02.888503+00:00"
+    },
+    "20e05667f317a1360091ab72ce706683e922675ce57799d47f5424ea31331a97": {
+      "verdict": "incorrect",
+      "reason": "逐题审阅最终答案与标准：1987 / [\"2015\"]；实体、数值、时间或所問字段不一致，维持错误。",
+      "question_id": "08327de096ccacec2e1dda3eef0dfe040a0800167333e3488316d679375a082a",
+      "question": "What year was George Harrison's top UK charted song voted the nations 11th favorite 1980s number?",
+      "target": [
+        "2015"
+      ],
+      "answer": "1987",
+      "reviewer": "Codex逐题审阅",
+      "reviewed_utc": "2026-10-14T14:13:02.888509+00:00"
+    },
+    "ef076de9773b98c9c50b1584f7e6069e69b55898de1e8991e64dacf3cabe6fe3": {
+      "verdict": "uncertain",
+      "reason": "精度、关键字段、上下级范围或合法替代答案存在歧义，未确认等价，暂不加分。",
+      "question_id": "6cb802f5dcef31e1c0c1afbeaf38b534440813bebbc4ea3173e360fe4eda614f",
+      "question": "the work of The Last Poets and Gil Scott Heron inspired music that fits under what larger sub-genre?",
+      "target": [
+        "underground hip hop"
+      ],
+      "answer": "political hip hop",
+      "reviewer": "Codex逐题审阅",
+      "reviewed_utc": "2026-10-14T14:13:02.888517+00:00"
+    },
+    "3519964d6c5e4341f3791f41c371bc715b558647aca19b74e519ab1c38ba7a81": {
+      "verdict": "incorrect",
+      "reason": "逐题审阅最终答案与标准：end of production of Skateboard Magazine / [\"October 15, 2013\"]；实体、数值、时间或所問字段不一致，维持错误。",
+      "question_id": "c5d5249291713f6491f6f7cac8cce03982ca1ff1ff0132cc1649829ef7389a2f",
+      "question": "Which date occurred first the end of Riley Hawk's amateur career or end of production of Skateboard Magazine ?",
+      "target": [
+        "October 15, 2013"
+      ],
+      "answer": "end of production of Skateboard Magazine",
+      "reviewer": "Codex逐题审阅",
+      "reviewed_utc": "2026-10-14T14:13:02.888525+00:00"
+    },
+    "e1a8a7f9c34fe993c4880763a484f87878ca34bca07a09438d4864e8736a6f59": {
+      "verdict": "incorrect",
+      "reason": "逐题审阅最终答案与标准：Nicholas Tse / [\"Bosco Wong Chung-chak\"]；实体、数值、时间或所問字段不一致，维持错误。",
+      "question_id": "4ba0f9230f434e3d0f3e4bd5c057cd226a327bd597e54e64c83742e88ab57685",
+      "question": "What Hong Kong actor born in 1980 will star in \"Heart and Greed\"?",
+      "target": [
+        "Bosco Wong Chung-chak"
+      ],
+      "answer": "Nicholas Tse",
+      "reviewer": "Codex逐题审阅",
+      "reviewed_utc": "2026-10-14T14:13:02.888532+00:00"
+    },
+    "6074d23ec886fa5c4ee3e1fb590591fc9bf5f054084bf6e57d7abe27fd8e3f3d": {
+      "verdict": "incorrect",
+      "reason": "逐题审阅最终答案与标准：Raleigh / [\"Pittsburgh\"]；实体、数值、时间或所問字段不一致，维持错误。",
+      "question_id": "2698f773c6be7b67b9b7834d9c772448566dbe8163b2c07d3bc383009e9c9dd6",
+      "question": "Before moving to Boston to play at the New England Patriots, in which city did Dean Caliguire play his college and NFL football?",
+      "target": [
+        "Pittsburgh"
+      ],
+      "answer": "Raleigh",
+      "reviewer": "Codex逐题审阅",
+      "reviewed_utc": "2026-10-14T14:13:02.888538+00:00"
+    },
+    "100cae4238225571cffee4e96fdbda3c67507d22864873f7c49324729d8dff4a": {
+      "verdict": "uncertain",
+      "reason": "精度、关键字段、上下级范围或合法替代答案存在歧义，未确认等价，暂不加分。",
+      "question_id": "7e673fbeb17354445604a3c5006786bdb39b8cd1d0025a2f6b9ac27396a7e3ac",
+      "question": "The Church of St Peter in Pertenhall, Bedfordshire, England was added to this register on 13 July 1964.?",
+      "target": [
+        "Statutory List of Buildings of Special Architectural or Historic Interest"
+      ],
+      "answer": "National Heritage List for England",
+      "reviewer": "Codex逐题审阅",
+      "reviewed_utc": "2026-10-14T14:13:02.888546+00:00"
+    },
+    "7486af54b6ea6e123d169269c9b148c108939b3432fddff71ff52df66636771c": {
+      "verdict": "incorrect",
+      "reason": "逐题审阅最终答案与标准：Sabine / [\"stunt performances\"]；实体、数值、时间或所問字段不一致，维持错误。",
+      "question_id": "602ff04782a56a44f6983c337f18938feeff741c24b1363c02617d9f3cdcd1e4",
+      "question": "What is Rachelle Amy Beinart's role in the film that follows a group of rebels on a mission?",
+      "target": [
+        "stunt performances"
+      ],
+      "answer": "Sabine",
+      "reviewer": "Codex逐题审阅",
+      "reviewed_utc": "2026-10-14T14:13:02.888552+00:00"
+    },
+    "dfb2c4f2e9c4a1e5fc3480bce8926c7d3ed7bb4675abf9775125f8f3b9d6f223": {
+      "verdict": "incorrect",
+      "reason": "逐题审阅最终答案与标准：a pirate's life for me / [\"most performed song of all time\"]；实体、数值、时间或所問字段不一致，维持错误。",
+      "question_id": "9b859ac18232aeacb54f6e683fb57a460d5837aab0094a680a6dd3f5ad14e8e6",
+      "question": "The water-based dark ride in Walt Disney is connected to a song known for what?",
+      "target": [
+        "most performed song of all time"
+      ],
+      "answer": "a pirate's life for me",
+      "reviewer": "Codex逐题审阅",
+      "reviewed_utc": "2026-10-14T14:13:02.888559+00:00"
+    },
+    "8bfa35038f0f022925aa33f5520963ea02e7cc1f766a7ca057fb1b573b286c40": {
+      "verdict": "label_issue",
+      "reason": "原标签实体类型或事实关系疑误，单列保留原EM，不增加等价正确数。",
+      "question_id": "1fba92ff6b6a0df7b17a96953273875ff73bae9adcea10aab468eb3dd1a9df6c",
+      "question": "Who did the Star and Dagger bass player marry?",
+      "target": [
+        "Sean Yseult."
+      ],
+      "answer": "Alison Statton",
+      "reviewer": "Codex逐题审阅",
+      "reviewed_utc": "2026-10-14T14:13:02.888567+00:00"
+    },
+    "7f68b5385c4d2c77421aa8909440048d5e61f50b54724d6f3f924e9eec8ee125": {
+      "verdict": "incorrect",
+      "reason": "逐题审阅最终答案与标准：1974 / [\"1962\"]；实体、数值、时间或所問字段不一致，维持错误。",
+      "question_id": "d9a52c3e4da059f22406eafe41eb452d6a87a368cfa9af7dca35c154f52eab6d",
+      "question": "A Japanese manga series based on a 16 year old high school student Ichitaka Seto, is written and illustrated by someone born in what year?",
+      "target": [
+        "1962"
+      ],
+      "answer": "1974",
+      "reviewer": "Codex逐题审阅",
+      "reviewed_utc": "2026-10-14T14:13:02.888573+00:00"
+    },
+    "0795ea94b3047f1e6a83575cf00fad9a2e8e95fc4578aa0a64c4d6786c53ee08": {
+      "verdict": "incorrect",
+      "reason": "逐题审阅最终答案与标准：WWE / [\"The Vaudevillains\"]；实体、数值、时间或所問字段不一致，维持错误。",
+      "question_id": "667b561204b4a6274d1d068dae70011299d92f92f7a2e33f9e75aea934612e87",
+      "question": "What wrestling team is Mathew Thomas Rehwoldt a part of?",
+      "target": [
+        "The Vaudevillains"
+      ],
+      "answer": "WWE",
+      "reviewer": "Codex逐题审阅",
+      "reviewed_utc": "2026-10-14T14:13:02.888580+00:00"
+    },
+    "0f03b8329752c903e14b17c67fef00f288a54bfcce8c23f566ddba3b709dade2": {
+      "verdict": "incorrect",
+      "reason": "逐题审阅最终答案与标准：journal / [\"satirical-humor magazine\"]；实体、数值、时间或所問字段不一致，维持错误。",
+      "question_id": "c75c493bdb39682772a6d5dc720c03a4bb90c9e8653c45bb656a044442fe58f7",
+      "question": "Of these two publication--Báiki and Sick--what type of publication is the one that was published most frequently?",
+      "target": [
+        "satirical-humor magazine"
+      ],
+      "answer": "journal",
+      "reviewer": "Codex逐题审阅",
+      "reviewed_utc": "2026-10-14T14:13:02.888587+00:00"
+    },
+    "37e0d9c1e31603535a86f90ce872c99d052e807fde3288340ad8826bc7018b8e": {
+      "verdict": "uncertain",
+      "reason": "精度、关键字段、上下级范围或合法替代答案存在歧义，未确认等价，暂不加分。",
+      "question_id": "d54de49a377004ccf1e552d8ac56b7d5d0f344242e932a380028d9279a85ee28",
+      "question": "What is in both the Lithocarpus and Duranta species?",
+      "target": [
+        "trees"
+      ],
+      "answer": "flowering plants",
+      "reviewer": "Codex逐题审阅",
+      "reviewed_utc": "2026-10-14T14:13:02.888604+00:00"
+    },
+    "58c8cbc2816db3340f1a70a11d2e5119cfbe29fc884c276340e5248f94a8c8e2": {
+      "verdict": "incorrect",
+      "reason": "逐题审阅最终答案与标准：1 acre / [\"2 acre\"]；实体、数值、时间或所問字段不一致，维持错误。",
+      "question_id": "af328fd76a4551f74a99b17af0d41d1307b2b3c8221598ffc9a8151b74784c3e",
+      "question": "What is the size of the archaeological site which is in the hamlet of the Guilderland in Albany County, New York?",
+      "target": [
+        "2 acre"
+      ],
+      "answer": "1 acre",
+      "reviewer": "Codex逐题审阅",
+      "reviewed_utc": "2026-10-14T14:13:02.888612+00:00"
+    },
+    "da0552e824241aa29ff8eafb4774ff969baebf12c1d8f220696caf799a950161": {
+      "verdict": "equivalent",
+      "reason": "west coast与west在海岸问题中相同方向，附加单位词。",
+      "question_id": "1f050e2bfd515f999675eb8e76f9d133ee041f06d6065e242f87017619f316d6",
+      "question": "On which coast can the California Aqueduct and the Lake Washington Ship Canal be found?",
+      "target": [
+        "west"
+      ],
+      "answer": "west coast",
+      "reviewer": "Codex逐题审阅",
+      "reviewed_utc": "2026-10-14T14:13:02.888618+00:00"
+    },
+    "e629807fe0a0635ac984ae9d1517500559d04869d1de8f6349b65417acb12358": {
+      "verdict": "uncertain",
+      "reason": "精度、关键字段、上下级范围或合法替代答案存在歧义，未确认等价，暂不加分。",
+      "question_id": "398666c72ed9014b3388fcec929918a5a67fdacf24a8c834ef71f99b411fdab2",
+      "question": "What do Josef Veltjens and Hermann Goering have in common?",
+      "target": [
+        "A veteran World War I fighter pilot ace"
+      ],
+      "answer": "German",
+      "reviewer": "Codex逐题审阅",
+      "reviewed_utc": "2026-10-14T14:13:02.888626+00:00"
+    },
+    "385e42d4fd167b573d81c83032302828193ec620bb9babf55f80ac3f12a0f1d7": {
+      "verdict": "incorrect",
+      "reason": "逐题审阅最终答案与标准：Brennan Manning / [\"Sharon Sheeley\"]；实体、数值、时间或所問字段不一致，维持错误。",
+      "question_id": "f3081c116803219612de4ab0fdcadb17f5011bf77e480fa1dc8d848a185701e4",
+      "question": "In addition to the individual born on August 21, who else wrote He's The Great Imposter?",
+      "target": [
+        "Sharon Sheeley"
+      ],
+      "answer": "Brennan Manning",
+      "reviewer": "Codex逐题审阅",
+      "reviewed_utc": "2026-10-14T14:13:02.888633+00:00"
+    },
+    "e15c0a5087a7977fc95f9f07df30564971f2d6efd407e6bb6cf729596d4b8253": {
+      "verdict": "equivalent",
+      "reason": "Emilio Sánchez与Sanchez在指定两位网球运动员中同一人，附加名及重音符。",
+      "question_id": "23d7dc9c3cf90a2f70e388f772d86a2f9e0577865df3e5e77abac3e51d35d6f3",
+      "question": "Who appeared in the Olympics first, Piet Norval or Emilio Sánchez?",
+      "target": [
+        "Sanchez"
+      ],
+      "answer": "Emilio Sánchez",
+      "reviewer": "Codex逐题审阅",
+      "reviewed_utc": "2026-10-14T14:13:02.888640+00:00"
+    },
+    "83b4f7b087d9f41645041caf5b79586ea7ed0ec2479527cd60ae139ceed8c00c": {
+      "verdict": "incorrect",
+      "reason": "逐题审阅最终答案与标准：River Conder / [\"Ribble\"]；实体、数值、时间或所問字段不一致，维持错误。",
+      "question_id": "b07ec90034d5d4843ee553fb869ccc826a97249374de82d175db86f96045a59e",
+      "question": "Blackamoor, Lancashire lies near the banks of what river?",
+      "target": [
+        "Ribble"
+      ],
+      "answer": "River Conder",
+      "reviewer": "Codex逐题审阅",
+      "reviewed_utc": "2026-10-14T14:13:02.888647+00:00"
+    },
+    "c7c27eab13716bfbba0ab81620edccd2e9df401803fed5e520023617cebaae9a": {
+      "verdict": "incorrect",
+      "reason": "逐题审阅最终答案与标准：André Popp / [\"Pierre Louis Joseph Boulez\"]；实体、数值、时间或所問字段不一致，维持错误。",
+      "question_id": "0609c3a6f8d6b25c7ac582dfc956c58ffe9ea8e21c644b73e27079412b0e21f6",
+      "question": "Ross Pople worked with this French dominant figure of the post-war classical music world.?",
+      "target": [
+        "Pierre Louis Joseph Boulez"
+      ],
+      "answer": "André Popp",
+      "reviewer": "Codex逐题审阅",
+      "reviewed_utc": "2026-10-14T14:13:02.888654+00:00"
+    },
+    "a8fc99a204f6a3ec3b1f3b0e984fff9803a7348471a6356410a0cdbacebb6c0e": {
+      "verdict": "equivalent",
+      "reason": "Merrimack County与Merrimack同一县，附加单位词。",
+      "question_id": "f6a99fd27b219fc954970c08022b69cc23d17db7afdbdb0224a3308be76c841f",
+      "question": "John Stark Regional High School serves the community in which New Hampshire county?",
+      "target": [
+        "Merrimack"
+      ],
+      "answer": "Merrimack County",
+      "reviewer": "Codex逐题审阅",
+      "reviewed_utc": "2026-10-14T14:13:02.888662+00:00"
+    },
+    "08af7634f2cdaedb8255ae879c14ef6d53da3850235391ae507dba7160ea9255": {
+      "verdict": "incorrect",
+      "reason": "逐题审阅最终答案与标准：1930 / [\"1935\"]；实体、数值、时间或所問字段不一致，维持错误。",
+      "question_id": "180501b34ebac19ab34d8c7c323516366197d4ee139c8e0e5fa269ab6b7d90f1",
+      "question": "The player who defeated Johnny Majors for the Heisman Trophy in 1956 was born in what year?",
+      "target": [
+        "1935"
+      ],
+      "answer": "1930",
+      "reviewer": "Codex逐题审阅",
+      "reviewed_utc": "2026-10-14T14:13:02.888668+00:00"
+    },
+    "2928d202b98793fcd8409018e98b7149e3dca60904bddc8e60330a3c63de720f": {
+      "verdict": "incorrect",
+      "reason": "逐题审阅最终答案与标准：Route 14 / [\"16th Street and Georgetown Road\"]；实体、数值、时间或所問字段不一致，维持错误。",
+      "question_id": "69475a32b4cca3eda41721de4f0e73e8e9ba6a82cf609017e4a588527df71ada",
+      "question": "This event which was part of the 1954 AAA National Championship Trail was held at a racing circuit located at the corner of what?",
+      "target": [
+        "16th Street and Georgetown Road"
+      ],
+      "answer": "Route 14",
+      "reviewer": "Codex逐题审阅",
+      "reviewed_utc": "2026-10-14T14:13:02.888677+00:00"
+    },
+    "5964a65d9b48bc26423326d83495eb501277846de424f3572ec6346776434877": {
+      "verdict": "equivalent",
+      "reason": "Princess Aisha与Princess Aisha bint Hussein在Princess Zein姐妹语境中同一人。",
+      "question_id": "8b8b4c8c79cf0bb2309ad91044226c4e7281d121348ecea979281265af3b3b64",
+      "question": "Who is the sister of Princess Zein and the daughter of a British woman?",
+      "target": [
+        "Princess Aisha bint Hussein"
+      ],
+      "answer": "Princess Aisha",
+      "reviewer": "Codex逐题审阅",
+      "reviewed_utc": "2026-10-14T14:13:02.888684+00:00"
+    },
+    "d16fd7cfbd47dc127a39aa3c3bf98d52d2bc52a3ad1696317d07d4fc8151d79d": {
+      "verdict": "incorrect",
+      "reason": "逐题审阅最终答案与标准：Marion County / [\"Franklin, Indiana\"]；实体、数值、时间或所問字段不一致，维持错误。",
+      "question_id": "7bca563cd7d8859c3442120c15294a881575b6ad37facda084cd521690b966a6",
+      "question": "Where was the community schools to which Franklin Community High School was part of headquartered ?",
+      "target": [
+        "Franklin, Indiana"
+      ],
+      "answer": "Marion County",
+      "reviewer": "Codex逐题审阅",
+      "reviewed_utc": "2026-10-14T14:13:02.888691+00:00"
+    },
+    "c57b8b4c39b0decf5fb621731b828d54ecfc3d30883174c7d7329edff0f0f24b": {
+      "verdict": "incorrect",
+      "reason": "逐题审阅最终答案与标准：Soncino / [\"Atlanta, Georgia\"]；实体、数值、时间或所問字段不一致，维持错误。",
+      "question_id": "956758180472e2e115fe2f1c665d0268828551c22a6d3610635b1f352eb73886",
+      "question": "Where was the artist behind \"Shit\" born and raised?",
+      "target": [
+        "Atlanta, Georgia"
+      ],
+      "answer": "Soncino",
+      "reviewer": "Codex逐题审阅",
+      "reviewed_utc": "2026-10-14T14:13:02.888697+00:00"
+    },
+    "ae94f2cc52a6e8fa94609f18a4b83cd5bd982a1520d17db5cb02d6806315681b": {
+      "verdict": "incorrect",
+      "reason": "逐题审阅最终答案与标准：thirty / [\"28\"]；实体、数值、时间或所問字段不一致，维持错误。",
+      "question_id": "8ef786fe03ccb2e04a259c9012ef30955626a1edffb69a9bb4a31b915e6f71a2",
+      "question": "How many seasons has a popular tv show had, in which one of the episodes is called Moho House?",
+      "target": [
+        "28"
+      ],
+      "answer": "thirty",
+      "reviewer": "Codex逐题审阅",
+      "reviewed_utc": "2026-10-14T14:13:02.888704+00:00"
+    },
+    "90a234abf720c4dff53737bb8fff2b1577600dc29b80fff4fe8c78c4fa807da1": {
+      "verdict": "incorrect",
+      "reason": "逐题审阅最终答案与标准：Lizzie Borden / [\"Dziga Vertov\"]；实体、数值、时间或所問字段不一致，维持错误。",
+      "question_id": "f0b852aaabe67f1d06c76275712838ddd47363826d0b4cb9b70ec0424205a37e",
+      "question": "The Collective for Living Cinema of Lower Manhattan featured work from what filmmaker also known as Denis Kaufman?",
+      "target": [
+        "Dziga Vertov"
+      ],
+      "answer": "Lizzie Borden",
+      "reviewer": "Codex逐题审阅",
+      "reviewed_utc": "2026-10-14T14:13:02.888711+00:00"
+    },
+    "3abcc2ad55aff86dd550d1194b1809c3544e7d1d00826d07b404db0b74bb25e0": {
+      "verdict": "equivalent",
+      "reason": "3与three singles titles同一数量。",
+      "question_id": "13a457e369489ce47a1d966a4ea7a9c4eb1f0cfc773146977e60d4052844ed86",
+      "question": "How many more singles titles did Kim Warwick win than Jorge Lozano?",
+      "target": [
+        "three singles titles"
+      ],
+      "answer": "3",
+      "reviewer": "Codex逐题审阅",
+      "reviewed_utc": "2026-10-14T14:13:02.888718+00:00"
+    },
+    "a4f0365bd2dfd1caf1c2d9923f10be92c4b6bd55e385492c092af6ecb453f4d6": {
+      "verdict": "equivalent",
+      "reason": "seven与seven members同一团体人数。",
+      "question_id": "ff193029927517ec3cde011eac3f3cba84ebaee4f10e10d9c76b79433b91cc58",
+      "question": "How many members were in the South Korean boy group whose first official sub-unit is Bastarz?",
+      "target": [
+        "seven members"
+      ],
+      "answer": "seven",
+      "reviewer": "Codex逐题审阅",
+      "reviewed_utc": "2026-10-14T14:13:02.888724+00:00"
+    },
+    "9c35801caad5baff60d9ad915ae04f9117deadac76fb20e7f8cbc1daf6c40453": {
+      "verdict": "incorrect",
+      "reason": "逐题审阅最终答案与标准：Czech Republic / [\"Ufa, Russia\"]；实体、数值、时间或所問字段不一致，维持错误。",
+      "question_id": "5e2402319ab979361a346932600cc224b02a661b3b2ee616628135298720413f",
+      "question": "Where was the second World Junior Ice Hockey Championship in which Miroslav Přerost coached the men's national junior ice hockey team hosted?",
+      "target": [
+        "Ufa, Russia"
+      ],
+      "answer": "Czech Republic",
+      "reviewer": "Codex逐题审阅",
+      "reviewed_utc": "2026-10-14T14:13:02.888731+00:00"
+    },
+    "1e7e5718b4a7af55a2a76df126d60c70090ff71e7c22713d75e7c830a2f436d4": {
+      "verdict": "incorrect",
+      "reason": "逐题审阅最终答案与标准：horse / [\"Dachshunds\"]；实体、数值、时间或所問字段不一致，维持错误。",
+      "question_id": "825dafe46a03b5dc4c2c16d35ce5eb53eb07a7ba98e2da444f00d9a554dd7ebe",
+      "question": "Which animal races annually for a national title as part of a post-season NCAA Division I Football Bowl Subdivision college football game?\\?",
+      "target": [
+        "Dachshunds"
+      ],
+      "answer": "horse",
+      "reviewer": "Codex逐题审阅",
+      "reviewed_utc": "2026-10-14T14:13:02.888737+00:00"
+    },
+    "444956f80db04c04c55fe7fdc2584a6ea9316af121e76e6e94089ccb9ba6dfa8": {
+      "verdict": "label_issue",
+      "reason": "原标签实体类型或事实关系疑误，单列保留原EM，不增加等价正确数。",
+      "question_id": "23ada520c5ba5d1fff8bfb1a39d722bb24bef599c38f6569682cabc7d4ad624d",
+      "question": "What Danish sports club based in Copenhagen  did striker Søren Lindsted start his career at?",
+      "target": [
+        "Søren Lindsted"
+      ],
+      "answer": null,
+      "reviewer": "Codex逐题审阅",
+      "reviewed_utc": "2026-10-14T14:13:02.888744+00:00"
+    },
+    "ff7ebcdb851341f0edc9f920a015731882920dd4cd49218ab6d8ef57af3022d4": {
+      "verdict": "incorrect",
+      "reason": "未交出合法最终答案，不从think或工具文段补出答案。",
+      "question_id": "21a08329c2a744e92f8b9466fa3126cc04655ae7f44e814ea906572a118631ff",
+      "question": "Who directed both Last Days and Point Break?",
+      "target": [
+        "Kathryn Bigelow"
+      ],
+      "answer": null,
+      "reviewer": "Codex逐题审阅",
+      "reviewed_utc": "2026-10-14T14:13:02.888751+00:00"
+    },
+    "490a20f64965ad16d92a960f247e53296c5c4a8615f1f4282feac5f75036f259": {
+      "verdict": "incorrect",
+      "reason": "逐题审阅最终答案与标准：personal / [\"a travel diary\"]；实体、数值、时间或所問字段不一致，维持错误。",
+      "question_id": "e451d328a51ffe9e6f182404bc068412092e21817424fa3d62c924f7b53a2686",
+      "question": "What type of diary did one of the founders of the John Bishop Memorial Hospital in Srinagar write?",
+      "target": [
+        "a travel diary"
+      ],
+      "answer": "personal",
+      "reviewer": "Codex逐题审阅",
+      "reviewed_utc": "2026-10-14T14:13:02.888758+00:00"
+    },
+    "fb11577a6455fb7735fc0a144504b12ff21f97c1f30dbab7fc528f5b968772de": {
+      "verdict": "uncertain",
+      "reason": "精度、关键字段、上下级范围或合法替代答案存在歧义，未确认等价，暂不加分。",
+      "question_id": "8f72bd667b0410e1440f2b599a98ddfe7afeb0e63702eb763d46132e3f3649ba",
+      "question": "Which American former competitive swimmer was Mitzi Kremer team mate?",
+      "target": [
+        "Dara Grace Torres"
+      ],
+      "answer": "Laura Walker",
+      "reviewer": "Codex逐题审阅",
+      "reviewed_utc": "2026-10-14T14:13:02.888765+00:00"
+    },
+    "018cb2f6c9f43e88e1478a6fee43d9b1510734d7af1fe9c1290ab15a6b2fef1d": {
+      "verdict": "incorrect",
+      "reason": "逐题审阅最终答案与标准：$75 million / [\"$10.5 million\"]；实体、数值、时间或所問字段不一致，维持错误。",
+      "question_id": "8cd1cab2ff3930466d706326bd5484a0d2679447d9f893b732a17623fdf2173f",
+      "question": "What amount was the settlement that the character from the Son of al Quada got in 2017?",
+      "target": [
+        "$10.5 million"
+      ],
+      "answer": "$75 million",
+      "reviewer": "Codex逐题审阅",
+      "reviewed_utc": "2026-10-14T14:13:02.888771+00:00"
+    },
+    "eeed4a66178f02ec458a7a768d2bdcaaeb4daf5333646c226d5f9932fb799c67": {
+      "verdict": "incorrect",
+      "reason": "逐题审阅最终答案与标准：yes / [\"no\"]；实体、数值、时间或所問字段不一致，维持错误。",
+      "question_id": "265b089f5cf77f5dff1fc4c05d53d52bda343fe91e50384e82d24b1314bdba98",
+      "question": "Are both Frank Lloyd and Olivier Assayas American film directors?",
+      "target": [
+        "no"
+      ],
+      "answer": "yes",
+      "reviewer": "Codex逐题审阅",
+      "reviewed_utc": "2026-10-14T14:13:02.888777+00:00"
+    },
+    "2e4ff33f254771e4d4289f25987efb2c1023354a1d0a1d384724de201115ea1c": {
+      "verdict": "incorrect",
+      "reason": "逐题审阅最终答案与标准：Asif Kapadia / [\"James Gay-Rees\"]；实体、数值、时间或所問字段不一致，维持错误。",
+      "question_id": "a81eaf2b59b66c3e21611808bfbf1c334fe3d7d19098f431745ded4ba8b42b77",
+      "question": "Which producer from the 2015 British documentary film about the life and death of British singer-songwriter Amy Winehouse also worked on the film Oasis: Supersonic as a film producer?",
+      "target": [
+        "James Gay-Rees"
+      ],
+      "answer": "Asif Kapadia",
+      "reviewer": "Codex逐题审阅",
+      "reviewed_utc": "2026-10-14T14:13:02.888784+00:00"
+    },
+    "cec63d63c61f37e7578d0158ab2ff9d830e4314927b1cf53f24010000aaf7b3b": {
+      "verdict": "incorrect",
+      "reason": "逐题审阅最终答案与标准：Liu Yifei / [\"Liu Ye, Yu Shaoqun and Leon Lai\"]；实体、数值、时间或所問字段不一致，维持错误。",
+      "question_id": "536c7d4952520bb8376f954de50bd1631e7c62a93da507fa9f5b3f8fb1862ee9",
+      "question": "The Chinese actress also known as Crystal Liu stars in Night Peacock with which three other actresses?",
+      "target": [
+        "Liu Ye, Yu Shaoqun and Leon Lai"
+      ],
+      "answer": "Liu Yifei",
+      "reviewer": "Codex逐题审阅",
+      "reviewed_utc": "2026-10-14T14:13:02.888791+00:00"
+    },
+    "e97599b182cca7c45bb3e06ff8f86520d19565ee455a66cf8efa94ea8cfc06b6": {
+      "verdict": "uncertain",
+      "reason": "精度、关键字段、上下级范围或合法替代答案存在歧义，未确认等价，暂不加分。",
+      "question_id": "87116afb2b0ff2ea97742da86cd167eb59d5956ecd6f80a258ac8cee672e05a9",
+      "question": "What retailer did Albert Heijn start up that eventually merged with the Delhaize Group?",
+      "target": [
+        "Koninklijke Ahold N.V."
+      ],
+      "answer": "Albert Heijn",
+      "reviewer": "Codex逐题审阅",
+      "reviewed_utc": "2026-10-14T14:13:02.888798+00:00"
+    },
+    "f3a468259707bdba68d79aba517fbdefd6a8beb288c6fd9b10ec15aeeefd342c": {
+      "verdict": "incorrect",
+      "reason": "逐题审阅最终答案与标准：Piercing / [\"Suspiria\"]；实体、数值、时间或所問字段不一致，维持错误。",
+      "question_id": "295aac8742b18bf03382c55b841011cc115c84a795c1de2813fa79bc340ef64b",
+      "question": "What is the name of the umcoming horror film adaptation starring Melanie Griffiths daughter?",
+      "target": [
+        "Suspiria"
+      ],
+      "answer": "Piercing",
+      "reviewer": "Codex逐题审阅",
+      "reviewed_utc": "2026-10-14T14:13:02.888804+00:00"
+    },
+    "3075cc608d9e574dbb6a09a5c54818d2e237817ef46c738d19a9b9442b49c7fb": {
+      "verdict": "label_issue",
+      "reason": "原标签实体类型或事实关系疑误，单列保留原EM，不增加等价正确数。",
+      "question_id": "10d8201725b1dcf06d21e87c7090b39e83f0e92a631fea19cf24459a7b1c43ae",
+      "question": "Is The Stuff of Legend and Babes in Toyland both entertainment?",
+      "target": [
+        "by"
+      ],
+      "answer": "yes",
+      "reviewer": "Codex逐题审阅",
+      "reviewed_utc": "2026-10-14T14:13:02.888811+00:00"
+    },
+    "3c4ad93cc03977da11d5500e138b9efc7ec2c7037b178e92dd55d34213cdfd2c": {
+      "verdict": "equivalent",
+      "reason": "His Magic Band与Magic Band在Captain Beefheart语境中同一乐队。",
+      "question_id": "a61e7b4627dbe640c696832980f2493e2500555404119acca60b1095b22771c5",
+      "question": "The Legendary A&M Sessions contain five songs by the singer whose work was conducted with what band?",
+      "target": [
+        "Magic Band"
+      ],
+      "answer": "His Magic Band",
+      "reviewer": "Codex逐题审阅",
+      "reviewed_utc": "2026-10-14T14:13:02.888817+00:00"
+    },
+    "e9b9a7e4966edc7d816a3f72a766f59b39bc152ddd9bdd60cada2e848ab6db2b": {
+      "verdict": "uncertain",
+      "reason": "精度、关键字段、上下级范围或合法替代答案存在歧义，未确认等价，暂不加分。",
+      "question_id": "736b62ed02ad0fa28c61cc8520648d4c1ae1d4c347122f0b55b54daf0d8466b3",
+      "question": "What kind of group does Josey Scott and Kurt Cobain have in common?",
+      "target": [
+        "band"
+      ],
+      "answer": "rock",
+      "reviewer": "Codex逐题审阅",
+      "reviewed_utc": "2026-10-14T14:13:02.888824+00:00"
+    },
+    "938353a4889659ad9505a63d2dbeda9c53f990a127eb58989896f953fcb28db3": {
+      "verdict": "uncertain",
+      "reason": "精度、关键字段、上下级范围或合法替代答案存在歧义，未确认等价，暂不加分。",
+      "question_id": "d45e425245b72661923990924187db6c689d1483ecd194de6a224f2db4276c88",
+      "question": "Which countries forces fought in The Battle of Hürtgen Forest which was covered in the shooter video game Darkest Hour: Europe '44-'45?",
+      "target": [
+        "American and German"
+      ],
+      "answer": "United States",
+      "reviewer": "Codex逐题审阅",
+      "reviewed_utc": "2026-10-14T14:13:02.888831+00:00"
+    },
+    "7eec6529a26e78046bf1ec275f9984c0715b68c7e42b4ba8f0d9bbdb9c732904": {
+      "verdict": "equivalent",
+      "reason": "competitive swimming与swimming在体育电影问题下同一游泳运动。",
+      "question_id": "bb808dade4a5d586ffe977be2dfc1992c0b9dc0a02700e1aa5d29db5a60173e7",
+      "question": "What sport is featured in the film in which Kwon Yu-ri made her film debut ?",
+      "target": [
+        "swimming"
+      ],
+      "answer": "competitive swimming",
+      "reviewer": "Codex逐题审阅",
+      "reviewed_utc": "2026-10-14T14:13:02.888838+00:00"
+    },
+    "939272dcf5a6014e4416cba713a90305289722993319e14415d920c5d29a3dd7": {
+      "verdict": "uncertain",
+      "reason": "标准1978的法案实际签署于10月，答案附加December存在日期冲突，不仅凭年份包含加分。",
+      "question_id": "7f0ad1a1485d397dac6e2a12e84ac7c8e6d39fc1b3223e7b34c491b410a0e009",
+      "question": "When was the federal US law made that was responsible for shutting down Braniff Airways?",
+      "target": [
+        "1978"
+      ],
+      "answer": "December 1978",
+      "reviewer": "Codex逐题审阅",
+      "reviewed_utc": "2026-10-14T14:13:02.888845+00:00"
+    },
+    "56c6c9ea315dc28b02bad08a429944b93e55c3075df63723f16dedbb7ae1dbc1": {
+      "verdict": "incorrect",
+      "reason": "逐题审阅最终答案与标准：aunt / [\"niece\"]；实体、数值、时间或所問字段不一致，维持错误。",
+      "question_id": "648434c8ac4ac14abfe5e4bec68792fa8138c81cff7092874577b1eae4011410",
+      "question": "What is the relationship of Yeshahework Yilma's mother to the man who was Ethiopia's emperor from 1930 to 1974?",
+      "target": [
+        "niece"
+      ],
+      "answer": "aunt",
+      "reviewer": "Codex逐题审阅",
+      "reviewed_utc": "2026-10-14T14:13:02.888852+00:00"
+    },
+    "a131b0f69b24facb9864a79a3de08cd222ef54da899aa8f1cd468751a217b571": {
+      "verdict": "uncertain",
+      "reason": "精度、关键字段、上下级范围或合法替代答案存在歧义，未确认等价，暂不加分。",
+      "question_id": "c3efb6090d89a51a9d6467f6ac96b0c69a6824f2655795ef4ee2f97a3bff7865",
+      "question": "What offence were opening batsman Khalid Latif and 5 other cricketers suspended for, in February 2017?",
+      "target": [
+        "spot-fixing"
+      ],
+      "answer": "violating the Pakistan Cricket Board's (PCB) anti-corruption code",
+      "reviewer": "Codex逐题审阅",
+      "reviewed_utc": "2026-10-14T14:13:02.888860+00:00"
+    },
+    "513850aa2ec13282d31f461550ebb991fd4bf15159697ad7517736425fede141": {
+      "verdict": "equivalent",
+      "reason": "railway-themed family board game明确给所问Colt Express的railway-themed主题差异。",
+      "question_id": "16daef5df55cc0917617e17cda6c087939d88dd48646e869e54650c1b3e8d878",
+      "question": "What is the main difference between the game Plateau and the game Colt Express?",
+      "target": [
+        "Colt Express is a railway-themed"
+      ],
+      "answer": "railway-themed family board game",
+      "reviewer": "Codex逐题审阅",
+      "reviewed_utc": "2026-10-14T14:13:02.888867+00:00"
+    },
+    "893a5081f1ebd4f2f3577c544191f242b133d038e2c2dab68cc99aea665c44b2": {
+      "verdict": "incorrect",
+      "reason": "逐题审阅最终答案与标准：wives and girlfriends of high-profile sportspersons / [\"American reality television series\"]；实体、数值、时间或所問字段不一致，维持错误。",
+      "question_id": "e1105a4e7b6383cc43554e77b22cc4959b3ec708b3cd5737499cad814521d3cc",
+      "question": "Both WAGS Atlanta and WAGS are what?",
+      "target": [
+        "American reality television series"
+      ],
+      "answer": "wives and girlfriends of high-profile sportspersons",
+      "reviewer": "Codex逐题审阅",
+      "reviewed_utc": "2026-10-14T14:13:02.888875+00:00"
+    },
+    "9e924381807abe4d537191bfbcc37a3346659170a28e5fd024a1366f3f53db9b": {
+      "verdict": "incorrect",
+      "reason": "逐题审阅最终答案与标准：Manhattan Life Insurance Building / [\"712 5th Avenue\"]；实体、数值、时间或所問字段不一致，维持错误。",
+      "question_id": "891e8624e6d3539f1b04a5428aa77f91fbf2a9f4ee18b695db3e47cbb1d7d046",
+      "question": "Which tower is taller, 712 Fifth Avenue or Manhattan Life Insurance Building?",
+      "target": [
+        "712 5th Avenue"
+      ],
+      "answer": "Manhattan Life Insurance Building",
+      "reviewer": "Codex逐题审阅",
+      "reviewed_utc": "2026-10-14T14:13:02.888882+00:00"
+    },
+    "9f4fd60cd8ec0d0b8ef782bc1ff70e5b6628829cc4c9d03ddb81c41bb4c62a4b": {
+      "verdict": "incorrect",
+      "reason": "逐题审阅最终答案与标准：1920 / [\"between 1987 and 2010\"]；实体、数值、时间或所問字段不一致，维持错误。",
+      "question_id": "4d5f0996d6eefac4c606edd2752025adacecfe48f850cb4863499eaca6ec5791",
+      "question": "What are the publishing years of this American and New York based film magazine published by Hachette Filipacchi Media U.S., where April Bernard worked as senior editor?",
+      "target": [
+        "between 1987 and 2010"
+      ],
+      "answer": "1920",
+      "reviewer": "Codex逐题审阅",
+      "reviewed_utc": "2026-10-14T14:13:02.888890+00:00"
+    },
+    "08603ff0878a7b05a224f4f66205021f1b78374edfd0c236884899fa781c2402": {
+      "verdict": "incorrect",
+      "reason": "逐题审阅最终答案与标准：Dorothy LaBostrie / [\"Robert \\\"Bumps\\\" Blackwell\"]；实体、数值、时间或所問字段不一致，维持错误。",
+      "question_id": "67a17d3db6cf8c17cc6104ccc37eacdb05ad80eed5572d0f6528111cf8baa9af",
+      "question": "Here's Little Richard is a debut album containing a song written by Little Richard, Enotris Johnson and who else?",
+      "target": [
+        "Robert \"Bumps\" Blackwell"
+      ],
+      "answer": "Dorothy LaBostrie",
+      "reviewer": "Codex逐题审阅",
+      "reviewed_utc": "2026-10-14T14:13:02.888898+00:00"
+    },
+    "04225b7d9a00022e581d85bfef9cffa448d4e96f8f18e18bbc517a84927d2e38": {
+      "verdict": "equivalent",
+      "reason": "singer-songwriter完整给出singer和songwriter两项职业。",
+      "question_id": "fee9f2d4c59de436d96726c7478bdbbd577287186150cd2d620145d08e4ced94",
+      "question": "Which two occupations does Ronnie Dunn and Annie Lennox have in common?",
+      "target": [
+        "singer, songwriter"
+      ],
+      "answer": "singer-songwriter",
+      "reviewer": "Codex逐题审阅",
+      "reviewed_utc": "2026-10-14T14:13:02.888905+00:00"
+    },
+    "ac58d709073c848a100a7061b893a0f1294b3e9795573bc54b56d4d60adc6209": {
+      "verdict": "incorrect",
+      "reason": "逐题审阅最终答案与标准：October 12, 1958 / [\"October 17, 1938\"]；实体、数值、时间或所問字段不一致，维持错误。",
+      "question_id": "473f0111cb64a66f610d9ad448594da100ada4124222b83681f5df19dd39d9a4",
+      "question": "when was american stunt performer which Stunt Cycle attempted to cash in with born?",
+      "target": [
+        "October 17, 1938"
+      ],
+      "answer": "October 12, 1958",
+      "reviewer": "Codex逐题审阅",
+      "reviewed_utc": "2026-10-14T14:13:02.888912+00:00"
+    },
+    "4142e2b14e1a486ed64e1e54475f4df16c893517f2e1fda2cff657d527e3bd82": {
+      "verdict": "equivalent",
+      "reason": "题目问音乐类型，rock完整提取标准rock band中的音乐类型。",
+      "question_id": "834571430402943506d4a799544304f5616baa2fd8ad76b263ba3bdebe8dbd93",
+      "question": "What kind of music do The Stone Roses and The Lemonheads play?",
+      "target": [
+        "rock band"
+      ],
+      "answer": "rock",
+      "reviewer": "Codex逐题审阅",
+      "reviewed_utc": "2026-10-14T14:13:02.888919+00:00"
+    },
+    "a47bbaedb0cd0efe478cce716213849515b96a69b81fde97b46c58586911db5c": {
+      "verdict": "equivalent",
+      "reason": "该两人比较问题下回答American表明二者同为美国人，隐含肯定same nationality命题。",
+      "question_id": "de825fc8f447c6276658c69ace9b4fdb5a95352d4c5f97dbe6e799aefc2dc08d",
+      "question": "Are Dorothy Parker and Maxine Kumin the same nationality?",
+      "target": [
+        "yes"
+      ],
+      "answer": "American",
+      "reviewer": "Codex逐题审阅",
+      "reviewed_utc": "2026-10-14T14:13:02.888926+00:00"
+    },
+    "4525df599793a1b56d4a1dd20812ade62579bf81da1dfd9b00fb43bde9c91b6b": {
+      "verdict": "equivalent",
+      "reason": "United States Secretary of Labor与Secretary of Labor同一职位，附加国家限定。",
+      "question_id": "1998edbc4e43d1f8b35228900817bb1987f6695e54323cc6e53a8012dd3e024d",
+      "question": "Edward C. Hugger and Alexander Acosta served at appointees for what job?",
+      "target": [
+        "Secretary of Labor"
+      ],
+      "answer": "United States Secretary of Labor",
+      "reviewer": "Codex逐题审阅",
+      "reviewed_utc": "2026-10-14T14:13:02.888933+00:00"
+    },
+    "24f2a98e0aa1ff9745da63fc21c2ac7b704053ed3f78e033a3981b6bd7a57023": {
+      "verdict": "incorrect",
+      "reason": "逐题审阅最终答案与标准：fourth / [\"first\"]；实体、数值、时间或所問字段不一致，维持错误。",
+      "question_id": "344b54e0ab25616053834ad4e3c56fead3370e1166ed501c1f0c21359dd8aea5",
+      "question": "Keith Konrad Slettedahl appeared on which season of \"How I Met Your Mother\"?",
+      "target": [
+        "first"
+      ],
+      "answer": "fourth",
+      "reviewer": "Codex逐题审阅",
+      "reviewed_utc": "2026-10-14T14:13:02.888939+00:00"
+    },
+    "4df9534936c1dbf2361c174f0b6d3738c61d5f40b28e1793dc98a9076c4d43c8": {
+      "verdict": "equivalent",
+      "reason": "Marvel Comics与Marvel同一漫画公司，附加业务名。",
+      "question_id": "3aa0f6261b0a01b710f107a999b98accd7d82943ed037697a99c05a996b0f3ff",
+      "question": "Suicide's 1977 released album features a song based on what brand's comic character?",
+      "target": [
+        "Marvel"
+      ],
+      "answer": "Marvel Comics",
+      "reviewer": "Codex逐题审阅",
+      "reviewed_utc": "2026-10-14T14:13:02.888946+00:00"
+    },
+    "f51bf059603064069c781e4a35b2741ab56e5db781fed7cb28a5f79dd5cae406": {
+      "verdict": "incorrect",
+      "reason": "逐题审阅最终答案与标准：3,655 feet / [\"850 m\"]；实体、数值、时间或所問字段不一致，维持错误。",
+      "question_id": "812e5ec41d03e9170c7ac9e4caae9834d4fcacef96287ae81d1388bf4ebd6b3b",
+      "question": "What is the height of the tallest mountain from which the Glen River flows?",
+      "target": [
+        "850 m"
+      ],
+      "answer": "3,655 feet",
+      "reviewer": "Codex逐题审阅",
+      "reviewed_utc": "2026-10-14T14:13:02.888953+00:00"
+    },
+    "a317a1aae6f97f7c747adecbcfef0105d6810690b81c69903af4826fd56031d0": {
+      "verdict": "equivalent",
+      "reason": "December 16, 1959为The Second City成立日，给出标准1959的相容细化日期。",
+      "question_id": "779c03a942d3d3e96465e723861d73a6e5905ce1e9fbf50c03427ea31d1065f0",
+      "question": "When was the improvisational troupe, which trained Amy Sedaris, Paul Dinello, and Stephen Colber, founded?",
+      "target": [
+        "1959"
+      ],
+      "answer": "December 16, 1959",
+      "reviewer": "Codex逐题审阅",
+      "reviewed_utc": "2026-10-14T14:13:02.888960+00:00"
+    },
+    "60c49cb6a5329160924f9378b8fe53e1fddcfa28e558c11fa280c83e135c06cf": {
+      "verdict": "equivalent",
+      "reason": "William III完整给Heythrop Park原主人语境中的William君主身份。",
+      "question_id": "ce483823d4df46b0e2bbc6909a16426b91791f2b4df44e00f063728b16c890cc",
+      "question": "In whose government did the original owner of Heythrop Park come to prominence?",
+      "target": [
+        "William's"
+      ],
+      "answer": "William III",
+      "reviewer": "Codex逐题审阅",
+      "reviewed_utc": "2026-10-14T14:13:02.888967+00:00"
+    },
+    "423b2a669d5dd68bd815d9f9252a4c69a8fbba4ea08d5f3b682f33db2b0907d4": {
+      "verdict": "equivalent",
+      "reason": "U.S. military与U.S.在军队归属问题中同一美国军队。",
+      "question_id": "75e2ac5362e549d75d7cb4ea565be0dc94afed6ed4094fddd802bf8170f7e575",
+      "question": "The M1919 and the M1 was used by what military?",
+      "target": [
+        "U.S."
+      ],
+      "answer": "U.S. military",
+      "reviewer": "Codex逐题审阅",
+      "reviewed_utc": "2026-10-14T14:13:02.888974+00:00"
+    },
+    "03b88dd32ac5bccf0bee7c46a43879fff7b657f121e443ba926f8a3df831e9dc": {
+      "verdict": "equivalent",
+      "reason": "题目已限定comedian，Canadian完整回答标准Canadian comedian的国籍限定。",
+      "question_id": "9d166e6414ffd92e6a3c22f5e4e73c65e32c3dfdd006000b42f2a49365c31e9e",
+      "question": "What kind of comedian was Michael Mclntyre's father?",
+      "target": [
+        "Canadian comedian"
+      ],
+      "answer": "Canadian",
+      "reviewer": "Codex逐题审阅",
+      "reviewed_utc": "2026-10-14T14:13:02.888981+00:00"
+    },
+    "1f8995324fb61409ebb76c1e8c8a5ff4ab4aa1c2477758adb7f499304d3658b6": {
+      "verdict": "incorrect",
+      "reason": "未交出合法最终答案，不从think或工具文段补出答案。",
+      "question_id": "82c0e3e78d1be397419566e3f0b0f8fd6e6d1e7a4dbffb100634ac2ec758a357",
+      "question": "Cyrina Fiallo has guest starred on which Michael Jacobs-created sitcom?",
+      "target": [
+        "Girl Meets World"
+      ],
+      "answer": null,
+      "reviewer": "Codex逐题审阅",
+      "reviewed_utc": "2026-10-14T14:13:02.888988+00:00"
+    },
+    "53601225da9177318b92e0d604e2ed2174c5ecb2cf669e8ad2b8c30e92afb5eb": {
+      "verdict": "incorrect",
+      "reason": "逐题审阅最终答案与标准：Tim Leiper / [\"Chris Weinke\"]；实体、数值、时间或所問字段不一致，维持错误。",
+      "question_id": "751b43831d41198e0b2b3bb759dc8f6bafd473eb4481f8bd8f1c98bd88297a83",
+      "question": "Bobby Bowden coached which former Toronto Blue Jays minor league baseball player?",
+      "target": [
+        "Chris Weinke"
+      ],
+      "answer": "Tim Leiper",
+      "reviewer": "Codex逐题审阅",
+      "reviewed_utc": "2026-10-14T14:13:02.888995+00:00"
+    },
+    "d58fa7d9a8be62b88440490ac949691ddb01e09b9e7435adee3705b439897206": {
+      "verdict": "incorrect",
+      "reason": "逐题审阅最终答案与标准：McMaster University / [\"Wharton School of the University\"]；实体、数值、时间或所問字段不一致，维持错误。",
+      "question_id": "6fb331f6817a3e8c512c50a80a0c5284e172e8d85dc3df8572292db984329442",
+      "question": "Which of the university at which Jack M. Guttentag  is a professor emeritus of finance was established in 1881 through a donation?",
+      "target": [
+        "Wharton School of the University"
+      ],
+      "answer": "McMaster University",
+      "reviewer": "Codex逐题审阅",
+      "reviewed_utc": "2026-10-14T14:13:02.889002+00:00"
+    },
+    "51b2509db412b77cb9314d6d91053c756bf78d031330910571fa39b34da0fe6c": {
+      "verdict": "uncertain",
+      "reason": "精度、关键字段、上下级范围或合法替代答案存在歧义，未确认等价，暂不加分。",
+      "question_id": "ea7de8fa922229038d2902f65778bc343f2db439816fd3d4632f341e73adcafd",
+      "question": "What criteria subjectively qualifies the Houston Astrodome to be called the Eighth Wonder of the World?",
+      "target": [
+        "comparable to the seven Wonders of the World"
+      ],
+      "answer": "innovative design",
+      "reviewer": "Codex逐题审阅",
+      "reviewed_utc": "2026-10-14T14:13:02.889009+00:00"
+    },
+    "4a926d6b5d1ae8d7778804df76d35ade573ec7d23c00151ed254c8ea7be9055f": {
+      "verdict": "incorrect",
+      "reason": "逐题审阅最终答案与标准：Call My Name / [\"\\\"Cheap Thrills\\\" by Sia\"]；实体、数值、时间或所問字段不一致，维持错误。",
+      "question_id": "f424f6c934c636245bbe57f9ca05c10ede61a28f366bbdfbf7eebecbdaa71549",
+      "question": "What song included on the 59th edition of Now That's What I Call Music was written and recorded by an Australian recording artist?",
+      "target": [
+        "\"Cheap Thrills\" by Sia"
+      ],
+      "answer": "Call My Name",
+      "reviewer": "Codex逐题审阅",
+      "reviewed_utc": "2026-10-14T14:13:02.889016+00:00"
+    },
+    "2bc7d1d8060e6a58472632c13e6ff469d91c4664578e58e75a92366af6b1fba2": {
+      "verdict": "incorrect",
+      "reason": "逐题审阅最终答案与标准：Karl Maka / [\"Brad Silberling\"]；实体、数值、时间或所問字段不一致，维持错误。",
+      "question_id": "7a71841fb05f8dfa4009450729cda78599cfe498b63a4de6ded46eb60c814359",
+      "question": "Jamie Harris is best known for his role as The Hook-Handed Man in a movie directed by who ?",
+      "target": [
+        "Brad Silberling"
+      ],
+      "answer": "Karl Maka",
+      "reviewer": "Codex逐题审阅",
+      "reviewed_utc": "2026-10-14T14:13:02.889024+00:00"
+    },
+    "dcba1b123323ffc06cc0158174aeb66b00c2dfa0bd45e2552be1939b3563708d": {
+      "verdict": "incorrect",
+      "reason": "逐题审阅最终答案与标准：Randy Cunningham / [\"PewDiePie\"]；实体、数值、时间或所問字段不一致，维持错误。",
+      "question_id": "c730329c5c831d7f3d961c94299fc9a61824fd1c1e8cedc568c23e51c988ad20",
+      "question": "Who is a guest in the final two episodes of season eighteen of South Park?",
+      "target": [
+        "PewDiePie"
+      ],
+      "answer": "Randy Cunningham",
+      "reviewer": "Codex逐题审阅",
+      "reviewed_utc": "2026-10-14T14:13:02.889031+00:00"
+    },
+    "c48d8b6e8e1f1404ddb1434a16bca5888793e7da9ea343ddfe45a0703ea05aa3": {
+      "verdict": "incorrect",
+      "reason": "逐题审阅最终答案与标准：Sears / [\"Macy's\"]；实体、数值、时间或所問字段不一致，维持错误。",
+      "question_id": "7a672bf232c215353afbdc98d34e77ecc20707e8b57454a57ce0e23c8f656962",
+      "question": "What anchor store in the Stratford Square Mall has 728 department store locations in the continental United States?",
+      "target": [
+        "Macy's"
+      ],
+      "answer": "Sears",
+      "reviewer": "Codex逐题审阅",
+      "reviewed_utc": "2026-10-14T14:13:02.889038+00:00"
+    },
+    "9cf8fb34eae8765fbdce65a07581463dc620eb7644c04ed84b82ad6615807d36": {
+      "verdict": "incorrect",
+      "reason": "逐题审阅最终答案与标准：RAF Swanton Morley / [\"Mount Pleasant\"]；实体、数值、时间或所問字段不一致，维持错误。",
+      "question_id": "5c2caaa13c6dc45b886cc335707bc160a8fb7b16cc4746f9cf919ca5ccb8e741",
+      "question": "Which Royal Air Force is located in a town that had a population of 2,841 on 15 April 2012?",
+      "target": [
+        "Mount Pleasant"
+      ],
+      "answer": "RAF Swanton Morley",
+      "reviewer": "Codex逐题审阅",
+      "reviewed_utc": "2026-10-14T14:13:02.889045+00:00"
+    },
+    "c5014d0f2765f739264a9fca5149c31defc2b3b45d59e60abdab62ff2c89cff2": {
+      "verdict": "incorrect",
+      "reason": "逐题审阅最终答案与标准：Baadshaho / [\"Julie 2\"]；实体、数值、时间或所問字段不一致，维持错误。",
+      "question_id": "b68e069c4868ec469c75cabb762f730374f12592337886bdf47fb2a19a6a7f86",
+      "question": "What Hindi thriller directed by Deepak SHivdasani features choreography by Phulwa Khamkar?",
+      "target": [
+        "Julie 2"
+      ],
+      "answer": "Baadshaho",
+      "reviewer": "Codex逐题审阅",
+      "reviewed_utc": "2026-10-14T14:13:02.889051+00:00"
+    },
+    "e1a5ccc3c0cd31f0636b4e6eba739b57930ceb15d02f68a4ab8f703b156bbb2c": {
+      "verdict": "uncertain",
+      "reason": "精度、关键字段、上下级范围或合法替代答案存在歧义，未确认等价，暂不加分。",
+      "question_id": "c6ea75670b64f35ac2cbd764268024acc1aa532b1a3a2b74aa21992ae6b730c1",
+      "question": "The focus city for Israel's third largest airline is located where?",
+      "target": [
+        "Tel Aviv"
+      ],
+      "answer": "Israel",
+      "reviewer": "Codex逐题审阅",
+      "reviewed_utc": "2026-10-14T14:13:02.889059+00:00"
+    },
+    "4e24c2a9d4ec45cab0813d865e386c5f9771c3d98cb8d24f9b8283764dc4fd58": {
+      "verdict": "incorrect",
+      "reason": "逐题审阅最终答案与标准：University of Oklahoma / [\"USC Marshall School of Business\"]；实体、数值、时间或所問字段不一致，维持错误。",
+      "question_id": "8253afbb00b36b660af87e6ea69d4f583795c317df4b8a5ea062416a73a5972e",
+      "question": "The non-fiction book \"Finding Chandra\" is about an affair between the victim and a congressman that holds a B.B.A from what school?",
+      "target": [
+        "USC Marshall School of Business"
+      ],
+      "answer": "University of Oklahoma",
+      "reviewer": "Codex逐题审阅",
+      "reviewed_utc": "2026-10-14T14:13:02.889067+00:00"
+    },
+    "4914a74cb0ca78dbeaeead3853d9d19aaad657ab76f522588d0b9b671877cb65": {
+      "verdict": "equivalent",
+      "reason": "题目已限定music，novelty与novelty songs为相同音乐类别。",
+      "question_id": "a12ca96a9aad26a542ab0e244e0da880127275f3e678a9da670a3eda1f84510e",
+      "question": "I Like 'em Big and Stupid was a single whose B-side was played on the show of the record collector specializing in what type of music?",
+      "target": [
+        "novelty songs"
+      ],
+      "answer": "novelty",
+      "reviewer": "Codex逐题审阅",
+      "reviewed_utc": "2026-10-14T14:13:02.889074+00:00"
+    },
+    "7210557a291226ff5d363b576ca5057267e8a5b64626b8626935da09775f014f": {
+      "verdict": "uncertain",
+      "reason": "精度、关键字段、上下级范围或合法替代答案存在歧义，未确认等价，暂不加分。",
+      "question_id": "02b372731632e79067834baf86e307e4c2c7fb550f7d5c8597e6c783833dce2e",
+      "question": "The Church of the Guanche People was founded in the city that is on the most populated island of what larger area?",
+      "target": [
+        "Macaronesia"
+      ],
+      "answer": "Canary Islands",
+      "reviewer": "Codex逐题审阅",
+      "reviewed_utc": "2026-10-14T14:13:02.889081+00:00"
+    },
+    "a1246f41f777c1669d92f33a29943d9dd7a526c4ce0623101b85e817264ed014": {
+      "verdict": "incorrect",
+      "reason": "逐题审阅最终答案与标准：Gordon Craig / [\"Dave Thomas\"]；实体、数值、时间或所問字段不一致，维持错误。",
+      "question_id": "ec583f4da01819fef09aa7501625940356eae21f0d1a251e71452021be89bb94",
+      "question": "Who founded the company that sponsors the CFL game of the week?",
+      "target": [
+        "Dave Thomas"
+      ],
+      "answer": "Gordon Craig",
+      "reviewer": "Codex逐题审阅",
+      "reviewed_utc": "2026-10-14T14:13:02.889087+00:00"
+    },
+    "5046688274a7b234eb7687f14d88d7655bf1170e51c01c66671eaba50460d2e6": {
+      "verdict": "label_issue",
+      "reason": "原标签实体类型或事实关系疑误，单列保留原EM，不增加等价正确数。",
+      "question_id": "be7633d5d5aa845326bbdbe427c3b2dcd07a89d964b62dc252d6f6e39b8986b9",
+      "question": "Who authorized this infantry that was organized in the northern states during the Civil War and was commanded by RObert GOuld Shaw?",
+      "target": [
+        "Emancipation Proclamation"
+      ],
+      "answer": "United States War Department",
+      "reviewer": "Codex逐题审阅",
+      "reviewed_utc": "2026-10-14T14:13:02.889094+00:00"
+    },
+    "bd7e47c42c6256fc81beda42a2ee8755619d705638ac3870a6ebb1fbe216f1b6": {
+      "verdict": "incorrect",
+      "reason": "未交出合法最终答案，不从think或工具文段补出答案。",
+      "question_id": "285c87e610fadaae1e7f28004dde4d0e18e82ee169b8e7be3fcad8253d07fcaf",
+      "question": "Which jazz singer has a 2003 album entitled The Boy Next Door?",
+      "target": [
+        "Stacey Kent"
+      ],
+      "answer": null,
+      "reviewer": "Codex逐题审阅",
+      "reviewed_utc": "2026-10-14T14:13:02.889102+00:00"
+    },
+    "81726c8509614ae51b4c7d13e3ed093d7a271859f927b9cc6c425d6c1cec4094": {
+      "verdict": "incorrect",
+      "reason": "逐题审阅最终答案与标准：Book of Samuel / [\"Book of Judges\"]；实体、数值、时间或所問字段不一致，维持错误。",
+      "question_id": "ab21f68f33294b73ba1fbc5662aac6c9632f16e591af09e14f6642e297f2653a",
+      "question": "What is the seventh book of the Hebrew and Christina bible and also has Quran references to the river drinking experience?",
+      "target": [
+        "Book of Judges"
+      ],
+      "answer": "Book of Samuel",
+      "reviewer": "Codex逐题审阅",
+      "reviewed_utc": "2026-10-14T14:13:02.889108+00:00"
+    },
+    "6371ce9cc59d138c62cec0b84605e14230834f99fa2e877ef501e5218cc9e13e": {
+      "verdict": "incorrect",
+      "reason": "逐题审阅最终答案与标准：Pornhub / [\"XVideos\"]；实体、数值、时间或所問字段不一致，维持错误。",
+      "question_id": "7ce78bc575412895a6251c1ca4eb9b92b37f7a8fcd5a7588567b97b8309cf387",
+      "question": "YouPorn was surpassed, in 2013, by competitor sites xHamster, Pornhub, LiveJasmin, and this website that is registered to the Polish company WGCZ Holding?",
+      "target": [
+        "XVideos"
+      ],
+      "answer": "Pornhub",
+      "reviewer": "Codex逐题审阅",
+      "reviewed_utc": "2026-10-14T14:13:02.889115+00:00"
+    },
+    "7b80af58ee628b2dd1fe22f43a5b43564c61670dd9414a4cf73b6e5fb8514b67": {
+      "verdict": "equivalent",
+      "reason": "no与标准terrible date直接否定good prom date为同义布尔回答。",
+      "question_id": "c719632f0cf9bc9186b9248a0e65285232c0c2d5f30289cd92b500cfccce8353",
+      "question": "Was Artie Ziff a good prom date for Marge?",
+      "target": [
+        "Artie turns out to be a terrible date"
+      ],
+      "answer": "no",
+      "reviewer": "Codex逐题审阅",
+      "reviewed_utc": "2026-10-14T14:13:02.889122+00:00"
+    },
+    "513ae57765db2dbcda9f549ddea90b935ed063fa9a22f83e871685e057486dcf": {
+      "verdict": "incorrect",
+      "reason": "逐题审阅最终答案与标准：centuries / [\"three centuries\"]；实体、数值、时间或所問字段不一致，维持错误。",
+      "question_id": "3f1c7b687b45c33921f4d4f4fdbb240189f0333e99dd82670dbe338539a34dca",
+      "question": "Over how many centuries were the \"dwelling place of the dead\" built?",
+      "target": [
+        "three centuries"
+      ],
+      "answer": "centuries",
+      "reviewer": "Codex逐题审阅",
+      "reviewed_utc": "2026-10-14T14:13:02.889129+00:00"
+    },
+    "aca38ade8ec6a61e9df26b170eb2d7d09c6ef3039395c7036a128be5be256058": {
+      "verdict": "incorrect",
+      "reason": "逐题审阅最终答案与标准：grenadine / [\"It features Havana Club 7 Añejo Rum and Cranberry juice\"]；实体、数值、时间或所問字段不一致，维持错误。",
+      "question_id": "07b1006202d1cc61e7576cf9bfeaf02f081d36eb2a7cfd7b7805511d3d3c7e37",
+      "question": "Casino and Culto A La Vida are cocktails, one of which contains Havana Club 7 and what else?",
+      "target": [
+        "It features Havana Club 7 Añejo Rum and Cranberry juice"
+      ],
+      "answer": "grenadine",
+      "reviewer": "Codex逐题审阅",
+      "reviewed_utc": "2026-10-14T14:13:02.889136+00:00"
+    },
+    "0cb28dd5793217ebadd867827468e13722e4357f1295ad3244bfc33175443bf3": {
+      "verdict": "incorrect",
+      "reason": "逐题审阅最终答案与标准：Master Harold...and the Boys / [\"Awake\"]；实体、数值、时间或所問字段不一致，维持错误。",
+      "question_id": "6a329ca75b4263835921e9df7722e5a939e06b74f436d8ad66c60cc672db3608",
+      "question": "What film was written and directed by Joby Harold with music written by Samuel Sim?",
+      "target": [
+        "Awake"
+      ],
+      "answer": "Master Harold...and the Boys",
+      "reviewer": "Codex逐题审阅",
+      "reviewed_utc": "2026-10-14T14:13:02.889143+00:00"
+    },
+    "241f4ff71c7c493d13e375e21116c7b70c6b528800923b5dab96b8f2ed7d1f95": {
+      "verdict": "incorrect",
+      "reason": "逐题审阅最终答案与标准：number 1 / [\"4\"]；实体、数值、时间或所問字段不一致，维持错误。",
+      "question_id": "dfc8b887aca12e18a277753f82617b91bdbd2e5c05f900a56bf2f286c60084df",
+      "question": "Live Acoustic America features a cover of a Beatles song that peaked at what number in the United Kingdom?",
+      "target": [
+        "4"
+      ],
+      "answer": "number 1",
+      "reviewer": "Codex逐题审阅",
+      "reviewed_utc": "2026-10-14T14:13:02.889150+00:00"
+    },
+    "6a0e1e07121cbf436439896f1291905e785f835a7bc791216b4c75d6817a6225": {
+      "verdict": "uncertain",
+      "reason": "精度、关键字段、上下级范围或合法替代答案存在歧义，未确认等价，暂不加分。",
+      "question_id": "58bf724f84c7f20ac79c78de75e95c7bfcb7ed28b39f805136d2fbf06a206e04",
+      "question": "Where in Greek mythology was the father of Benthesikyme venerated as a chief deity?",
+      "target": [
+        "Pylos and Thebes"
+      ],
+      "answer": "Greece",
+      "reviewer": "Codex逐题审阅",
+      "reviewed_utc": "2026-10-14T14:13:02.889157+00:00"
+    },
+    "290f744be5a624b75b14b3a98e400bcc2622d850db7909e0b696c8682f2d078f": {
+      "verdict": "incorrect",
+      "reason": "逐题审阅最终答案与标准：Sports Talk / [\"an oldies format\"]；实体、数值、时间或所問字段不一致，维持错误。",
+      "question_id": "636214c745fb40f2f51df232109cfc262876a7544bdf661a30ca7bc8f28312ad",
+      "question": "What format does a 1170 kHz AM station that Jim Angel presented the news for have?",
+      "target": [
+        "an oldies format"
+      ],
+      "answer": "Sports Talk",
+      "reviewer": "Codex逐题审阅",
+      "reviewed_utc": "2026-10-14T14:13:02.889164+00:00"
+    },
+    "cd215fbf57ed076d8affb5b04398d18e55a501ecd9cbb9deb8bef46a4b02841d": {
+      "verdict": "incorrect",
+      "reason": "未交出合法最终答案，不从think或工具文段补出答案。",
+      "question_id": "438603c04466549c4b918b996f27c2242ceb30edc4ad8e6053f89994bb7688b4",
+      "question": "What judge who was on the show \"Dancing with the Stars\" was born on the 31st of March, 1963?",
+      "target": [
+        "Paul Joseph Mercurio"
+      ],
+      "answer": null,
+      "reviewer": "Codex逐题审阅",
+      "reviewed_utc": "2026-10-14T14:13:02.889170+00:00"
+    },
+    "4a11ef4abb32968e56bc326dd98b5cdbba5f486200a112cd38c1859b6d0256dc": {
+      "verdict": "incorrect",
+      "reason": "逐题审阅最终答案与标准：The Upside of Anger / [\"\\\"Field of Dreams\\\"\"]；实体、数值、时间或所問字段不一致，维持错误。",
+      "question_id": "3c4a8fa6530d77489748b8135284f1ec44855225f3c57132bc2464e566450a20",
+      "question": "Which Kevin Costner movie included an actor who also starred in \"Little Big League\"?",
+      "target": [
+        "\"Field of Dreams\""
+      ],
+      "answer": "The Upside of Anger",
+      "reviewer": "Codex逐题审阅",
+      "reviewed_utc": "2026-10-14T14:13:02.889178+00:00"
+    },
+    "32c906daabef7f7367d9c542fb6045ab8c0190bbcfae6946bea1dd3e21b53fcb": {
+      "verdict": "incorrect",
+      "reason": "逐题审阅最终答案与标准：Italy / [\"Spain, Mexico and France\"]；实体、数值、时间或所問字段不一致，维持错误。",
+      "question_id": "54ca89d13fb72eb9c048d9e7135f4fdada18db9948a68e56f4cc2531e70502dd",
+      "question": "José Baviera starred in the 1962 film by the filmmaker who worked in what countries?",
+      "target": [
+        "Spain, Mexico and France"
+      ],
+      "answer": "Italy",
+      "reviewer": "Codex逐题审阅",
+      "reviewed_utc": "2026-10-14T14:13:02.889184+00:00"
+    },
+    "a3166ea02a13dcb51a841120c757dd7002998a3b237b6ab58ba20088eb566c63": {
+      "verdict": "incorrect",
+      "reason": "未交出合法最终答案，不从think或工具文段补出答案。",
+      "question_id": "cd733d4670200b849ebdc3c7c945cd79db715ee772dc270a0435608f7ff288a6",
+      "question": "What is the Latin phrase that describes Pope Julius II's efforts to remove Pope Alexander VI's name from the records?",
+      "target": [
+        "Damnatio memoriae"
+      ],
+      "answer": null,
+      "reviewer": "Codex逐题审阅",
+      "reviewed_utc": "2026-10-14T14:13:02.889191+00:00"
+    },
+    "d52e8ab5bb97d8978e5f6b393d55650c69eaa901841795bd0e133e8a4921c3e6": {
+      "verdict": "incorrect",
+      "reason": "逐题审阅最终答案与标准：four / [\"number 5\"]；实体、数值、时间或所問字段不一致，维持错误。",
+      "question_id": "3986ddbbb6ebe0583a4892acb028b812efb773f660e8f92431513c96ae46ce94",
+      "question": "How high on the US \"Billboard\" Hot 100 chart did Dan Smith's song reach in 2013?",
+      "target": [
+        "number 5"
+      ],
+      "answer": "four",
+      "reviewer": "Codex逐题审阅",
+      "reviewed_utc": "2026-10-14T14:13:02.889198+00:00"
+    },
+    "a6677e57bd4a402e4c35fc026ff0e78dcb33186dd8e406b6018d15e765e2d12a": {
+      "verdict": "incorrect",
+      "reason": "逐题审阅最终答案与标准：Shellharbour / [\"City of Newcastle\"]；实体、数值、时间或所問字段不一致，维持错误。",
+      "question_id": "143f6221525904b5496cbad3f46cfbde835aabef8a547e38bc89dafb7718fcc0",
+      "question": "Which of the city at the south of Shelly Beach, New South Wales is a local government area in the Hunter region of New South Wales, Australia?",
+      "target": [
+        "City of Newcastle"
+      ],
+      "answer": "Shellharbour",
+      "reviewer": "Codex逐题审阅",
+      "reviewed_utc": "2026-10-14T14:13:02.889204+00:00"
+    },
+    "af055ff3b85e61175ca3d5d6a82e9e3e1d6e402d93c192c8c1d10102127fc814": {
+      "verdict": "incorrect",
+      "reason": "逐题审阅最终答案与标准：first / [\"third\"]；实体、数值、时间或所問字段不一致，维持错误。",
+      "question_id": "27a755491fb28f98b3e063de0c6a555005be83687cf1b3a923dbf543ac73878b",
+      "question": "What number album is the first W.A.S.P. album to feature Steven Edward Duren playing guitar?",
+      "target": [
+        "third"
+      ],
+      "answer": "first",
+      "reviewer": "Codex逐题审阅",
+      "reviewed_utc": "2026-10-14T14:13:02.889211+00:00"
+    },
+    "488ac559d2b1ac30a67a25df70634493680c53c0cac60b2bb6be101490339ff3": {
+      "verdict": "uncertain",
+      "reason": "精度、关键字段、上下级范围或合法替代答案存在歧义，未确认等价，暂不加分。",
+      "question_id": "63f81e94f3672289096d3a18031ec7c8a77e8af820a4cec07e26664af5e918b8",
+      "question": "Both Alexander Hall and Pierre Morel are involved in which profession?",
+      "target": [
+        "film director"
+      ],
+      "answer": "film",
+      "reviewer": "Codex逐题审阅",
+      "reviewed_utc": "2026-10-14T14:13:02.889218+00:00"
+    },
+    "661ebbece5ec46fc032257a54af1a28a56218ed11683846a4b849000c388b71c": {
+      "verdict": "incorrect",
+      "reason": "逐题审阅最终答案与标准：Walt Disney Pictures / [\"Don Hahn\"]；实体、数值、时间或所問字段不一致，维持错误。",
+      "question_id": "32f9089175b8d21bbfd5e8b2cb4ee318d7e1d08277da75de9709510f51892d0b",
+      "question": "Who was the producer of the 1994 American animated epic musical film which Mel Shaw animated?",
+      "target": [
+        "Don Hahn"
+      ],
+      "answer": "Walt Disney Pictures",
+      "reviewer": "Codex逐题审阅",
+      "reviewed_utc": "2026-10-14T14:13:02.889225+00:00"
+    },
+    "4688ff8d3464b81e895b658d3e3901607f823db4bce2514909a4f529178b7b6d": {
+      "verdict": "incorrect",
+      "reason": "逐题审阅最终答案与标准：1974 / [\"1952\"]；实体、数值、时间或所問字段不一致，维持错误。",
+      "question_id": "29a016edb2fefd1df119397dc4aa154856382ca15297acf0858e9aabc54549bc",
+      "question": "What year did the series on CBS, starring the actor who known for his role in \"Rebel Without a Cause,\" air?",
+      "target": [
+        "1952"
+      ],
+      "answer": "1974",
+      "reviewer": "Codex逐题审阅",
+      "reviewed_utc": "2026-10-14T14:13:02.889231+00:00"
+    },
+    "8aa689b1c8ed70eddaee76e9f091ebbb8313acc3211091752b6bd62ebd4a3171": {
+      "verdict": "incorrect",
+      "reason": "逐题审阅最终答案与标准：yes / [\"no\"]；实体、数值、时间或所問字段不一致，维持错误。",
+      "question_id": "732f4c2e0c6fed4e675410a8e618b9723546ad95d537a35bec890eeb53aa3267",
+      "question": "Did both Alan Crosland and Chris Columbus work as stage actor?",
+      "target": [
+        "no"
+      ],
+      "answer": "yes",
+      "reviewer": "Codex逐题审阅",
+      "reviewed_utc": "2026-10-14T14:13:02.889238+00:00"
+    },
+    "4c7608267c5f23b84461c7c4e4e13c2c515420dbcf4dcd1eb75beb2e7f0c18e3": {
+      "verdict": "uncertain",
+      "reason": "精度、关键字段、上下级范围或合法替代答案存在歧义，未确认等价，暂不加分。",
+      "question_id": "276f44a351e5832cd0b0eb9138b98baa6400b59eafaf30cc6d7cd77e9aac2b95",
+      "question": "How many minutes outside of Carson City is the Moonlite BunnyRanch on Moonlight Road?",
+      "target": [
+        "a few minutes"
+      ],
+      "answer": "1",
+      "reviewer": "Codex逐题审阅",
+      "reviewed_utc": "2026-10-14T14:13:02.889245+00:00"
+    },
+    "a0014d67a79a0db696fc73880ac9f0e41c0a7ff1f6d342dda3772cf485a2c0f6": {
+      "verdict": "uncertain",
+      "reason": "精度、关键字段、上下级范围或合法替代答案存在歧义，未确认等价，暂不加分。",
+      "question_id": "13a62680ec39715dcb23971ad2da7efca1996b1c51afd16eb37733ee8018b0c5",
+      "question": "Die Nacht was composed by German composer, Richard Strauss. What other well known operas did he compose?",
+      "target": [
+        "Der Rosenkavalier"
+      ],
+      "answer": "Elektra",
+      "reviewer": "Codex逐题审阅",
+      "reviewed_utc": "2026-10-14T14:13:02.889251+00:00"
+    },
+    "a81e9f30c60625995dde158fda0e4b802410ba233744d0075d47ebd92bed8e2c": {
+      "verdict": "incorrect",
+      "reason": "逐题审阅最终答案与标准：Leonor / [\"Jillian Belk\"]；实体、数值、时间或所問字段不一致，维持错误。",
+      "question_id": "41495c8539ec9dbca72a0769997b92d82f5b8f466502ff479a1aaaafcbe82852",
+      "question": "SuperMansion starred the actress who had a recurring role as whom on Workaholics?",
+      "target": [
+        "Jillian Belk"
+      ],
+      "answer": "Leonor",
+      "reviewer": "Codex逐题审阅",
+      "reviewed_utc": "2026-10-14T14:13:02.889258+00:00"
+    },
+    "3e608f9dbbbd61a50873292b0939407f294a4d31e49818f8cb492cde2ee8aec5": {
+      "verdict": "incorrect",
+      "reason": "逐题审阅最终答案与标准：2015 / [\"2002\"]；实体、数值、时间或所問字段不一致，维持错误。",
+      "question_id": "282eb54b33cc3c9502db463a3670c55de46f71df8520936f1365d4f7c685fe3b",
+      "question": "Phillip Pullman's book set in a parallel universe featuring a character named Lyra Belacqua was put into audio in what year?",
+      "target": [
+        "2002"
+      ],
+      "answer": "2015",
+      "reviewer": "Codex逐题审阅",
+      "reviewed_utc": "2026-10-14T14:13:02.889265+00:00"
+    },
+    "095072c390999188604561ec2b5f8f7c0b5820cc856cb94e98c0e0397e8dfae0": {
+      "verdict": "incorrect",
+      "reason": "逐题审阅最终答案与标准：Daimler / [\"D. Napier & Son\"]；实体、数值、时间或所問字段不一致，维持错误。",
+      "question_id": "7b031d5f4e875dcf43e2b5e7efb2a754dfaca9fd324a56c009d0ae7519dc6628",
+      "question": "Which British engineering company is best known for its luxury motor cars in the era of British history that covers the brief reign of King Edward VII?",
+      "target": [
+        "D. Napier & Son"
+      ],
+      "answer": "Daimler",
+      "reviewer": "Codex逐题审阅",
+      "reviewed_utc": "2026-10-14T14:13:02.889273+00:00"
+    },
+    "b979bac1552a73d7e6f42a2124edf114219c1dc41d555fff07837191ba682ae4": {
+      "verdict": "incorrect",
+      "reason": "逐题审阅最终答案与标准：May, 1995 / [\"1943\"]；实体、数值、时间或所問字段不一致，维持错误。",
+      "question_id": "a85df34ddb398928edd193113e3b480175bea296594ca0155076e146e78bb6ee",
+      "question": "When was the multinational group headquartered in the Netherlands adjacent to the Junction 27 Retail Park near Birstall, Batley, West Yorkshite, England, founded?",
+      "target": [
+        "1943"
+      ],
+      "answer": "May, 1995",
+      "reviewer": "Codex逐题审阅",
+      "reviewed_utc": "2026-10-14T14:13:02.889280+00:00"
+    },
+    "5fa8d12c2dc1fd72106eae1efbb1210bf9b0e5522b156837481e98d2c4880336": {
+      "verdict": "incorrect",
+      "reason": "逐题审阅最终答案与标准：no / [\"yes\"]；实体、数值、时间或所問字段不一致，维持错误。",
+      "question_id": "482fc68055f5452fbe75705a32aef5585f1653f99217ff01e27db09b1fa1e6e1",
+      "question": "Are David Schwimmer and James Wan in the same industry?",
+      "target": [
+        "yes"
+      ],
+      "answer": "no",
+      "reviewer": "Codex逐题审阅",
+      "reviewed_utc": "2026-10-14T14:13:02.889287+00:00"
+    },
+    "d862bb22753bb618ef8bec5313e0d95b9179822a0784f4369a76bdfa12f86462": {
+      "verdict": "incorrect",
+      "reason": "未交出合法最终答案，不从think或工具文段补出答案。",
+      "question_id": "515e2062eead5bec5fb516d66b803998f1cf4ce5cbd613c41585881285ab0e6a",
+      "question": "What is the company that currently recognizes the sprinting records set by Leni Junker and Florence Griffith-Joyner?",
+      "target": [
+        "International Association of Athletics Federations"
+      ],
+      "answer": null,
+      "reviewer": "Codex逐题审阅",
+      "reviewed_utc": "2026-10-14T14:13:02.889294+00:00"
+    },
+    "fba6929e99ca4b36661f87d3514f89ff823b09cdb6756d6c13af13f301cb922a": {
+      "verdict": "incorrect",
+      "reason": "逐题审阅最终答案与标准：7 to 11 / [\"between 11 or 13 and 18\"]；实体、数值、时间或所問字段不一致，维持错误。",
+      "question_id": "8df9b51a60d1954d1dbfc6682f3093354c001654f951a7eac78bf624a6e6ee2b",
+      "question": "Queen Elizabeth Grammar School, Wakefield is a type of secondary school that caters to children of what age cohort?",
+      "target": [
+        "between 11 or 13 and 18"
+      ],
+      "answer": "7 to 11",
+      "reviewer": "Codex逐题审阅",
+      "reviewed_utc": "2026-10-14T14:13:02.889302+00:00"
+    },
+    "20911c40908239e3bd65157adf9c9b515d85206bfd57f8e44358523e80ed7d98": {
+      "verdict": "uncertain",
+      "reason": "精度、关键字段、上下级范围或合法替代答案存在歧义，未确认等价，暂不加分。",
+      "question_id": "2e3a216f5d1a1e7f121f02195764e7e7d087134a81d4b857c580b372fcf6d7e0",
+      "question": "Arundel Castle was damaged during a war between which two groups?",
+      "target": [
+        "Parliamentarians (\"Roundheads\") and Royalists (\"Cavaliers\")"
+      ],
+      "answer": "Parliamentarians",
+      "reviewer": "Codex逐题审阅",
+      "reviewed_utc": "2026-10-14T14:13:02.889309+00:00"
+    },
+    "778f93e57125364264fd260e3cd8821fe3c507c60726384ff0dcc77363714598": {
+      "verdict": "incorrect",
+      "reason": "逐题审阅最终答案与标准：29 March 1972 / [\"2 March 1972\"]；实体、数值、时间或所問字段不一致，维持错误。",
+      "question_id": "499bae42e817f92d259f64f56db9326d78d21a84f70295d89202c5aaa4c1c03c",
+      "question": "When was the  Argentine former footballer which  Dutch manager Ronald Koeman replaced in  2014–15 Southampton F.C. season born?",
+      "target": [
+        "2 March 1972"
+      ],
+      "answer": "29 March 1972",
+      "reviewer": "Codex逐题审阅",
+      "reviewed_utc": "2026-10-14T14:13:02.889316+00:00"
+    },
+    "afc0b7ce7613c87974edddc19b96b2b26277024fe5040c5e3d243d7cc988c4a5": {
+      "verdict": "uncertain",
+      "reason": "精度、关键字段、上下级范围或合法替代答案存在歧义，未确认等价，暂不加分。",
+      "question_id": "fa40f8bdfcc2331040c415931cd522a386ff0498cfa38c7d2077fdee3fc6283f",
+      "question": "The university where Rolf Martin Theodor Dahlgren worked as a professor has how many employees?",
+      "target": [
+        "9,000"
+      ],
+      "answer": "over 9,000",
+      "reviewer": "Codex逐题审阅",
+      "reviewed_utc": "2026-10-14T14:13:02.889323+00:00"
+    },
+    "8464a73f705b8ec50234a4a8fbfdb486b4d0997dd6e8b10edad0a919352b26e3": {
+      "verdict": "incorrect",
+      "reason": "逐题审阅最终答案与标准：over 1 million / [\"2 million\"]；实体、数值、时间或所問字段不一致，维持错误。",
+      "question_id": "14c579338f3ab2b57e20ba5b9a2defc8ae6d663f4c377ddadb8ac653cb4543ee",
+      "question": "The rapper whose debut album was titled \"Thug Misses\" has sold over how many records worldwide?",
+      "target": [
+        "2 million"
+      ],
+      "answer": "over 1 million",
+      "reviewer": "Codex逐题审阅",
+      "reviewed_utc": "2026-10-14T14:13:02.889330+00:00"
+    },
+    "d95f9561d54e7fb3b4181cd31ce5e784f61d99482dc30da549a7d98412f3d35e": {
+      "verdict": "label_issue",
+      "reason": "原标签实体类型或事实关系疑误，单列保留原EM，不增加等价正确数。",
+      "question_id": "c90a88deea7bc38376fe41d5c30ae7c5825ed0c02b04f1e598d7ab86ea72d5c9",
+      "question": "Who was born in August and was a professor?",
+      "target": [
+        "Fred MacMurray"
+      ],
+      "answer": "Jack August",
+      "reviewer": "Codex逐题审阅",
+      "reviewed_utc": "2026-10-14T14:13:02.889337+00:00"
+    },
+    "c6cb8d78ac2b439c86ec2b1d3256ed2a0a6687a97d446702e9d92cbfdb663db2": {
+      "verdict": "incorrect",
+      "reason": "逐题审阅最终答案与标准：Tails / [\"Kairi in the video game series \\\"Kingdom Hearts\\\".\"]；实体、数值、时间或所問字段不一致，维持错误。",
+      "question_id": "96a933892f94351a4aa3578ad929e99f4c026e84291c9c88af8e6b7326ad27a2",
+      "question": "What video game character did the voice actress in the animated film Alpha and Omega voice?",
+      "target": [
+        "Kairi in the video game series \"Kingdom Hearts\"."
+      ],
+      "answer": "Tails",
+      "reviewer": "Codex逐题审阅",
+      "reviewed_utc": "2026-10-14T14:13:02.889344+00:00"
+    },
+    "40a0a7075937353f05ce2a87ffc9f7150ffffd02214aa90dd8cff6b60ed23466": {
+      "verdict": "incorrect",
+      "reason": "逐题审阅最终答案与标准：three / [\"seven\"]；实体、数值、时间或所問字段不一致，维持错误。",
+      "question_id": "8dcc2d9784c04ded7c39004856ac3e407659b7a97f7dd29d86952b3ced651fca",
+      "question": "Brahmarshi Vishwamitra is a 1991 film produced & directed by a man that served as Chief Minister of Andhra Pradesh for how many years?",
+      "target": [
+        "seven"
+      ],
+      "answer": "three",
+      "reviewer": "Codex逐题审阅",
+      "reviewed_utc": "2026-10-14T14:13:02.889351+00:00"
+    },
+    "77e4ef9536a773ee3fbe3ae8e72ff6dc0188050a6f263dde4021f3fc344f56b9": {
+      "verdict": "uncertain",
+      "reason": "精度、关键字段、上下级范围或合法替代答案存在歧义，未确认等价，暂不加分。",
+      "question_id": "af66b94ac0d60e92511f7f3c0175658e3c32444c006350797553b170f5f713a9",
+      "question": "Were was the Mexican state after which there is Villa Unión, Sinaloa located?",
+      "target": [
+        "tip of the Baja California"
+      ],
+      "answer": "Northwestern Mexico",
+      "reviewer": "Codex逐题审阅",
+      "reviewed_utc": "2026-10-14T14:13:02.889358+00:00"
+    },
+    "5a070208f4901b413d4e0eed6472185ab46d40ba5d02e6f91077c431577329ca": {
+      "verdict": "incorrect",
+      "reason": "逐题审阅最终答案与标准：Fred Berry / [\"Ben Savage\"]；实体、数值、时间或所問字段不一致，维持错误。",
+      "question_id": "eb5bcacf939592eaff4f701d97d28d9c4eb192ab6ddfe050b40834242dc5cd0c",
+      "question": "Penny Rae Bridges starred in a television sitcom with what other actor?",
+      "target": [
+        "Ben Savage"
+      ],
+      "answer": "Fred Berry",
+      "reviewer": "Codex逐题审阅",
+      "reviewed_utc": "2026-10-14T14:13:02.889365+00:00"
+    },
+    "f6d6e92e4f33a4a6e98ef956b9e62f1203c58995254bd6131158c140ca2a9760": {
+      "verdict": "uncertain",
+      "reason": "精度、关键字段、上下级范围或合法替代答案存在歧义，未确认等价，暂不加分。",
+      "question_id": "e577449475a7eb5dc3b1db5331c19690beeb0640054608488f5edbc3628cb585",
+      "question": "What type of elevation does Aldgate railway station, Adelaide and Aldgate, South Australia have in common?",
+      "target": [
+        "Hills"
+      ],
+      "answer": "elevated",
+      "reviewer": "Codex逐题审阅",
+      "reviewed_utc": "2026-10-14T14:13:02.889371+00:00"
+    },
+    "9436e05fc1cade143cac22607cbe598047ccbd4f5d8ecb44d89ad9d98e18fd8a": {
+      "verdict": "label_issue",
+      "reason": "原标签实体类型或事实关系疑误，单列保留原EM，不增加等价正确数。",
+      "question_id": "b33847ab56a35d70144c24e5b6f4d1a1bc3d9d88acd46a0dc89fc9760ba2ab0e",
+      "question": "In what year did Farda Amiga win a race at the Saratoga Race course?",
+      "target": [
+        "(foaled February 1, 1999)"
+      ],
+      "answer": "2001",
+      "reviewer": "Codex逐题审阅",
+      "reviewed_utc": "2026-10-14T14:13:02.889378+00:00"
+    },
+    "9ccdcfb2f95ad508580f4b1e1329d2d126e6ce8c071b500dec168575b718d86c": {
+      "verdict": "incorrect",
+      "reason": "逐题审阅最终答案与标准：Brian McClair / [\"Ferdinand\"]；实体、数值、时间或所問字段不一致，维持错误。",
+      "question_id": "7634b9d9cf4e0c53602e1602e493d898d53d2c587b2bbada434518e4419daec9",
+      "question": "A celebrity magazine that has featured Snoop Dogg and footballers such as Riyad Mahrez and the creator's team-mate Juan Mata was launched by which former Manchester United player?",
+      "target": [
+        "Ferdinand"
+      ],
+      "answer": "Brian McClair",
+      "reviewer": "Codex逐题审阅",
+      "reviewed_utc": "2026-10-14T14:13:02.889386+00:00"
+    },
+    "66913e723f8df850b9a138e19847e3218b6448a3367c4f07548fc118aa4b9c58": {
+      "verdict": "incorrect",
+      "reason": "逐题审阅最终答案与标准：Ted Kotcheff / [\"Hampton Del Ruth\"]；实体、数值、时间或所問字段不一致，维持错误。",
+      "question_id": "d8a0c1cf754dc4d0822b8add6d68c0b020d6a93f6faff5802127991efc921e18",
+      "question": "Who is older, Hampton Del Ruth or Ted Kotcheff?",
+      "target": [
+        "Hampton Del Ruth"
+      ],
+      "answer": "Ted Kotcheff",
+      "reviewer": "Codex逐题审阅",
+      "reviewed_utc": "2026-10-14T14:13:02.889393+00:00"
+    },
+    "28ccb7e649733d16a9e0741ed13fbf830e79295db702944438e04220764646db": {
+      "verdict": "uncertain",
+      "reason": "精度、关键字段、上下级范围或合法替代答案存在歧义，未确认等价，暂不加分。",
+      "question_id": "b976ef0e85bc46394390e538f8a16b22843617c00bfab4ca1c15dab038f35751",
+      "question": "Carlos Alberto Hurtado played on loan from a mexican team which plays where?",
+      "target": [
+        "Estadio Victoria"
+      ],
+      "answer": "Mexico",
+      "reviewer": "Codex逐题审阅",
+      "reviewed_utc": "2026-10-14T14:13:02.889400+00:00"
+    },
+    "6785c9d76dfbff2e30139660cf059cdb6efa8d493037d8aa82824c9980f9f31b": {
+      "verdict": "incorrect",
+      "reason": "逐题审阅最终答案与标准：Damian Lillard / [\"Nate Robinson\"]；实体、数值、时间或所問字段不一致，维持错误。",
+      "question_id": "8f33f16fd926f201839e6fb780542911f0b68e2fc6b8f4318adf4f05d7307d55",
+      "question": "Which of Aaron Goodwin client was born in May 31, 1984?",
+      "target": [
+        "Nate Robinson"
+      ],
+      "answer": "Damian Lillard",
+      "reviewer": "Codex逐题审阅",
+      "reviewed_utc": "2026-10-14T14:13:02.889407+00:00"
+    },
+    "039a0b7730adbddbdf13d302ea3702c3ab1cfc317d994c6a2492ae78ee245f9f": {
+      "verdict": "incorrect",
+      "reason": "逐题审阅最终答案与标准：Escape the Fate / [\"lead singer\"]；实体、数值、时间或所問字段不一致，维持错误。",
+      "question_id": "5f4076731ea57ce29bd776bb0c470ef1398e0be4a43ef2f9461867b2549b4080",
+      "question": "Taylor Momsen and Craig Mabbitt from Escape the Fate have what in common?",
+      "target": [
+        "lead singer"
+      ],
+      "answer": "Escape the Fate",
+      "reviewer": "Codex逐题审阅",
+      "reviewed_utc": "2026-10-14T14:13:02.889415+00:00"
+    },
+    "07b09a3cfef0f7e8045434c5967d089f5c10ae4bf7c4e762fe15d27948e07aed": {
+      "verdict": "equivalent",
+      "reason": "British Columbia与British Columbia, Canada同一省份，省略国家。",
+      "question_id": "2a2d4e8847ad9f0ec682e667403a36ee0331c25220f68c831fbd1636055d56cc",
+      "question": "Where are Catcha Lake and Hedley Mascot Mine located?",
+      "target": [
+        "British Columbia, Canada"
+      ],
+      "answer": "British Columbia",
+      "reviewer": "Codex逐题审阅",
+      "reviewed_utc": "2026-10-14T14:13:02.889422+00:00"
+    },
+    "1391c39c79d8c4d6f0887ee39a1fcf3f43557056ecd9b1abd5063ad5e4d59f47": {
+      "verdict": "incorrect",
+      "reason": "逐题审阅最终答案与标准：JaR / [\"trio with his younger brothers Steve and Rudy\"]；实体、数值、时间或所問字段不一致，维持错误。",
+      "question_id": "81c83c1aaca4abc75836d0e4aaf2d0dac87767503bd652d2d143c6a2850d7523",
+      "question": "What trio was the songwriter of \"What Are We Doin' Lonesome\" from?",
+      "target": [
+        "trio with his younger brothers Steve and Rudy"
+      ],
+      "answer": "JaR",
+      "reviewer": "Codex逐题审阅",
+      "reviewed_utc": "2026-10-14T14:13:02.889429+00:00"
+    },
+    "3255da02ba5174bdc17c38491a64c11056ff847081082649f67a43aaeab4d9ad": {
+      "verdict": "incorrect",
+      "reason": "逐题审阅最终答案与标准：The Authority / [\"Transmetropolitan\"]；实体、数值、时间或所問字段不一致，维持错误。",
+      "question_id": "f64b0a95c4828d4bbb1057a02b7c01c646a5d24edac8ca414f8b9b916d9bc09b",
+      "question": "What was the first comic book written by the writer who had a series developed into a 2010 film with Bruce Willis and Morgan Freeman?",
+      "target": [
+        "Transmetropolitan"
+      ],
+      "answer": "The Authority",
+      "reviewer": "Codex逐题审阅",
+      "reviewed_utc": "2026-10-14T14:13:02.889436+00:00"
+    },
+    "5d7f05547d0693e99b33cb71250327b4c246d0d082fa53eda7d950a793f0238e": {
+      "verdict": "incorrect",
+      "reason": "逐题审阅最终答案与标准：Black Country / [\"defence of the Cathedral\"]；实体、数值、时间或所問字段不一致，维持错误。",
+      "question_id": "b86875ce0061503e2ded2e451741a2d4a29bc9243cf500201be3feeaf3b70d02",
+      "question": "Why is Minister Pool important to Black Country and the West Midlands in England?",
+      "target": [
+        "defence of the Cathedral"
+      ],
+      "answer": "Black Country",
+      "reviewer": "Codex逐题审阅",
+      "reviewed_utc": "2026-10-14T14:13:02.889443+00:00"
+    },
+    "e604ecd77fb62d816a3f93d54d69d3083f1bd9a463af20e5d51cce0d8bb49343": {
+      "verdict": "equivalent",
+      "reason": "题目限定NCAA，Division I与NCAA Division I为相同大学体育组别。",
+      "question_id": "30c923b80b4607c37e92e64303af507d95b5d8c5d2588127d387c5acf92bdcff",
+      "question": "Oklahoma State Cowboys are part of what NCAA Division?",
+      "target": [
+        "NCAA Division I"
+      ],
+      "answer": "Division I",
+      "reviewer": "Codex逐题审阅",
+      "reviewed_utc": "2026-10-14T14:13:02.889450+00:00"
+    },
+    "a1c8fd06f5c08412653e278efd2ecd3119dc9bf8db47b959b351aa7676975cbd": {
+      "verdict": "incorrect",
+      "reason": "逐题审阅最终答案与标准：Athenaeum / [\"Household Words\"]；实体、数值、时间或所問字段不一致，维持错误。",
+      "question_id": "206b48fbbc874c9d35a128712fc3bd506179529113cc224ded35c5e11bc00a4c",
+      "question": "This British television series was adapted from one of the better-known novels of a 19th-century writer and was first published in what magazine?",
+      "target": [
+        "Household Words"
+      ],
+      "answer": "Athenaeum",
+      "reviewer": "Codex逐题审阅",
+      "reviewed_utc": "2026-10-14T14:13:02.889457+00:00"
+    },
+    "9f90a5c70dd836edf4aa439e8130af8a42d0dc9fe7bfa685927a27ff5039b48c": {
+      "verdict": "incorrect",
+      "reason": "逐题审阅最终答案与标准：Maldon &amp; Tiptree / [\"Bishop's Stortford\"]；实体、数值、时间或所問字段不一致，维持错误。",
+      "question_id": "7b40043d3ad7229fba66510d9247e7b83e9ea41e365c8b0b90d65a2c7cf7ac19",
+      "question": "Kevin Watson currently manages which Southern League football team?",
+      "target": [
+        "Bishop's Stortford"
+      ],
+      "answer": "Maldon &amp; Tiptree",
+      "reviewer": "Codex逐题审阅",
+      "reviewed_utc": "2026-10-14T14:13:02.889464+00:00"
+    },
+    "5156afa081d162c4291287dc2afc367dc97049e7a46a0fd789cd75c9211cb4fe": {
+      "verdict": "incorrect",
+      "reason": "逐题审阅最终答案与标准：Eucommia / [\"Milium\"]；实体、数值、时间或所問字段不一致，维持错误。",
+      "question_id": "6d382ead2562d146aa19b161781a9d9e8575a3bb1804a13ed7dbf128c5138bd3",
+      "question": "Which one between Milium and Eucommia lives more widely spread across the world?",
+      "target": [
+        "Milium"
+      ],
+      "answer": "Eucommia",
+      "reviewer": "Codex逐题审阅",
+      "reviewed_utc": "2026-10-14T14:13:02.889471+00:00"
+    },
+    "395b93f23e1ab70bf820912ab75a057b3d3c3da57a792fb1c80a86766f9f2379": {
+      "verdict": "incorrect",
+      "reason": "逐题审阅最终答案与标准：Peter Perry / [\"Thomas Mawson\"]；实体、数值、时间或所問字段不一致，维持错误。",
+      "question_id": "4c22a6df3edd8be0f4147924a991582dfda72dd42001583791bc7788c5763de8",
+      "question": "Salisbury Woodland Gardens links a zoo with a park designed and built under the watchful eye of who?",
+      "target": [
+        "Thomas Mawson"
+      ],
+      "answer": "Peter Perry",
+      "reviewer": "Codex逐题审阅",
+      "reviewed_utc": "2026-10-14T14:13:02.889478+00:00"
+    },
+    "f8cdb16939240cd3adbadd1e5eeb1e3473d477432fe8504425f9d6a7e84c289c": {
+      "verdict": "incorrect",
+      "reason": "未交出合法最终答案，不从think或工具文段补出答案。",
+      "question_id": "8dd5dba1d02555b8ca7faa4ca1ace6de1e1fed9f84dbe4759d92813dc5e9f1a8",
+      "question": "Who else besides \"The Golden Jet\" was born in Point Anne, Ontario?",
+      "target": [
+        "Dennis Hull, as well as painter Manley MacDonald."
+      ],
+      "answer": null,
+      "reviewer": "Codex逐题审阅",
+      "reviewed_utc": "2026-10-14T14:13:02.889486+00:00"
+    },
+    "1026ba6816fa91e13a5f438c99cd09baa7267aa31fe58854e6609f0b143abe9a": {
+      "verdict": "incorrect",
+      "reason": "逐题审阅最终答案与标准：African Grass Yellow / [\"the buff-tipped skipper\"]；实体、数值、时间或所問字段不一致，维持错误。",
+      "question_id": "f64816cee07fc5cd09750073b7e602f9d01c3fa5f507849916f39ed207cb8120",
+      "question": "What is another name for the butterfly of the Hesperiidae family that is found in the third largest country in Africa?",
+      "target": [
+        "the buff-tipped skipper"
+      ],
+      "answer": "African Grass Yellow",
+      "reviewer": "Codex逐题审阅",
+      "reviewed_utc": "2026-10-14T14:13:02.889493+00:00"
+    },
+    "39141c46b21f246b4b8f7ed1b1f39b1f8f90e7d14bc090d3e91b8a820e3d39a4": {
+      "verdict": "incorrect",
+      "reason": "逐题审阅最终答案与标准：500 AD / [\"500 BC\"]；实体、数值、时间或所問字段不一致，维持错误。",
+      "question_id": "f3f17fb87ea69d66fe67096c96e494f955c5cdfe2767d9bd7dde3ed8d363558e",
+      "question": "Petroglyphs on Ingaro isalnd indicate it has been innhabited since an era that lasted until what year?",
+      "target": [
+        "500 BC"
+      ],
+      "answer": "500 AD",
+      "reviewer": "Codex逐题审阅",
+      "reviewed_utc": "2026-10-14T14:13:02.889500+00:00"
+    },
+    "e391a4f081b481b3efd9ff265c7d125fbabe2751ef1b579a4932b40c96099b0b": {
+      "verdict": "incorrect",
+      "reason": "逐题审阅最终答案与标准：Real Madrid / [\"Barcelona\"]；实体、数值、时间或所問字段不一致，维持错误。",
+      "question_id": "166227bfa86a65de3f5be9dc635ae22942c8e341553ee5aaa6f23b1eacb72eaa",
+      "question": "Which team featured in both the 2012 and 2011 Cops del Rey Finals ?",
+      "target": [
+        "Barcelona"
+      ],
+      "answer": "Real Madrid",
+      "reviewer": "Codex逐题审阅",
+      "reviewed_utc": "2026-10-14T14:13:02.889506+00:00"
+    },
+    "d1d2f976f419b6d38a312ed7d0f31b8e0924ae5662ac588152fd828d37d4a3c2": {
+      "verdict": "incorrect",
+      "reason": "逐题审阅最终答案与标准：Eric Christian Olsen / [\"Patrick Dempsey\"]；实体、数值、时间或所問字段不一致，维持错误。",
+      "question_id": "7cc7c0dec17d560e3e4cedad1b7f7dae3c0abbe64c3dd377a7cd94b6ac7a5555",
+      "question": "What actor played the male lead in a teen comedy about a high school nerd directed by Steve Rash?",
+      "target": [
+        "Patrick Dempsey"
+      ],
+      "answer": "Eric Christian Olsen",
+      "reviewer": "Codex逐题审阅",
+      "reviewed_utc": "2026-10-14T14:13:02.889514+00:00"
+    },
+    "3b243ffa7304f4f054b974602d1d06c3ff0ce891356d3de0eb573b45e9e4aea6": {
+      "verdict": "incorrect",
+      "reason": "未交出合法最终答案，不从think或工具文段补出答案。",
+      "question_id": "013359a89f44c8c92451181839bd6cb7708f6ca086656e81c7742d06637a677a",
+      "question": "What Andy Williams' album did a song written by Charles Wesley appear on?",
+      "target": [
+        "The Andy Williams Christmas Album"
+      ],
+      "answer": null,
+      "reviewer": "Codex逐题审阅",
+      "reviewed_utc": "2026-10-14T14:13:02.889521+00:00"
+    },
+    "36258c6150efeebc5222f499a7279dbae190f8c4763e96d1ab23b52bcab65814": {
+      "verdict": "equivalent",
+      "reason": "在原住民自主权运动语境中，federal policy favoring control指标准对部落实行的paternalistic policies；描述同一政策控制目标。",
+      "question_id": "0e83d9411036dd8407c015b56eb6469e941b06c54543e8773826e2e9a1b84604",
+      "question": "John E. EchoHawk is a leading member in a social movement that wants to reverse what ?",
+      "target": [
+        "the paternalistic policies enacted upon Native American tribes"
+      ],
+      "answer": "federal policy favoring control",
+      "reviewer": "Codex逐题审阅",
+      "reviewed_utc": "2026-10-14T14:13:02.889529+00:00"
+    },
+    "b8789d5816bd26b13189cd694b1ef4388aa73ea798d6fead183a58ed6cd26235": {
+      "verdict": "incorrect",
+      "reason": "逐题审阅最终答案与标准：no / [\"yes\"]；实体、数值、时间或所問字段不一致，维持错误。",
+      "question_id": "a7752c087948a7a94f9fc0cc1a578885efa15a0f97194e9b7253615b18b1f88a",
+      "question": "Are both Viken Babikian and Don Manoukian American ?",
+      "target": [
+        "yes"
+      ],
+      "answer": "no",
+      "reviewer": "Codex逐题审阅",
+      "reviewed_utc": "2026-10-14T14:13:02.889536+00:00"
     }
   }
 }

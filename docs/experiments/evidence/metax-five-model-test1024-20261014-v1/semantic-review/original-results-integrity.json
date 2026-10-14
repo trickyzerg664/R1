@@ -1,0 +1,26 @@
+{
+  "checked_utc": "2026-10-14T14:14:18.148935+00:00",
+  "checks": [
+    {
+      "model": "checkpoint80",
+      "sha256": "11260dd346d75f3503f1d7bc1ddd04a5d08dc5e57f334fd362f241fdf545cc83",
+      "matches_pre_review_cloud_receipt": true,
+      "cloud_verified": true,
+      "cloud_errors": []
+    },
+    {
+      "model": "base_qwen25_7b",
+      "sha256": "01c3da67abac48980ad220dddeaa13fdde1cd26c35e670e595df869345fdc657",
+      "matches_pre_review_cloud_receipt": true,
+      "cloud_verified": true,
+      "cloud_errors": []
+    },
+    {
+      "model": "official_grpo_v02",
+      "sha256": "23357e4d186934d2488d41cb340e7301be63d9a9d51d3023db1109b14689256e",
+      "matches_pre_review_cloud_receipt": true,
+      "cloud_verified": true,
+      "cloud_errors": []
+    }
+  ]
+}

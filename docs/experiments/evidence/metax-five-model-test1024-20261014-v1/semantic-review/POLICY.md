@@ -11,3 +11,5 @@
 原始EM正确项保留原判；本次并非对全部金标准进行重新标注。未审答案为pending，未审完模型semantic_accuracy=null、review_complete=false。上一份T128复核独立保存；当前T1024采用本口径，宽泛零售类别等争议项不沿用旧报告加分。
 
 已完成模型保留1024条judgments.jsonl、逐个EM错题理由、来源汇总、共享decisions.json和原记录摘要，便于复算。后续模型完整结果落盘后沿用同标准。没有以定时任务或外部模型服务代替Codex审阅。
+
+外部直接证据：World Athletics官方网站明确IAAF于2019年改为World Athletics，支持原始模型row909同机构改名裁定：https://worldathletics.org/heritage/history/the-21st-century

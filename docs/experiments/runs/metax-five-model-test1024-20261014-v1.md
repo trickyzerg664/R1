@@ -230,3 +230,60 @@ CPU验收：
 
 更新UTC：2026-10-14T14:11:53.745609+00:00
 
+
+
+2026-10-14T14:14:18.148935+00:00 T1024官方GRPO正式完成1024题，原始EM456/1024=44.53125%，纯推理1552.99秒。逐题复查568个错题，其中266个复用同题同答案裁定、302个新裁定；新增明确等价131题，语义587/1024=57.32421875%，争议87、标签疑误15均不加分。全部1024逐题记录已保存，原始EM独立保留。与此前两个模型使用同口径，未设置定时任务。原始结果SHA与已上传不可变回执逐项比较，证据见semantic-review/original-results-integrity.json。当前ckpt60测试中，PPO等待。
+
+
+2026-10-14T14:15:47.970444+00:00 T1024 heartbeat verification: {"checked_utc": "2026-10-14T14:15:47.970444+00:00", "evaluation": {"phase": "evaluating", "pid": 1555832, "checked_utc": "2026-10-14T14:11:07.576642+00:00", "status": "running", "current_model": "checkpoint60", "evaluation_pid": 1667176, "model_index": 3, "completed_models": ["checkpoint80", "base_qwen25_7b", "official_grpo_v02"], "model_order": ["checkpoint80", "base_qwen25_7b", "official_grpo_v02", "checkpoint60", "official_ppo_v02"]}, "progress": {"status": "running", "model": "checkpoint60", "phase": "T1024", "completed": 344, "total": 1024, "checked_utc": "2026-10-14T14:15:40.138423+00:00"}, "workers": {"git": {"status": "waiting", "pid": 1555856, "current_model": "checkpoint60", "completed_models": ["checkpoint80", "base_qwen25_7b", "official_grpo_v02"]}, "cloud": {"status": "waiting", "pid": 1555857, "current_model": "checkpoint60", "completed_models": ["checkpoint80", "base_qwen25_7b", "official_grpo_v02"]}}, "process_identity": {"evaluation": true, "git": true, "cloud": true, "child_command": "/mnt/public/code/lyk/lzy/envs/vllm-metax-clean33/bin/python -u /mnt/public/code/lyk/lzy/maintenance/test1024-five-models-20261014/test1024_eval.py --settings /mnt/public/code/lyk/lzy/runs/metax-five-model-test1024-20261014-v1/settings.json --model checkpoint60 "}, "persisted_batches": 43, "persisted_records": 344, "batch_counts": [8], "receipts": {"git": {"base_qwen25_7b": {"model": "base_qwen25_7b", "commit": "0fd055291f7dd7d54c5f21590d9696e64e14ebef", "branch": "data-difficulty-muxi", "author": "trickyzerg <3261677617@qq.com>|trickyzerg <3261677617@qq.com>", "remote_verified": true, "checked_utc": "2026-10-14T13:43:59.150020+00:00"}, "checkpoint80": {"model": "checkpoint80", "commit": "324bdbab60ed6a84edd2ccf93ec8265c44be5e46", "branch": "data-difficulty-muxi", "author": "trickyzerg <3261677617@qq.com>|trickyzerg <3261677617@qq.com>", "remote_verified": true, "checked_utc": "2026-10-14T13:16:54.749250+00:00"}, "official_grpo_v02": {"model": "official_grpo_v02", "commit": "e31babd38c1fc79f060a1c9841eedd9831bc855a", "branch": "data-difficulty-muxi", "author": "trickyzerg <3261677617@qq.com>|trickyzerg <3261677617@qq.com>", "remote_verified": true, "checked_utc": "2026-10-14T14:12:16.404794+00:00"}}, "cloud": {"base_qwen25_7b": {"model": "base_qwen25_7b", "prefix": "runs/metax-five-model-test1024-20261014-v1/base_qwen25_7b", "verified": true, "errors": [], "checked_utc": "2026-10-14T13:44:21.754312+00:00"}, "checkpoint80": {"model": "checkpoint80", "prefix": "runs/metax-five-model-test1024-20261014-v1/checkpoint80", "verified": true, "errors": [], "checked_utc": "2026-10-14T13:17:47.082022+00:00"}, "official_grpo_v02": {"model": "official_grpo_v02", "prefix": "runs/metax-five-model-test1024-20261014-v1/official_grpo_v02", "verified": true, "errors": [], "checked_utc": "2026-10-14T14:11:54.557184+00:00"}}}}
+
+
+2026-10-14T14:16:41.542936+00:00 T1024 model publication verified: {"checked_utc": "2026-10-14T14:16:41.542936+00:00", "model": "official_grpo_v02", "summary": {"n": 1024, "correct": 456.0, "em": 0.4453125, "missing_answer": 18, "format_anomaly": 18, "model_information": 0, "rewarded_model_information": 0, "actual_search_queries": 1677, "generated_tokens": 211843, "forced_final": 22, "generation_limit_hits": 187, "sources": {"hotpotqa": {"n": 689, "correct": 283.0, "em": 0.4107402031930334}, "nq": {"n": 335, "correct": 173.0, "em": 0.5164179104477612}}}, "cost": {"total_seconds": 1552.9874150101095, "generation_seconds": 1523.4648084733635, "search_seconds": 9.417540716007352}, "unique_paired_records": 1024, "commit": "e31babd38c1fc79f060a1c9841eedd9831bc855a", "remote_verified": true, "identity": "trickyzerg <3261677617@qq.com>|trickyzerg <3261677617@qq.com>", "cloud_verified": true, "cloud_files": 262, "raw_em_delta_ckpt80_minus_grpo": 0.03125}
+
+
+2026-10-14T14:20:56.740570+00:00 T1024 heartbeat verification: {"checked_utc": "2026-10-14T14:20:56.740570+00:00", "evaluation": {"phase": "evaluating", "pid": 1555832, "checked_utc": "2026-10-14T14:11:07.576642+00:00", "status": "running", "current_model": "checkpoint60", "evaluation_pid": 1667176, "model_index": 3, "completed_models": ["checkpoint80", "base_qwen25_7b", "official_grpo_v02"], "model_order": ["checkpoint80", "base_qwen25_7b", "official_grpo_v02", "checkpoint60", "official_ppo_v02"]}, "progress": {"status": "running", "model": "checkpoint60", "phase": "T1024", "completed": 648, "total": 1024, "checked_utc": "2026-10-14T14:20:53.537626+00:00"}, "workers": {"git": {"status": "waiting", "pid": 1555856, "current_model": "checkpoint60", "completed_models": ["checkpoint80", "base_qwen25_7b", "official_grpo_v02"]}, "cloud": {"status": "waiting", "pid": 1555857, "current_model": "checkpoint60", "completed_models": ["checkpoint80", "base_qwen25_7b", "official_grpo_v02"]}}, "process_identity": {"evaluation": true, "git": true, "cloud": true, "child_command": "/mnt/public/code/lyk/lzy/envs/vllm-metax-clean33/bin/python -u /mnt/public/code/lyk/lzy/maintenance/test1024-five-models-20261014/test1024_eval.py --settings /mnt/public/code/lyk/lzy/runs/metax-five-model-test1024-20261014-v1/settings.json --model checkpoint60 "}, "persisted_batches": 81, "persisted_records": 648, "batch_counts": [8], "receipts": {"git": {"base_qwen25_7b": {"model": "base_qwen25_7b", "commit": "0fd055291f7dd7d54c5f21590d9696e64e14ebef", "branch": "data-difficulty-muxi", "author": "trickyzerg <3261677617@qq.com>|trickyzerg <3261677617@qq.com>", "remote_verified": true, "checked_utc": "2026-10-14T13:43:59.150020+00:00"}, "checkpoint80": {"model": "checkpoint80", "commit": "324bdbab60ed6a84edd2ccf93ec8265c44be5e46", "branch": "data-difficulty-muxi", "author": "trickyzerg <3261677617@qq.com>|trickyzerg <3261677617@qq.com>", "remote_verified": true, "checked_utc": "2026-10-14T13:16:54.749250+00:00"}, "official_grpo_v02": {"model": "official_grpo_v02", "commit": "e31babd38c1fc79f060a1c9841eedd9831bc855a", "branch": "data-difficulty-muxi", "author": "trickyzerg <3261677617@qq.com>|trickyzerg <3261677617@qq.com>", "remote_verified": true, "checked_utc": "2026-10-14T14:12:16.404794+00:00"}}, "cloud": {"base_qwen25_7b": {"model": "base_qwen25_7b", "prefix": "runs/metax-five-model-test1024-20261014-v1/base_qwen25_7b", "verified": true, "errors": [], "checked_utc": "2026-10-14T13:44:21.754312+00:00"}, "checkpoint80": {"model": "checkpoint80", "prefix": "runs/metax-five-model-test1024-20261014-v1/checkpoint80", "verified": true, "errors": [], "checked_utc": "2026-10-14T13:17:47.082022+00:00"}, "official_grpo_v02": {"model": "official_grpo_v02", "prefix": "runs/metax-five-model-test1024-20261014-v1/official_grpo_v02", "verified": true, "errors": [], "checked_utc": "2026-10-14T14:11:54.557184+00:00"}}}}
+
+
+2026-10-14T14:26:07.949334+00:00 T1024 heartbeat verification: {"checked_utc": "2026-10-14T14:26:07.949334+00:00", "evaluation": {"phase": "evaluating", "pid": 1555832, "checked_utc": "2026-10-14T14:11:07.576642+00:00", "status": "running", "current_model": "checkpoint60", "evaluation_pid": 1667176, "model_index": 3, "completed_models": ["checkpoint80", "base_qwen25_7b", "official_grpo_v02"], "model_order": ["checkpoint80", "base_qwen25_7b", "official_grpo_v02", "checkpoint60", "official_ppo_v02"]}, "progress": {"status": "running", "model": "checkpoint60", "phase": "T1024", "completed": 952, "total": 1024, "checked_utc": "2026-10-14T14:26:01.098023+00:00"}, "workers": {"git": {"status": "waiting", "pid": 1555856, "current_model": "checkpoint60", "completed_models": ["checkpoint80", "base_qwen25_7b", "official_grpo_v02"]}, "cloud": {"status": "waiting", "pid": 1555857, "current_model": "checkpoint60", "completed_models": ["checkpoint80", "base_qwen25_7b", "official_grpo_v02"]}}, "process_identity": {"evaluation": true, "git": true, "cloud": true, "child_command": "/mnt/public/code/lyk/lzy/envs/vllm-metax-clean33/bin/python -u /mnt/public/code/lyk/lzy/maintenance/test1024-five-models-20261014/test1024_eval.py --settings /mnt/public/code/lyk/lzy/runs/metax-five-model-test1024-20261014-v1/settings.json --model checkpoint60 "}, "persisted_batches": 119, "persisted_records": 952, "batch_counts": [8], "receipts": {"git": {"base_qwen25_7b": {"model": "base_qwen25_7b", "commit": "0fd055291f7dd7d54c5f21590d9696e64e14ebef", "branch": "data-difficulty-muxi", "author": "trickyzerg <3261677617@qq.com>|trickyzerg <3261677617@qq.com>", "remote_verified": true, "checked_utc": "2026-10-14T13:43:59.150020+00:00"}, "checkpoint80": {"model": "checkpoint80", "commit": "324bdbab60ed6a84edd2ccf93ec8265c44be5e46", "branch": "data-difficulty-muxi", "author": "trickyzerg <3261677617@qq.com>|trickyzerg <3261677617@qq.com>", "remote_verified": true, "checked_utc": "2026-10-14T13:16:54.749250+00:00"}, "official_grpo_v02": {"model": "official_grpo_v02", "commit": "e31babd38c1fc79f060a1c9841eedd9831bc855a", "branch": "data-difficulty-muxi", "author": "trickyzerg <3261677617@qq.com>|trickyzerg <3261677617@qq.com>", "remote_verified": true, "checked_utc": "2026-10-14T14:12:16.404794+00:00"}}, "cloud": {"base_qwen25_7b": {"model": "base_qwen25_7b", "prefix": "runs/metax-five-model-test1024-20261014-v1/base_qwen25_7b", "verified": true, "errors": [], "checked_utc": "2026-10-14T13:44:21.754312+00:00"}, "checkpoint80": {"model": "checkpoint80", "prefix": "runs/metax-five-model-test1024-20261014-v1/checkpoint80", "verified": true, "errors": [], "checked_utc": "2026-10-14T13:17:47.082022+00:00"}, "official_grpo_v02": {"model": "official_grpo_v02", "prefix": "runs/metax-five-model-test1024-20261014-v1/official_grpo_v02", "verified": true, "errors": [], "checked_utc": "2026-10-14T14:11:54.557184+00:00"}}}}
+
+
+2026-10-14T14:27:24.229912+00:00 模型完整结束：checkpoint60
+
+# T1024五模型对比
+
+固定NQ335+HotpotQA689，原128题完整保留；greedy单轨迹、10轮、256生成/2048观察/4096上下文，同一检索和action-stop。
+
+| 模型 | 正确题数 | EM | NQ EM | HotpotQA EM | 未作答 | 检索次数 | 实测推理分钟 |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| checkpoint80 | 488/1024 | 47.66% | 53.43% | 44.85% | 0 | 3591 | 14.53 |
+| base_qwen25_7b | 229/1024 | 22.36% | 25.67% | 20.75% | 44 | 2678 | 25.89 |
+| official_grpo_v02 | 456/1024 | 44.53% | 51.64% | 41.07% | 18 | 1677 | 25.88 |
+| checkpoint60 | 475/1024 | 46.39% | 51.04% | 44.12% | 0 | 3946 | 14.96 |
+
+未完成模型：official_ppo_v02
+
+原始EM按冻结标签计算；T128语义复核为独立已提交报告，不覆盖本次1024题金标准。
+
+更新UTC：2026-10-14T14:27:24.212486+00:00
+
+
+
+2026-10-14T14:28:09.525323+00:00 模型完整结束：checkpoint60
+
+# T1024五模型对比
+
+固定NQ335+HotpotQA689，原128题完整保留；greedy单轨迹、10轮、256生成/2048观察/4096上下文，同一检索和action-stop。
+
+| 模型 | 正确题数 | EM | NQ EM | HotpotQA EM | 未作答 | 检索次数 | 实测推理分钟 |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| checkpoint80 | 488/1024 | 47.66% | 53.43% | 44.85% | 0 | 3591 | 14.53 |
+| base_qwen25_7b | 229/1024 | 22.36% | 25.67% | 20.75% | 44 | 2678 | 25.89 |
+| official_grpo_v02 | 456/1024 | 44.53% | 51.64% | 41.07% | 18 | 1677 | 25.88 |
+| checkpoint60 | 475/1024 | 46.39% | 51.04% | 44.12% | 0 | 3946 | 14.96 |
+
+未完成模型：official_ppo_v02
+
+原始EM按冻结标签计算；T128语义复核为独立已提交报告，不覆盖本次1024题金标准。
+
+更新UTC：2026-10-14T14:28:09.507444+00:00
+
