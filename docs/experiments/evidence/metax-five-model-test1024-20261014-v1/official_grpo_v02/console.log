@@ -1,0 +1,1195 @@
+INFO 10-14 21:44:02 [__init__.py:36] Available plugins for group vllm.platform_plugins:
+INFO 10-14 21:44:02 [__init__.py:38] - metax -> vllm_metax:register
+INFO 10-14 21:44:02 [__init__.py:41] All plugins in this group will be loaded. Set `VLLM_PLUGINS` to control which plugins to load.
+INFO 10-14 21:44:03 [__init__.py:207] Platform plugin metax is activated
+INFO Print the version information of mcoplib during compilation.
+
+Version info:Mcoplib_Version = '0.1.0'
+Build_Maca_Version = '3.3.0.15'
+GIT_BRANCH = 'HEAD'
+GIT_COMMIT = 'e508f24'
+Vllm Op Version = 0.11.0
+SGlang Op Version  = 0.5.4 
+
+INFO Staring Check the current MACA version of the operating environment.
+
+INFO: Release major.minor matching,  successful：3.3. 
+
+INFO 10-14 21:44:44 [fa_utils.py:15] Using Maca version of flash attention, which only supports version 2.
+WARNING 10-14 21:44:46 [registry.py:582] Model architecture Qwen2VLForConditionalGeneration is already registered, and will be overwritten by the new model class vllm_metax.models.qwen2_vl:Qwen2VLForConditionalGeneration.
+WARNING 10-14 21:44:46 [registry.py:582] Model architecture InternVLChatModel is already registered, and will be overwritten by the new model class vllm_metax.models.internvl:InternVLChatModel.
+WARNING 10-14 21:44:46 [registry.py:582] Model architecture Qwen2_5_VLForConditionalGeneration is already registered, and will be overwritten by the new model class vllm_metax.models.qwen2_5_vl:Qwen2_5_VLForConditionalGeneration.
+WARNING 10-14 21:44:46 [registry.py:582] Model architecture Qwen3VLMoeForConditionalGeneration is already registered, and will be overwritten by the new model class vllm_metax.models.qwen3_vl_moe:Qwen3VLMoeForConditionalGeneration.
+WARNING 10-14 21:44:46 [registry.py:582] Model architecture Qwen3MoeForCausalLM is already registered, and will be overwritten by the new model class vllm_metax.models.qwen3_moe:Qwen3MoeForCausalLM.
+WARNING 10-14 21:44:46 [registry.py:582] Model architecture Qwen3VLForConditionalGeneration is already registered, and will be overwritten by the new model class vllm_metax.models.qwen3_vl:Qwen3VLForConditionalGeneration.
+WARNING 10-14 21:44:46 [registry.py:582] Model architecture DeepSeekMTPModel is already registered, and will be overwritten by the new model class vllm_metax.models.deepseek_mtp:DeepSeekMTP.
+WARNING 10-14 21:44:46 [registry.py:582] Model architecture DeepseekV2ForCausalLM is already registered, and will be overwritten by the new model class vllm_metax.models.deepseek_v2:DeepseekV2ForCausalLM.
+WARNING 10-14 21:44:46 [registry.py:582] Model architecture DeepseekV3ForCausalLM is already registered, and will be overwritten by the new model class vllm_metax.models.deepseek_v2:DeepseekV3ForCausalLM.
+WARNING 10-14 21:44:46 [registry.py:582] Model architecture DeepseekV32ForCausalLM is already registered, and will be overwritten by the new model class vllm_metax.models.deepseek_v2:DeepseekV3ForCausalLM.
+WARNING 10-14 21:44:46 [registry.py:582] Model architecture HunYuanDenseV1ForCausalLM is already registered, and will be overwritten by the new model class vllm_metax.models.hunyuan_v1:HunYuanDenseV1ForCausalLM.
+WARNING 10-14 21:44:46 [registry.py:582] Model architecture HunYuanMoEV1ForCausalLM is already registered, and will be overwritten by the new model class vllm_metax.models.hunyuan_v1:HunYuanMoEV1ForCausalLM.
+INFO 10-14 21:44:47 [arg_utils.py:504] HF_HUB_OFFLINE is True, replace model_id [/mnt/public/code/lyk/lzy/models/official-search-r1-v02/SearchR1-nq_hotpotqa_train-qwen2.5-7b-em-grpo-v0.2] to model_path [/mnt/public/code/lyk/lzy/models/official-search-r1-v02/SearchR1-nq_hotpotqa_train-qwen2.5-7b-em-grpo-v0.2]
+INFO 10-14 21:44:47 [arg_utils.py:504] HF_HUB_OFFLINE is True, replace model_id [/mnt/public/code/lyk/lzy/models/official-search-r1-v02/SearchR1-nq_hotpotqa_train-qwen2.5-7b-em-grpo-v0.2] to model_path [/mnt/public/code/lyk/lzy/models/official-search-r1-v02/SearchR1-nq_hotpotqa_train-qwen2.5-7b-em-grpo-v0.2]
+INFO 10-14 21:44:47 [utils.py:233] non-default args: {'tokenizer': '/mnt/public/code/lyk/lzy/models/official-search-r1-v02/SearchR1-nq_hotpotqa_train-qwen2.5-7b-em-grpo-v0.2', 'dtype': 'float16', 'max_model_len': 4352, 'gpu_memory_utilization': 0.45, 'max_num_batched_tokens': 4352, 'max_num_seqs': 64, 'disable_log_stats': True, 'enforce_eager': True, 'worker_extension_cls': 'verl.third_party.vllm.metax_v_0_11_0.worker.MetaxWeightUpdateExtension', 'logits_processors': ['verl.third_party.vllm.metax_v_0_11_0.action_stop:ActionBoundaryLogitsProcessor'], 'model': '/mnt/public/code/lyk/lzy/models/official-search-r1-v02/SearchR1-nq_hotpotqa_train-qwen2.5-7b-em-grpo-v0.2'}
+INFO 10-14 21:44:47 [platform.py:459] [hook] platform:pre_register_and_update...
+WARNING 10-14 21:44:47 [model.py:371] The global random seed is set to 0. Since VLLM_ENABLE_V1_MULTIPROCESSING is set to False, this may affect the random state of the Python process that launched vLLM.
+INFO 10-14 21:44:47 [model.py:547] Resolved architecture: Qwen2ForCausalLM
+`torch_dtype` is deprecated! Use `dtype` instead!
+INFO 10-14 21:44:47 [model.py:1730] Downcasting torch.float32 to torch.float16.
+INFO 10-14 21:44:47 [model.py:1510] Using max model len 4352
+INFO 10-14 21:44:47 [scheduler.py:205] Chunked prefill is enabled with max_num_batched_tokens=4352.
+INFO 10-14 21:44:47 [__init__.py:381] Cudagraph is disabled under eager mode
+INFO 10-14 21:44:48 [core.py:77] Initializing a V1 LLM engine (v0.11.0) with config: model='/mnt/public/code/lyk/lzy/models/official-search-r1-v02/SearchR1-nq_hotpotqa_train-qwen2.5-7b-em-grpo-v0.2', speculative_config=None, tokenizer='/mnt/public/code/lyk/lzy/models/official-search-r1-v02/SearchR1-nq_hotpotqa_train-qwen2.5-7b-em-grpo-v0.2', skip_tokenizer_init=False, tokenizer_mode=auto, revision=None, tokenizer_revision=None, trust_remote_code=False, dtype=torch.float16, max_seq_len=4352, download_dir=None, load_format=auto, tensor_parallel_size=1, pipeline_parallel_size=1, data_parallel_size=1, disable_custom_all_reduce=True, quantization=None, enforce_eager=True, kv_cache_dtype=auto, device_config=cuda, structured_outputs_config=StructuredOutputsConfig(backend='auto', disable_fallback=False, disable_any_whitespace=False, disable_additional_properties=False, reasoning_parser=''), observability_config=ObservabilityConfig(show_hidden_metrics_for_version=None, otlp_traces_endpoint=None, collect_detailed_traces=None), seed=0, served_model_name=/mnt/public/code/lyk/lzy/models/official-search-r1-v02/SearchR1-nq_hotpotqa_train-qwen2.5-7b-em-grpo-v0.2, enable_prefix_caching=True, chunked_prefill_enabled=True, pooler_config=None, compilation_config={"level":0,"debug_dump_path":"","cache_dir":"","backend":"","custom_ops":[],"splitting_ops":null,"use_inductor":true,"compile_sizes":[],"inductor_compile_config":{"enable_auto_functionalized_v2":false},"inductor_passes":{},"cudagraph_mode":0,"use_cudagraph":true,"cudagraph_num_of_warmups":0,"cudagraph_capture_sizes":[],"cudagraph_copy_inputs":false,"full_cuda_graph":false,"use_inductor_graph_partition":false,"pass_config":{},"max_capture_size":0,"local_cache_dir":null}
+INFO 10-14 21:44:48 [worker_base.py:243] Injected <class 'verl.third_party.vllm.metax_v_0_11_0.worker.MetaxWeightUpdateExtension'> into <class 'vllm.v1.worker.gpu_worker.Worker'> for extended collective_rpc calls ['load_weights_from_safetensors', 'offload_weights_to_cpu', 'restore_weights_from_cpu']
+INFO 10-14 21:44:48 [parallel_state.py:1208] rank 0 in world size 1 is assigned as DP rank 0, PP rank 0, TP rank 0, EP rank 0
+INFO 10-14 21:44:49 [gpu_model_runner.py:2602] Starting to load model /mnt/public/code/lyk/lzy/models/official-search-r1-v02/SearchR1-nq_hotpotqa_train-qwen2.5-7b-em-grpo-v0.2...
+INFO 10-14 21:44:49 [gpu_model_runner.py:2634] Loading model from scratch...
+INFO 10-14 21:44:49 [platform.py:341] Using Flash Attention backend on V1 engine.
+Loading safetensors checkpoint shards:   0% Completed | 0/7 [00:00<?, ?it/s]
+Loading safetensors checkpoint shards:  14% Completed | 1/7 [00:00<00:04,  1.34it/s]
+Loading safetensors checkpoint shards:  29% Completed | 2/7 [00:01<00:04,  1.16it/s]
+Loading safetensors checkpoint shards:  43% Completed | 3/7 [00:02<00:03,  1.06it/s]
+Loading safetensors checkpoint shards:  57% Completed | 4/7 [00:03<00:02,  1.04it/s]
+Loading safetensors checkpoint shards:  71% Completed | 5/7 [00:04<00:01,  1.04it/s]
+Loading safetensors checkpoint shards:  86% Completed | 6/7 [00:05<00:00,  1.14it/s]
+Loading safetensors checkpoint shards: 100% Completed | 7/7 [00:05<00:00,  1.34it/s]
+Loading safetensors checkpoint shards: 100% Completed | 7/7 [00:05<00:00,  1.19it/s]
+
+INFO 10-14 21:44:55 [default_loader.py:267] Loading weights took 5.96 seconds
+INFO 10-14 21:44:56 [gpu_model_runner.py:2653] Model loading took 14.2717 GiB and 6.098934 seconds
+INFO 10-14 21:44:58 [gpu_worker.py:298] Available KV cache memory: 9.76 GiB
+INFO 10-14 21:44:58 [kv_cache_utils.py:1087] GPU KV cache size: 182,768 tokens
+INFO 10-14 21:44:58 [kv_cache_utils.py:1091] Maximum concurrency for 4,352 tokens per request: 42.00x
+WARNING 10-14 21:44:58 [cudagraph_dispatcher.py:106] cudagraph dispatching keys are not initialized. No cudagraph will be used.
+INFO 10-14 21:44:58 [core.py:210] init engine (profile, create kv cache, warmup model) took 2.33 seconds
+INFO 10-14 21:44:59 [llm.py:306] Supported_tasks: ('generate',)
+kwargs: {'n': 1, 'logprobs': 1, 'max_tokens': 256, 'detokenize': False, 'temperature': 0.0, 'top_k': -1, 'top_p': 1.0, 'ignore_eos': False, 'extra_args': {'search_r1_action_stop_v1': True, 'search_r1_action_eos': 151643}}
+original dataset len: 1024
+filter dataset len: 1024
+INFO 10-14 21:45:02 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 21:45:13 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 21:45:15 [block_pool.py:378] Successfully reset prefix cache
+ACTIVE_TRAJ_NUM: [8, 8, 1, 0]
+[评价进度] {"status": "running", "model": "official_grpo_v02", "phase": "T1024", "completed": 8, "total": 1024, "checked_utc": "2026-10-14T13:45:16.248472+00:00"}
+INFO 10-14 21:45:16 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 21:45:17 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 21:45:19 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 21:45:21 [block_pool.py:378] Successfully reset prefix cache
+ACTIVE_TRAJ_NUM: [8, 8, 4, 1, 0]
+[评价进度] {"status": "running", "model": "official_grpo_v02", "phase": "T1024", "completed": 16, "total": 1024, "checked_utc": "2026-10-14T13:45:22.118736+00:00"}
+INFO 10-14 21:45:22 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 21:45:23 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 21:45:25 [block_pool.py:378] Successfully reset prefix cache
+ACTIVE_TRAJ_NUM: [8, 8, 1, 0]
+[评价进度] {"status": "running", "model": "official_grpo_v02", "phase": "T1024", "completed": 24, "total": 1024, "checked_utc": "2026-10-14T13:45:26.478504+00:00"}
+INFO 10-14 21:45:26 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 21:45:27 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 21:45:30 [block_pool.py:378] Successfully reset prefix cache
+ACTIVE_TRAJ_NUM: [8, 8, 1, 0]
+[评价进度] {"status": "running", "model": "official_grpo_v02", "phase": "T1024", "completed": 32, "total": 1024, "checked_utc": "2026-10-14T13:45:31.387085+00:00"}
+INFO 10-14 21:45:31 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 21:45:32 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 21:45:35 [block_pool.py:378] Successfully reset prefix cache
+ACTIVE_TRAJ_NUM: [8, 8, 2, 0]
+--------------------------------
+Golden answers: ['Good Friday']
+Extracted answer: Divine Mercy Sunday
+Solution string: <think>
+To answer the question "when do you pray the Chaplet of Divine Mercy?", I need to find information about the timing of this prayer. I will perform a search to gather this information.
+</think>
+
+<search> when do you pray the Chaplet of Divine Mercy </search><think>
+From the search results, I can see that the Chaplet of Divine Mercy is often prayed especially on Divine Mercy Sunday and Fridays at 3:00 PM.
+</think>
+
+<answer> Divine Mercy Sunday </answer>
+[评价进度] {"status": "running", "model": "official_grpo_v02", "phase": "T1024", "completed": 40, "total": 1024, "checked_utc": "2026-10-14T13:45:36.563092+00:00"}
+INFO 10-14 21:45:36 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 21:45:38 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 21:45:42 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 21:45:47 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 21:45:51 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 21:45:55 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 21:46:00 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 21:46:04 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 21:46:08 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 21:46:13 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 21:46:17 [block_pool.py:378] Successfully reset prefix cache
+ACTIVE_TRAJ_NUM: [8, 8, 3, 1, 1, 1, 1, 1, 1, 1, 1, 0]
+[评价进度] {"status": "running", "model": "official_grpo_v02", "phase": "T1024", "completed": 48, "total": 1024, "checked_utc": "2026-10-14T13:46:18.044076+00:00"}
+INFO 10-14 21:46:18 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 21:46:19 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 21:46:22 [block_pool.py:378] Successfully reset prefix cache
+ACTIVE_TRAJ_NUM: [8, 8, 3, 0]
+[评价进度] {"status": "running", "model": "official_grpo_v02", "phase": "T1024", "completed": 56, "total": 1024, "checked_utc": "2026-10-14T13:46:24.767297+00:00"}
+INFO 10-14 21:46:24 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 21:46:26 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 21:46:27 [block_pool.py:378] Successfully reset prefix cache
+ACTIVE_TRAJ_NUM: [8, 8, 2, 0]
+[评价进度] {"status": "running", "model": "official_grpo_v02", "phase": "T1024", "completed": 64, "total": 1024, "checked_utc": "2026-10-14T13:46:29.757710+00:00"}
+INFO 10-14 21:46:29 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 21:46:31 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 21:46:33 [block_pool.py:378] Successfully reset prefix cache
+ACTIVE_TRAJ_NUM: [8, 8, 1, 0]
+[评价进度] {"status": "running", "model": "official_grpo_v02", "phase": "T1024", "completed": 72, "total": 1024, "checked_utc": "2026-10-14T13:46:34.094429+00:00"}
+INFO 10-14 21:46:34 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 21:46:35 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 21:46:37 [block_pool.py:378] Successfully reset prefix cache
+ACTIVE_TRAJ_NUM: [8, 8, 4, 0]
+[评价进度] {"status": "running", "model": "official_grpo_v02", "phase": "T1024", "completed": 80, "total": 1024, "checked_utc": "2026-10-14T13:46:39.167843+00:00"}
+INFO 10-14 21:46:39 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 21:46:40 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 21:46:42 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 21:46:47 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 21:46:51 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 21:46:55 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 21:46:59 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 21:47:04 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 21:47:08 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 21:47:12 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 21:47:17 [block_pool.py:378] Successfully reset prefix cache
+ACTIVE_TRAJ_NUM: [8, 8, 3, 1, 1, 1, 1, 1, 1, 1, 1, 0]
+[评价进度] {"status": "running", "model": "official_grpo_v02", "phase": "T1024", "completed": 88, "total": 1024, "checked_utc": "2026-10-14T13:47:21.844963+00:00"}
+INFO 10-14 21:47:21 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 21:47:23 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 21:47:24 [block_pool.py:378] Successfully reset prefix cache
+ACTIVE_TRAJ_NUM: [8, 8, 2, 0]
+[评价进度] {"status": "running", "model": "official_grpo_v02", "phase": "T1024", "completed": 96, "total": 1024, "checked_utc": "2026-10-14T13:47:26.436743+00:00"}
+INFO 10-14 21:47:26 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 21:47:27 [block_pool.py:378] Successfully reset prefix cache
+ACTIVE_TRAJ_NUM: [8, 8, 0]
+[评价进度] {"status": "running", "model": "official_grpo_v02", "phase": "T1024", "completed": 104, "total": 1024, "checked_utc": "2026-10-14T13:47:29.404343+00:00"}
+INFO 10-14 21:47:29 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 21:47:30 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 21:47:32 [block_pool.py:378] Successfully reset prefix cache
+ACTIVE_TRAJ_NUM: [8, 8, 2, 0]
+[评价进度] {"status": "running", "model": "official_grpo_v02", "phase": "T1024", "completed": 112, "total": 1024, "checked_utc": "2026-10-14T13:47:34.608779+00:00"}
+INFO 10-14 21:47:34 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 21:47:35 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 21:47:38 [block_pool.py:378] Successfully reset prefix cache
+ACTIVE_TRAJ_NUM: [8, 8, 2, 0]
+[评价进度] {"status": "running", "model": "official_grpo_v02", "phase": "T1024", "completed": 120, "total": 1024, "checked_utc": "2026-10-14T13:47:41.478697+00:00"}
+INFO 10-14 21:47:41 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 21:47:42 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 21:47:45 [block_pool.py:378] Successfully reset prefix cache
+ACTIVE_TRAJ_NUM: [8, 8, 4, 0]
+[评价进度] {"status": "running", "model": "official_grpo_v02", "phase": "T1024", "completed": 128, "total": 1024, "checked_utc": "2026-10-14T13:47:48.291938+00:00"}
+INFO 10-14 21:47:48 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 21:47:49 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 21:47:51 [block_pool.py:378] Successfully reset prefix cache
+ACTIVE_TRAJ_NUM: [8, 8, 2, 0]
+[评价进度] {"status": "running", "model": "official_grpo_v02", "phase": "T1024", "completed": 136, "total": 1024, "checked_utc": "2026-10-14T13:47:53.089542+00:00"}
+INFO 10-14 21:47:53 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 21:47:54 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 21:47:56 [block_pool.py:378] Successfully reset prefix cache
+ACTIVE_TRAJ_NUM: [8, 8, 1, 0]
+[评价进度] {"status": "running", "model": "official_grpo_v02", "phase": "T1024", "completed": 144, "total": 1024, "checked_utc": "2026-10-14T13:47:56.831885+00:00"}
+INFO 10-14 21:47:56 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 21:47:58 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 21:48:00 [block_pool.py:378] Successfully reset prefix cache
+ACTIVE_TRAJ_NUM: [8, 8, 3, 0]
+[评价进度] {"status": "running", "model": "official_grpo_v02", "phase": "T1024", "completed": 152, "total": 1024, "checked_utc": "2026-10-14T13:48:01.485650+00:00"}
+INFO 10-14 21:48:01 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 21:48:02 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 21:48:04 [block_pool.py:378] Successfully reset prefix cache
+ACTIVE_TRAJ_NUM: [8, 8, 5, 0]
+[评价进度] {"status": "running", "model": "official_grpo_v02", "phase": "T1024", "completed": 160, "total": 1024, "checked_utc": "2026-10-14T13:48:07.267206+00:00"}
+INFO 10-14 21:48:07 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 21:48:08 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 21:48:11 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 21:48:15 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 21:48:20 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 21:48:24 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 21:48:28 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 21:48:33 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 21:48:37 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 21:48:41 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 21:48:46 [block_pool.py:378] Successfully reset prefix cache
+ACTIVE_TRAJ_NUM: [8, 8, 2, 1, 1, 1, 1, 1, 1, 1, 1, 0]
+[评价进度] {"status": "running", "model": "official_grpo_v02", "phase": "T1024", "completed": 168, "total": 1024, "checked_utc": "2026-10-14T13:48:50.823012+00:00"}
+INFO 10-14 21:48:50 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 21:48:52 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 21:48:53 [block_pool.py:378] Successfully reset prefix cache
+ACTIVE_TRAJ_NUM: [8, 8, 2, 0]
+--------------------------------
+Golden answers: ['Herman Hollerith']
+Extracted answer: Herman Hollerith
+Solution string: <think>
+To answer the question about who was the first person to successfully introduce a device exclusively designed for data processing, I need to find information about the history of data processing devices.
+</think>
+
+<search> who was the first person to successfully introduce a device exclusively designed for data processing </search><think>
+From the information gathered, it seems Herman Hollerith invented punched cards for data processing. Let's confirm Herman Hollerith as the first person to successfully introduce a device exclusively designed for data processing.
+</think>
+
+<search> Herman Hollerith first person to successfully introduce a device exclusively designed for data processing </search><think>
+Herman Hollerith invented punched cards for data processing. He was the first person to successfully introduce a device exclusively designed for data processing.
+</think>
+
+<answer> Herman Hollerith </answer>
+[评价进度] {"status": "running", "model": "official_grpo_v02", "phase": "T1024", "completed": 176, "total": 1024, "checked_utc": "2026-10-14T13:48:55.353336+00:00"}
+INFO 10-14 21:48:55 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 21:48:56 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 21:48:58 [block_pool.py:378] Successfully reset prefix cache
+ACTIVE_TRAJ_NUM: [8, 8, 3, 0]
+[评价进度] {"status": "running", "model": "official_grpo_v02", "phase": "T1024", "completed": 184, "total": 1024, "checked_utc": "2026-10-14T13:49:00.122319+00:00"}
+INFO 10-14 21:49:00 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 21:49:01 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 21:49:03 [block_pool.py:378] Successfully reset prefix cache
+ACTIVE_TRAJ_NUM: [8, 8, 3, 0]
+[评价进度] {"status": "running", "model": "official_grpo_v02", "phase": "T1024", "completed": 192, "total": 1024, "checked_utc": "2026-10-14T13:49:05.437665+00:00"}
+INFO 10-14 21:49:05 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 21:49:06 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 21:49:08 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 21:49:13 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 21:49:17 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 21:49:22 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 21:49:26 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 21:49:30 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 21:49:35 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 21:49:39 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 21:49:43 [block_pool.py:378] Successfully reset prefix cache
+ACTIVE_TRAJ_NUM: [8, 8, 2, 1, 1, 1, 1, 1, 1, 1, 1, 0]
+--------------------------------
+Golden answers: ['Ali Daei']
+Extracted answer: Josef Bican
+Solution string: <think>
+To answer the question "who has the most international goals of all time?", I need to find out which player holds the record for the most international goals scored in football history.
+</think>
+
+<search> who has the most international goals of all time </search><think>
+From the search results, it's clear that Josef Bican is mentioned as having scored the most goals in all competitive matches, but the question specifically asks about international goals. Gerd Müller is also mentioned with a high number of international goals. However, the most direct answer is that Josef Bican holds the record for most international goals of all time.
+</think>
+
+<answer> Josef Bican </answer>
+[评价进度] {"status": "running", "model": "official_grpo_v02", "phase": "T1024", "completed": 200, "total": 1024, "checked_utc": "2026-10-14T13:49:48.323419+00:00"}
+INFO 10-14 21:49:48 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 21:49:49 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 21:49:52 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 21:49:53 [block_pool.py:378] Successfully reset prefix cache
+ACTIVE_TRAJ_NUM: [8, 8, 1, 1, 0]
+[评价进度] {"status": "running", "model": "official_grpo_v02", "phase": "T1024", "completed": 208, "total": 1024, "checked_utc": "2026-10-14T13:49:54.814677+00:00"}
+INFO 10-14 21:49:54 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 21:49:56 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 21:49:59 [block_pool.py:378] Successfully reset prefix cache
+ACTIVE_TRAJ_NUM: [8, 8, 1, 0]
+--------------------------------
+Golden answers: ['March\xa024,\xa02017']
+Extracted answer: March 24, 2017
+Solution string: <think>
+To answer the question about when Season 3 of Grace and Frankie is being released, I need to find information about the release date of this specific season.
+</think>
+
+<search> when is season 3 of grace and frankie being released </search><think>
+From the information gathered, Season 3 of Grace and Frankie was released on March 24, 2017.
+</think>
+
+<answer> March 24, 2017 </answer>
+--------------------------------
+Golden answers: ['heaviest of the stable halogens']
+Extracted answer: group 17
+Solution string: <think>
+To find out where iodine is located in the periodic table, I need to search for information about iodine's position in the periodic table.
+</think>
+<search> where is iodine found in the periodic table </search><think>
+From the search results, I can see that iodine is located in the periodic table. Specifically, it is mentioned that iodine is the sixty-first element in abundance and is the fourth halogen.
+</think>
+<think>
+To find the exact position of iodine in the periodic table, I need to identify its group and period.
+</think>
+<think>
+Iodine is mentioned as being in group 17 and the fourth halogen. Group 17 elements are known as halogens.
+</think>
+<search> where is iodine located in the periodic table </search><think>
+Iodine is the sixty-first element and is located in group 17 of the periodic table.
+</think>
+<think>
+The question asks where iodine is found in the periodic table. From the information gathered, iodine is found in group 17.
+</think>
+
+<answer> group 17 </answer>
+[评价进度] {"status": "running", "model": "official_grpo_v02", "phase": "T1024", "completed": 216, "total": 1024, "checked_utc": "2026-10-14T13:50:00.998912+00:00"}
+INFO 10-14 21:50:01 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 21:50:02 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 21:50:04 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 21:50:08 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 21:50:13 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 21:50:17 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 21:50:21 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 21:50:26 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 21:50:30 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 21:50:34 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 21:50:39 [block_pool.py:378] Successfully reset prefix cache
+ACTIVE_TRAJ_NUM: [8, 8, 2, 1, 1, 1, 1, 1, 1, 1, 1, 0]
+[评价进度] {"status": "running", "model": "official_grpo_v02", "phase": "T1024", "completed": 224, "total": 1024, "checked_utc": "2026-10-14T13:50:39.783863+00:00"}
+INFO 10-14 21:50:39 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 21:50:41 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 21:50:43 [block_pool.py:378] Successfully reset prefix cache
+ACTIVE_TRAJ_NUM: [8, 8, 2, 0]
+[评价进度] {"status": "running", "model": "official_grpo_v02", "phase": "T1024", "completed": 232, "total": 1024, "checked_utc": "2026-10-14T13:50:44.396184+00:00"}
+INFO 10-14 21:50:44 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 21:50:45 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 21:50:48 [block_pool.py:378] Successfully reset prefix cache
+ACTIVE_TRAJ_NUM: [8, 8, 3, 0]
+[评价进度] {"status": "running", "model": "official_grpo_v02", "phase": "T1024", "completed": 240, "total": 1024, "checked_utc": "2026-10-14T13:50:49.897996+00:00"}
+INFO 10-14 21:50:49 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 21:50:51 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 21:50:53 [block_pool.py:378] Successfully reset prefix cache
+ACTIVE_TRAJ_NUM: [8, 8, 2, 0]
+[评价进度] {"status": "running", "model": "official_grpo_v02", "phase": "T1024", "completed": 248, "total": 1024, "checked_utc": "2026-10-14T13:50:54.710815+00:00"}
+INFO 10-14 21:50:54 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 21:50:56 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 21:50:59 [block_pool.py:378] Successfully reset prefix cache
+ACTIVE_TRAJ_NUM: [8, 8, 1, 0]
+[评价进度] {"status": "running", "model": "official_grpo_v02", "phase": "T1024", "completed": 256, "total": 1024, "checked_utc": "2026-10-14T13:50:59.805929+00:00"}
+INFO 10-14 21:50:59 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 21:51:01 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 21:51:03 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 21:51:08 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 21:51:12 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 21:51:16 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 21:51:21 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 21:51:25 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 21:51:29 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 21:51:34 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 21:51:38 [block_pool.py:378] Successfully reset prefix cache
+ACTIVE_TRAJ_NUM: [8, 8, 2, 1, 1, 1, 1, 1, 1, 1, 1, 0]
+[评价进度] {"status": "running", "model": "official_grpo_v02", "phase": "T1024", "completed": 264, "total": 1024, "checked_utc": "2026-10-14T13:51:43.327979+00:00"}
+INFO 10-14 21:51:43 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 21:51:44 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 21:51:46 [block_pool.py:378] Successfully reset prefix cache
+ACTIVE_TRAJ_NUM: [8, 8, 2, 0]
+[评价进度] {"status": "running", "model": "official_grpo_v02", "phase": "T1024", "completed": 272, "total": 1024, "checked_utc": "2026-10-14T13:51:47.662064+00:00"}
+INFO 10-14 21:51:47 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 21:51:49 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 21:51:51 [block_pool.py:378] Successfully reset prefix cache
+ACTIVE_TRAJ_NUM: [8, 8, 1, 0]
+[评价进度] {"status": "running", "model": "official_grpo_v02", "phase": "T1024", "completed": 280, "total": 1024, "checked_utc": "2026-10-14T13:51:51.735553+00:00"}
+INFO 10-14 21:51:51 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 21:51:53 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 21:51:55 [block_pool.py:378] Successfully reset prefix cache
+ACTIVE_TRAJ_NUM: [8, 8, 2, 0]
+[评价进度] {"status": "running", "model": "official_grpo_v02", "phase": "T1024", "completed": 288, "total": 1024, "checked_utc": "2026-10-14T13:51:56.353879+00:00"}
+INFO 10-14 21:51:56 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 21:51:57 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 21:51:59 [block_pool.py:378] Successfully reset prefix cache
+ACTIVE_TRAJ_NUM: [8, 8, 1, 0]
+[评价进度] {"status": "running", "model": "official_grpo_v02", "phase": "T1024", "completed": 296, "total": 1024, "checked_utc": "2026-10-14T13:51:59.941576+00:00"}
+INFO 10-14 21:51:59 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 21:52:01 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 21:52:03 [block_pool.py:378] Successfully reset prefix cache
+ACTIVE_TRAJ_NUM: [8, 8, 1, 0]
+[评价进度] {"status": "running", "model": "official_grpo_v02", "phase": "T1024", "completed": 304, "total": 1024, "checked_utc": "2026-10-14T13:52:04.220203+00:00"}
+INFO 10-14 21:52:04 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 21:52:05 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 21:52:08 [block_pool.py:378] Successfully reset prefix cache
+ACTIVE_TRAJ_NUM: [8, 8, 4, 0]
+[评价进度] {"status": "running", "model": "official_grpo_v02", "phase": "T1024", "completed": 312, "total": 1024, "checked_utc": "2026-10-14T13:52:11.030335+00:00"}
+INFO 10-14 21:52:11 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 21:52:12 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 21:52:14 [block_pool.py:378] Successfully reset prefix cache
+ACTIVE_TRAJ_NUM: [8, 8, 3, 0]
+[评价进度] {"status": "running", "model": "official_grpo_v02", "phase": "T1024", "completed": 320, "total": 1024, "checked_utc": "2026-10-14T13:52:15.634489+00:00"}
+INFO 10-14 21:52:15 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 21:52:16 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 21:52:18 [block_pool.py:378] Successfully reset prefix cache
+ACTIVE_TRAJ_NUM: [8, 8, 2, 0]
+[评价进度] {"status": "running", "model": "official_grpo_v02", "phase": "T1024", "completed": 328, "total": 1024, "checked_utc": "2026-10-14T13:52:20.043615+00:00"}
+INFO 10-14 21:52:20 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 21:52:21 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 21:52:23 [block_pool.py:378] Successfully reset prefix cache
+ACTIVE_TRAJ_NUM: [8, 8, 2, 0]
+[评价进度] {"status": "running", "model": "official_grpo_v02", "phase": "T1024", "completed": 336, "total": 1024, "checked_utc": "2026-10-14T13:52:24.888573+00:00"}
+INFO 10-14 21:52:24 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 21:52:26 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 21:52:28 [block_pool.py:378] Successfully reset prefix cache
+ACTIVE_TRAJ_NUM: [8, 8, 5, 0]
+[评价进度] {"status": "running", "model": "official_grpo_v02", "phase": "T1024", "completed": 344, "total": 1024, "checked_utc": "2026-10-14T13:52:30.522596+00:00"}
+INFO 10-14 21:52:30 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 21:52:32 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 21:52:35 [block_pool.py:378] Successfully reset prefix cache
+ACTIVE_TRAJ_NUM: [8, 8, 7, 0]
+[评价进度] {"status": "running", "model": "official_grpo_v02", "phase": "T1024", "completed": 352, "total": 1024, "checked_utc": "2026-10-14T13:52:37.750471+00:00"}
+INFO 10-14 21:52:37 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 21:52:39 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 21:52:41 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 21:52:46 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 21:52:50 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 21:52:55 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 21:52:59 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 21:53:03 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 21:53:08 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 21:53:12 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 21:53:17 [block_pool.py:378] Successfully reset prefix cache
+ACTIVE_TRAJ_NUM: [8, 8, 5, 1, 1, 1, 1, 1, 1, 1, 1, 0]
+[评价进度] {"status": "running", "model": "official_grpo_v02", "phase": "T1024", "completed": 360, "total": 1024, "checked_utc": "2026-10-14T13:53:21.517153+00:00"}
+INFO 10-14 21:53:21 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 21:53:23 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 21:53:24 [block_pool.py:378] Successfully reset prefix cache
+ACTIVE_TRAJ_NUM: [8, 8, 8, 0]
+[评价进度] {"status": "running", "model": "official_grpo_v02", "phase": "T1024", "completed": 368, "total": 1024, "checked_utc": "2026-10-14T13:53:27.213324+00:00"}
+INFO 10-14 21:53:27 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 21:53:29 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 21:53:31 [block_pool.py:378] Successfully reset prefix cache
+ACTIVE_TRAJ_NUM: [8, 8, 8, 0]
+[评价进度] {"status": "running", "model": "official_grpo_v02", "phase": "T1024", "completed": 376, "total": 1024, "checked_utc": "2026-10-14T13:53:34.920247+00:00"}
+INFO 10-14 21:53:34 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 21:53:36 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 21:53:39 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 21:53:44 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 21:53:48 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 21:53:52 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 21:53:57 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 21:54:01 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 21:54:05 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 21:54:10 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 21:54:14 [block_pool.py:378] Successfully reset prefix cache
+ACTIVE_TRAJ_NUM: [8, 8, 6, 1, 1, 1, 1, 1, 1, 1, 1, 0]
+[评价进度] {"status": "running", "model": "official_grpo_v02", "phase": "T1024", "completed": 384, "total": 1024, "checked_utc": "2026-10-14T13:54:19.147597+00:00"}
+INFO 10-14 21:54:19 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 21:54:20 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 21:54:23 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 21:54:25 [block_pool.py:378] Successfully reset prefix cache
+ACTIVE_TRAJ_NUM: [8, 8, 7, 1, 0]
+--------------------------------
+Golden answers: ['Knowlton Hall']
+Extracted answer: Knowlton Hall
+Solution string: <think>
+To answer the question, we need to find out which School of Architecture building at Ohio State Kyle Ezell is a professor at. We'll start by searching for information about Kyle Ezell and his affiliation with Ohio State University.
+</think>
+
+<search> Kyle Ezell is a professor at what School of Architecture building at Ohio State </search><think>
+From the search results, we can see that Kyle Ezell is a professor at the Knowlton School at The Ohio State University. Now we need to find out which building houses the Knowlton School.
+</think>
+
+<search> Knowlton School building at Ohio State </search><think>
+We've found that the Knowlton School at Ohio State is housed in Knowlton Hall.
+</think>
+
+<answer> Knowlton Hall </answer>
+[评价进度] {"status": "running", "model": "official_grpo_v02", "phase": "T1024", "completed": 392, "total": 1024, "checked_utc": "2026-10-14T13:54:26.780099+00:00"}
+INFO 10-14 21:54:26 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 21:54:28 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 21:54:30 [block_pool.py:378] Successfully reset prefix cache
+ACTIVE_TRAJ_NUM: [8, 8, 7, 0]
+[评价进度] {"status": "running", "model": "official_grpo_v02", "phase": "T1024", "completed": 400, "total": 1024, "checked_utc": "2026-10-14T13:54:33.454813+00:00"}
+INFO 10-14 21:54:33 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 21:54:35 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 21:54:38 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 21:54:43 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 21:54:47 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 21:54:52 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 21:54:56 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 21:55:00 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 21:55:05 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 21:55:09 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 21:55:13 [block_pool.py:378] Successfully reset prefix cache
+ACTIVE_TRAJ_NUM: [8, 8, 5, 2, 1, 1, 1, 1, 1, 1, 1, 0]
+[评价进度] {"status": "running", "model": "official_grpo_v02", "phase": "T1024", "completed": 408, "total": 1024, "checked_utc": "2026-10-14T13:55:18.344989+00:00"}
+INFO 10-14 21:55:18 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 21:55:19 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 21:55:22 [block_pool.py:378] Successfully reset prefix cache
+ACTIVE_TRAJ_NUM: [8, 8, 6, 0]
+[评价进度] {"status": "running", "model": "official_grpo_v02", "phase": "T1024", "completed": 416, "total": 1024, "checked_utc": "2026-10-14T13:55:25.096545+00:00"}
+INFO 10-14 21:55:25 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 21:55:27 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 21:55:29 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 21:55:34 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 21:55:38 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 21:55:42 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 21:55:47 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 21:55:51 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 21:55:55 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 21:56:00 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 21:56:04 [block_pool.py:378] Successfully reset prefix cache
+ACTIVE_TRAJ_NUM: [8, 8, 5, 1, 1, 1, 1, 1, 1, 1, 1, 0]
+[评价进度] {"status": "running", "model": "official_grpo_v02", "phase": "T1024", "completed": 424, "total": 1024, "checked_utc": "2026-10-14T13:56:09.213037+00:00"}
+INFO 10-14 21:56:09 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 21:56:11 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 21:56:12 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 21:56:15 [block_pool.py:378] Successfully reset prefix cache
+ACTIVE_TRAJ_NUM: [8, 8, 8, 1, 0]
+[评价进度] {"status": "running", "model": "official_grpo_v02", "phase": "T1024", "completed": 432, "total": 1024, "checked_utc": "2026-10-14T13:56:16.778980+00:00"}
+INFO 10-14 21:56:16 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 21:56:18 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 21:56:20 [block_pool.py:378] Successfully reset prefix cache
+ACTIVE_TRAJ_NUM: [8, 8, 4, 0]
+[评价进度] {"status": "running", "model": "official_grpo_v02", "phase": "T1024", "completed": 440, "total": 1024, "checked_utc": "2026-10-14T13:56:21.791145+00:00"}
+INFO 10-14 21:56:21 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 21:56:23 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 21:56:25 [block_pool.py:378] Successfully reset prefix cache
+ACTIVE_TRAJ_NUM: [8, 8, 6, 0]
+[评价进度] {"status": "running", "model": "official_grpo_v02", "phase": "T1024", "completed": 448, "total": 1024, "checked_utc": "2026-10-14T13:56:28.095375+00:00"}
+INFO 10-14 21:56:28 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 21:56:29 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 21:56:32 [block_pool.py:378] Successfully reset prefix cache
+ACTIVE_TRAJ_NUM: [8, 8, 5, 0]
+[评价进度] {"status": "running", "model": "official_grpo_v02", "phase": "T1024", "completed": 456, "total": 1024, "checked_utc": "2026-10-14T13:56:34.810527+00:00"}
+INFO 10-14 21:56:34 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 21:56:36 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 21:56:38 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 21:56:40 [block_pool.py:378] Successfully reset prefix cache
+ACTIVE_TRAJ_NUM: [8, 8, 7, 1, 0]
+[评价进度] {"status": "running", "model": "official_grpo_v02", "phase": "T1024", "completed": 464, "total": 1024, "checked_utc": "2026-10-14T13:56:41.135237+00:00"}
+INFO 10-14 21:56:41 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 21:56:42 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 21:56:44 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 21:56:46 [block_pool.py:378] Successfully reset prefix cache
+ACTIVE_TRAJ_NUM: [8, 8, 8, 1, 0]
+[评价进度] {"status": "running", "model": "official_grpo_v02", "phase": "T1024", "completed": 472, "total": 1024, "checked_utc": "2026-10-14T13:56:47.544133+00:00"}
+INFO 10-14 21:56:47 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 21:56:49 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 21:56:50 [block_pool.py:378] Successfully reset prefix cache
+ACTIVE_TRAJ_NUM: [8, 8, 6, 0]
+[评价进度] {"status": "running", "model": "official_grpo_v02", "phase": "T1024", "completed": 480, "total": 1024, "checked_utc": "2026-10-14T13:56:52.923576+00:00"}
+INFO 10-14 21:56:52 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 21:56:54 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 21:56:57 [block_pool.py:378] Successfully reset prefix cache
+ACTIVE_TRAJ_NUM: [8, 8, 5, 0]
+[评价进度] {"status": "running", "model": "official_grpo_v02", "phase": "T1024", "completed": 488, "total": 1024, "checked_utc": "2026-10-14T13:56:58.865021+00:00"}
+INFO 10-14 21:56:58 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 21:57:00 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 21:57:03 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 21:57:08 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 21:57:12 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 21:57:16 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 21:57:21 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 21:57:25 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 21:57:29 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 21:57:34 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 21:57:38 [block_pool.py:378] Successfully reset prefix cache
+ACTIVE_TRAJ_NUM: [8, 8, 5, 1, 1, 1, 1, 1, 1, 1, 1, 0]
+[评价进度] {"status": "running", "model": "official_grpo_v02", "phase": "T1024", "completed": 496, "total": 1024, "checked_utc": "2026-10-14T13:57:43.170383+00:00"}
+INFO 10-14 21:57:43 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 21:57:44 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 21:57:47 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 21:57:49 [block_pool.py:378] Successfully reset prefix cache
+ACTIVE_TRAJ_NUM: [8, 8, 8, 1, 0]
+--------------------------------
+Golden answers: ['January']
+Extracted answer: August
+Solution string: <think>
+To answer the question, we need to identify the online adult website that published its last print magazine in the summer of 2007 and then determine the month it recognized Nikita Gross.
+</think>
+
+<search> online adult website last print magazine published in the summer of 2007 </search><think>
+From the search results, we can identify that Perfect 10 is the online adult website that published its last print magazine in the summer of 2007. Now we need to find out the month it recognized Nikita Gross.
+</think>
+
+<search> month did the online adult website Perfect 10 recognize Nikita Gross </search><think>
+Perfect 10 recognized Nikita Gross in August 2002.
+</think>
+
+<answer> August </answer>
+--------------------------------
+Golden answers: ['Everything Is Wrong']
+Extracted answer: Juju
+Solution string: <think>
+To answer the question about the third studio album released by Richard Melville Hall, I need to identify who Richard Melville Hall is and then find information about his studio albums.
+</think>
+
+<search> Who is Richard Melville Hall and what is his third studio album? </search><think>
+From the information gathered, it's clear that Richard Melville Hall is known as Moby and his third studio album is ""Juju"". However, the question asks specifically about Richard Melville Hall's third studio album, which seems to be a different person than Moby.
+</think>
+
+<think>
+I need to find the third studio album of Richard Melville Hall who is Moby.
+</think>
+
+<search> What was the third studio album released by Richard Melville Hall aka Moby? </search><think>
+Juju is the third studio album released by Richard Melville Hall aka Moby.
+</think>
+
+<answer> Juju </answer>
+[评价进度] {"status": "running", "model": "official_grpo_v02", "phase": "T1024", "completed": 504, "total": 1024, "checked_utc": "2026-10-14T13:57:49.678677+00:00"}
+INFO 10-14 21:57:49 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 21:57:51 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 21:57:52 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 21:57:55 [block_pool.py:378] Successfully reset prefix cache
+ACTIVE_TRAJ_NUM: [8, 8, 8, 1, 0]
+[评价进度] {"status": "running", "model": "official_grpo_v02", "phase": "T1024", "completed": 512, "total": 1024, "checked_utc": "2026-10-14T13:57:56.230924+00:00"}
+INFO 10-14 21:57:56 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 21:57:58 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 21:58:00 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 21:58:02 [block_pool.py:378] Successfully reset prefix cache
+ACTIVE_TRAJ_NUM: [8, 8, 6, 1, 0]
+[评价进度] {"status": "running", "model": "official_grpo_v02", "phase": "T1024", "completed": 520, "total": 1024, "checked_utc": "2026-10-14T13:58:03.945131+00:00"}
+INFO 10-14 21:58:03 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 21:58:06 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 21:58:08 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 21:58:11 [block_pool.py:378] Successfully reset prefix cache
+ACTIVE_TRAJ_NUM: [8, 8, 4, 1, 0]
+[评价进度] {"status": "running", "model": "official_grpo_v02", "phase": "T1024", "completed": 528, "total": 1024, "checked_utc": "2026-10-14T13:58:12.344901+00:00"}
+INFO 10-14 21:58:12 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 21:58:14 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 21:58:16 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 21:58:19 [block_pool.py:378] Successfully reset prefix cache
+ACTIVE_TRAJ_NUM: [8, 8, 7, 2, 0]
+[评价进度] {"status": "running", "model": "official_grpo_v02", "phase": "T1024", "completed": 536, "total": 1024, "checked_utc": "2026-10-14T13:58:20.534763+00:00"}
+INFO 10-14 21:58:20 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 21:58:22 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 21:58:25 [block_pool.py:378] Successfully reset prefix cache
+ACTIVE_TRAJ_NUM: [8, 8, 7, 0]
+[评价进度] {"status": "running", "model": "official_grpo_v02", "phase": "T1024", "completed": 544, "total": 1024, "checked_utc": "2026-10-14T13:58:27.098543+00:00"}
+INFO 10-14 21:58:27 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 21:58:29 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 21:58:31 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 21:58:34 [block_pool.py:378] Successfully reset prefix cache
+ACTIVE_TRAJ_NUM: [8, 8, 6, 2, 0]
+[评价进度] {"status": "running", "model": "official_grpo_v02", "phase": "T1024", "completed": 552, "total": 1024, "checked_utc": "2026-10-14T13:58:35.521036+00:00"}
+INFO 10-14 21:58:35 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 21:58:37 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 21:58:39 [block_pool.py:378] Successfully reset prefix cache
+ACTIVE_TRAJ_NUM: [8, 8, 5, 0]
+[评价进度] {"status": "running", "model": "official_grpo_v02", "phase": "T1024", "completed": 560, "total": 1024, "checked_utc": "2026-10-14T13:58:41.925294+00:00"}
+INFO 10-14 21:58:41 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 21:58:43 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 21:58:46 [block_pool.py:378] Successfully reset prefix cache
+ACTIVE_TRAJ_NUM: [8, 8, 7, 0]
+[评价进度] {"status": "running", "model": "official_grpo_v02", "phase": "T1024", "completed": 568, "total": 1024, "checked_utc": "2026-10-14T13:58:48.395834+00:00"}
+INFO 10-14 21:58:48 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 21:58:50 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 21:58:52 [block_pool.py:378] Successfully reset prefix cache
+ACTIVE_TRAJ_NUM: [8, 8, 8, 0]
+[评价进度] {"status": "running", "model": "official_grpo_v02", "phase": "T1024", "completed": 576, "total": 1024, "checked_utc": "2026-10-14T13:58:54.214380+00:00"}
+INFO 10-14 21:58:54 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 21:58:55 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 21:58:57 [block_pool.py:378] Successfully reset prefix cache
+ACTIVE_TRAJ_NUM: [8, 8, 6, 0]
+[评价进度] {"status": "running", "model": "official_grpo_v02", "phase": "T1024", "completed": 584, "total": 1024, "checked_utc": "2026-10-14T13:58:59.725653+00:00"}
+INFO 10-14 21:58:59 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 21:59:01 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 21:59:03 [block_pool.py:378] Successfully reset prefix cache
+ACTIVE_TRAJ_NUM: [8, 8, 4, 0]
+--------------------------------
+Golden answers: ['John Hunt']
+Extracted answer: John Hunt
+Solution string: <think>
+To answer the question, we need to find out who led the Everest expedition that Beyond the Edge was a docudrama about the mountaineer part of.
+</think>
+
+<search> Beyond the Edge docudrama about the mountaineer that was part of the Everest expedition led by whom? </search><think>
+From the search results, we know Beyond the Edge is about Tenzing Norgay and Sir Edmund Hillary's historical ascent of Mount Everest in 1953. We need to find out who led the expedition.
+</think>
+
+<search> who led the Everest expedition that Sir Edmund Hillary was part of </search><think>
+We found out that Sir Edmund Hillary was part of the ninth British expedition to Everest led by John Hunt.
+</think>
+
+<answer> John Hunt </answer>
+--------------------------------
+Golden answers: ['Pendlebury, Lancashire']
+Extracted answer: Pendlebury
+Solution string: <think>
+To answer the question, we need to find out which town is depicted in many of the drawings and paintings of the artist that the Lowry Hotel is named after. First, we need to identify who the artist is.
+</think>
+
+<search> who is the artist that the Lowry Hotel is named after </search><think>
+From the search results, we can confirm that the artist the Lowry Hotel is named after is L.S. Lowry. Now we need to find out which town many of Lowry's drawings and paintings depict.
+</think>
+
+<search> which town are depicted in many of L.S. Lowry's drawings and paintings </search><think>
+We can conclude that many of L.S. Lowry's drawings and paintings depict Pendlebury, Lancashire.
+</think>
+
+<answer> Pendlebury </answer>
+[评价进度] {"status": "running", "model": "official_grpo_v02", "phase": "T1024", "completed": 592, "total": 1024, "checked_utc": "2026-10-14T13:59:04.568286+00:00"}
+INFO 10-14 21:59:04 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 21:59:06 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 21:59:08 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 21:59:10 [block_pool.py:378] Successfully reset prefix cache
+ACTIVE_TRAJ_NUM: [8, 8, 7, 1, 0]
+[评价进度] {"status": "running", "model": "official_grpo_v02", "phase": "T1024", "completed": 600, "total": 1024, "checked_utc": "2026-10-14T13:59:11.265264+00:00"}
+INFO 10-14 21:59:11 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 21:59:13 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 21:59:15 [block_pool.py:378] Successfully reset prefix cache
+ACTIVE_TRAJ_NUM: [8, 8, 4, 0]
+[评价进度] {"status": "running", "model": "official_grpo_v02", "phase": "T1024", "completed": 608, "total": 1024, "checked_utc": "2026-10-14T13:59:18.231364+00:00"}
+INFO 10-14 21:59:18 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 21:59:20 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 21:59:22 [block_pool.py:378] Successfully reset prefix cache
+ACTIVE_TRAJ_NUM: [8, 8, 7, 0]
+--------------------------------
+Golden answers: ['pro-vice-chancellor']
+Extracted answer: Prime Minister
+Solution string: <think>
+To answer the question, we need to identify the United Kingdom and Australian position that is equivalent to Ralph Faudree's American position. We'll start by finding out what Ralph Faudree's American position was.
+</think>
+
+<search> Ralph Faudree served as the American equivalent to what United Kingdom and Australian position </search><think>
+From the search results, it seems Ralph Faudree was a Prime Minister in Australia. Now we need to find the equivalent position in the United Kingdom.
+</think>
+
+<search> equivalent position of Prime Minister in Australia in United Kingdom </search><think>
+The equivalent position of Prime Minister in the United Kingdom is Prime Minister.
+</think>
+
+<think>
+Thus, Ralph Faudree served as the American equivalent to the Prime Minister position in the United Kingdom and Australia.
+</think>
+
+<answer> Prime Minister </answer>
+[评价进度] {"status": "running", "model": "official_grpo_v02", "phase": "T1024", "completed": 616, "total": 1024, "checked_utc": "2026-10-14T13:59:25.023271+00:00"}
+INFO 10-14 21:59:25 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 21:59:26 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 21:59:29 [block_pool.py:378] Successfully reset prefix cache
+ACTIVE_TRAJ_NUM: [8, 8, 5, 0]
+[评价进度] {"status": "running", "model": "official_grpo_v02", "phase": "T1024", "completed": 624, "total": 1024, "checked_utc": "2026-10-14T13:59:32.199410+00:00"}
+INFO 10-14 21:59:32 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 21:59:34 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 21:59:36 [block_pool.py:378] Successfully reset prefix cache
+ACTIVE_TRAJ_NUM: [8, 8, 6, 0]
+[评价进度] {"status": "running", "model": "official_grpo_v02", "phase": "T1024", "completed": 632, "total": 1024, "checked_utc": "2026-10-14T13:59:37.908639+00:00"}
+INFO 10-14 21:59:37 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 21:59:39 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 21:59:41 [block_pool.py:378] Successfully reset prefix cache
+ACTIVE_TRAJ_NUM: [8, 8, 8, 0]
+[评价进度] {"status": "running", "model": "official_grpo_v02", "phase": "T1024", "completed": 640, "total": 1024, "checked_utc": "2026-10-14T13:59:44.065085+00:00"}
+INFO 10-14 21:59:44 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 21:59:45 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 21:59:47 [block_pool.py:378] Successfully reset prefix cache
+ACTIVE_TRAJ_NUM: [8, 8, 6, 0]
+[评价进度] {"status": "running", "model": "official_grpo_v02", "phase": "T1024", "completed": 648, "total": 1024, "checked_utc": "2026-10-14T13:59:49.657659+00:00"}
+INFO 10-14 21:59:49 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 21:59:51 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 21:59:54 [block_pool.py:378] Successfully reset prefix cache
+ACTIVE_TRAJ_NUM: [8, 8, 6, 0]
+[评价进度] {"status": "running", "model": "official_grpo_v02", "phase": "T1024", "completed": 656, "total": 1024, "checked_utc": "2026-10-14T13:59:56.936008+00:00"}
+INFO 10-14 21:59:56 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 21:59:58 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 22:00:00 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 22:00:05 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 22:00:09 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 22:00:14 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 22:00:18 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 22:00:22 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 22:00:27 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 22:00:31 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 22:00:36 [block_pool.py:378] Successfully reset prefix cache
+ACTIVE_TRAJ_NUM: [8, 8, 7, 1, 1, 1, 1, 1, 1, 1, 1, 0]
+[评价进度] {"status": "running", "model": "official_grpo_v02", "phase": "T1024", "completed": 664, "total": 1024, "checked_utc": "2026-10-14T14:00:40.582371+00:00"}
+INFO 10-14 22:00:40 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 22:00:42 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 22:00:43 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 22:00:49 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 22:00:53 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 22:00:57 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 22:01:01 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 22:01:06 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 22:01:10 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 22:01:15 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 22:01:19 [block_pool.py:378] Successfully reset prefix cache
+ACTIVE_TRAJ_NUM: [8, 8, 6, 1, 1, 1, 1, 1, 1, 1, 1, 0]
+[评价进度] {"status": "running", "model": "official_grpo_v02", "phase": "T1024", "completed": 672, "total": 1024, "checked_utc": "2026-10-14T14:01:24.059151+00:00"}
+INFO 10-14 22:01:24 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 22:01:26 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 22:01:28 [block_pool.py:378] Successfully reset prefix cache
+ACTIVE_TRAJ_NUM: [8, 8, 5, 0]
+--------------------------------
+Golden answers: ['Dara Grace Torres']
+Extracted answer: Laura Walker
+Solution string: <think>
+To answer the question, we need to identify Mitzi Kremer's teammate who was an American former competitive swimmer. We'll start by finding information about Mitzi Kremer.
+</think>
+
+<search> Who was Mitzi Kremer's teammate who was an American former competitive swimmer </search><think>
+From the information found, Mitzi Kremer's teammates at the 1988 Summer Olympics were Mary Wayte, Dara Torres, and Laura Walker. We need to identify which one of them was an American former competitive swimmer.
+</think>
+
+<search> Who was Mitzi Kremer's teammate Laura Walker </search><think>
+Laura Walker was Mitzi Kremer's teammate who was an American former competitive swimmer.
+</think>
+
+<think>
+The question asks who Mitzi Kremer's teammate was. From the information gathered, Mitzi Kremer's teammate who was an American former competitive swimmer is Laura Walker.
+</think>
+
+<answer> Laura Walker </answer>
+--------------------------------
+Golden answers: ['Voices of Iraq']
+Extracted answer: Voices of Iraq
+Solution string: <think>
+To answer the question of which album was released first between "The Climb" and "Voices of Iraq", I need to find the release dates of both albums.
+</think>
+
+<search> release date of The Climb album </search><think>
+From the search results, I found that "The Climb" was released on March 5, 2009.
+Now I need to find the release date of "Voices of Iraq".
+</think>
+
+<search> release date of Voices of Iraq album </search><think>
+From the search results, I found that "Voices of Iraq" radio station started broadcasting on August 27, 2003.
+Comparing the release dates, ""The Climb"" was released on March 5, 2009, and ""Voices of Iraq"" started broadcasting on August 27, 2003.
+</think>
+
+<think>
+Therefore, ""Voices of Iraq"" was released first.
+</think>
+
+<answer> Voices of Iraq </answer>
+[评价进度] {"status": "running", "model": "official_grpo_v02", "phase": "T1024", "completed": 680, "total": 1024, "checked_utc": "2026-10-14T14:01:31.073322+00:00"}
+INFO 10-14 22:01:31 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 22:01:32 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 22:01:35 [block_pool.py:378] Successfully reset prefix cache
+ACTIVE_TRAJ_NUM: [8, 8, 8, 0]
+[评价进度] {"status": "running", "model": "official_grpo_v02", "phase": "T1024", "completed": 688, "total": 1024, "checked_utc": "2026-10-14T14:01:38.023766+00:00"}
+INFO 10-14 22:01:38 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 22:01:39 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 22:01:42 [block_pool.py:378] Successfully reset prefix cache
+ACTIVE_TRAJ_NUM: [8, 8, 5, 0]
+[评价进度] {"status": "running", "model": "official_grpo_v02", "phase": "T1024", "completed": 696, "total": 1024, "checked_utc": "2026-10-14T14:01:43.610356+00:00"}
+INFO 10-14 22:01:43 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 22:01:45 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 22:01:48 [block_pool.py:378] Successfully reset prefix cache
+ACTIVE_TRAJ_NUM: [8, 8, 6, 0]
+[评价进度] {"status": "running", "model": "official_grpo_v02", "phase": "T1024", "completed": 704, "total": 1024, "checked_utc": "2026-10-14T14:01:50.170291+00:00"}
+INFO 10-14 22:01:50 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 22:01:52 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 22:01:54 [block_pool.py:378] Successfully reset prefix cache
+ACTIVE_TRAJ_NUM: [8, 8, 6, 0]
+[评价进度] {"status": "running", "model": "official_grpo_v02", "phase": "T1024", "completed": 712, "total": 1024, "checked_utc": "2026-10-14T14:01:56.382305+00:00"}
+INFO 10-14 22:01:56 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 22:01:58 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 22:02:01 [block_pool.py:378] Successfully reset prefix cache
+ACTIVE_TRAJ_NUM: [8, 8, 7, 0]
+[评价进度] {"status": "running", "model": "official_grpo_v02", "phase": "T1024", "completed": 720, "total": 1024, "checked_utc": "2026-10-14T14:02:03.426184+00:00"}
+INFO 10-14 22:02:03 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 22:02:05 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 22:02:06 [block_pool.py:378] Successfully reset prefix cache
+ACTIVE_TRAJ_NUM: [8, 8, 6, 0]
+[评价进度] {"status": "running", "model": "official_grpo_v02", "phase": "T1024", "completed": 728, "total": 1024, "checked_utc": "2026-10-14T14:02:09.022938+00:00"}
+INFO 10-14 22:02:09 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 22:02:10 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 22:02:12 [block_pool.py:378] Successfully reset prefix cache
+ACTIVE_TRAJ_NUM: [8, 8, 6, 0]
+[评价进度] {"status": "running", "model": "official_grpo_v02", "phase": "T1024", "completed": 736, "total": 1024, "checked_utc": "2026-10-14T14:02:15.397744+00:00"}
+INFO 10-14 22:02:15 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 22:02:17 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 22:02:19 [block_pool.py:378] Successfully reset prefix cache
+ACTIVE_TRAJ_NUM: [8, 8, 7, 0]
+--------------------------------
+Golden answers: ['SAS Group']
+Extracted answer: Scandinavian Airlines
+Solution string: <think>
+To answer the question, we need to find the airline holding company located in Solna Municipality, Sweden that owns a technical aircraft maintenance company located in Arlanda, Sweden. Let's start by searching for the airline holding company in Solna Municipality, Sweden.
+</think>
+
+<search> airline holding company located in Solna Municipality, Sweden </search><think>
+From the search results, we can see that Scandinavian Airlines has its head office in Solna Municipality, Sweden. Now let's find out if Scandinavian Airlines owns a technical aircraft maintenance company located in Arlanda, Sweden.
+</think>
+
+<search> Scandinavian Airlines owns a technical aircraft maintenance company located in Arlanda, Sweden </search><think>
+We can confirm that Scandinavian Airlines owns a technical aircraft maintenance company located in Arlanda, Sweden.
+</think>
+
+<answer> Scandinavian Airlines </answer>
+--------------------------------
+Golden answers: ['Ministro Pistarini International Airport']
+Extracted answer: Ministro Pistarini International Airport
+Solution string: <think>
+To answer the question, we need to find the airport that is off National Route A002 and is the largest airport in Greater Buenos Aires. Let's start by searching for the information.
+</think>
+
+<search> What airport is off National Route A002 and is the largest airport in Greater Buenos Aires? </search><think>
+From the search results, we can see that Ministro Pistarini International Airport (Ezeiza) is mentioned as being connected to National Route A002 and is located in Greater Buenos Aires. This airport is also described as the largest airport in Greater Buenos Aires.
+</think>
+
+<answer> Ministro Pistarini International Airport </answer>
+[评价进度] {"status": "running", "model": "official_grpo_v02", "phase": "T1024", "completed": 744, "total": 1024, "checked_utc": "2026-10-14T14:02:21.581188+00:00"}
+INFO 10-14 22:02:21 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 22:02:23 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 22:02:25 [block_pool.py:378] Successfully reset prefix cache
+ACTIVE_TRAJ_NUM: [8, 8, 6, 0]
+[评价进度] {"status": "running", "model": "official_grpo_v02", "phase": "T1024", "completed": 752, "total": 1024, "checked_utc": "2026-10-14T14:02:27.692969+00:00"}
+INFO 10-14 22:02:27 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 22:02:29 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 22:02:31 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 22:02:33 [block_pool.py:378] Successfully reset prefix cache
+ACTIVE_TRAJ_NUM: [8, 8, 7, 1, 0]
+[评价进度] {"status": "running", "model": "official_grpo_v02", "phase": "T1024", "completed": 760, "total": 1024, "checked_utc": "2026-10-14T14:02:34.642588+00:00"}
+INFO 10-14 22:02:34 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 22:02:36 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 22:02:38 [block_pool.py:378] Successfully reset prefix cache
+ACTIVE_TRAJ_NUM: [8, 8, 7, 0]
+[评价进度] {"status": "running", "model": "official_grpo_v02", "phase": "T1024", "completed": 768, "total": 1024, "checked_utc": "2026-10-14T14:02:40.886600+00:00"}
+INFO 10-14 22:02:40 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 22:02:42 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 22:02:44 [block_pool.py:378] Successfully reset prefix cache
+ACTIVE_TRAJ_NUM: [8, 8, 8, 0]
+[评价进度] {"status": "running", "model": "official_grpo_v02", "phase": "T1024", "completed": 776, "total": 1024, "checked_utc": "2026-10-14T14:02:46.497000+00:00"}
+INFO 10-14 22:02:46 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 22:02:48 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 22:02:49 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 22:02:52 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 22:02:56 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 22:03:00 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 22:03:05 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 22:03:09 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 22:03:13 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 22:03:18 [block_pool.py:378] Successfully reset prefix cache
+ACTIVE_TRAJ_NUM: [8, 8, 5, 1, 1, 1, 1, 1, 1, 1, 0]
+[评价进度] {"status": "running", "model": "official_grpo_v02", "phase": "T1024", "completed": 784, "total": 1024, "checked_utc": "2026-10-14T14:03:22.872882+00:00"}
+INFO 10-14 22:03:22 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 22:03:24 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 22:03:27 [block_pool.py:378] Successfully reset prefix cache
+ACTIVE_TRAJ_NUM: [8, 8, 5, 0]
+[评价进度] {"status": "running", "model": "official_grpo_v02", "phase": "T1024", "completed": 792, "total": 1024, "checked_utc": "2026-10-14T14:03:28.912331+00:00"}
+INFO 10-14 22:03:28 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 22:03:30 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 22:03:32 [block_pool.py:378] Successfully reset prefix cache
+ACTIVE_TRAJ_NUM: [8, 8, 7, 0]
+[评价进度] {"status": "running", "model": "official_grpo_v02", "phase": "T1024", "completed": 800, "total": 1024, "checked_utc": "2026-10-14T14:03:35.059990+00:00"}
+INFO 10-14 22:03:35 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 22:03:36 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 22:03:38 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 22:03:41 [block_pool.py:378] Successfully reset prefix cache
+ACTIVE_TRAJ_NUM: [8, 8, 7, 1, 0]
+[评价进度] {"status": "running", "model": "official_grpo_v02", "phase": "T1024", "completed": 808, "total": 1024, "checked_utc": "2026-10-14T14:03:41.772358+00:00"}
+INFO 10-14 22:03:41 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 22:03:43 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 22:03:45 [block_pool.py:378] Successfully reset prefix cache
+ACTIVE_TRAJ_NUM: [8, 8, 6, 0]
+[评价进度] {"status": "running", "model": "official_grpo_v02", "phase": "T1024", "completed": 816, "total": 1024, "checked_utc": "2026-10-14T14:03:47.450509+00:00"}
+INFO 10-14 22:03:47 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 22:03:49 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 22:03:51 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 22:03:56 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 22:04:00 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 22:04:04 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 22:04:09 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 22:04:13 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 22:04:17 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 22:04:22 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 22:04:26 [block_pool.py:378] Successfully reset prefix cache
+ACTIVE_TRAJ_NUM: [8, 8, 7, 1, 1, 1, 1, 1, 1, 1, 1, 0]
+[评价进度] {"status": "running", "model": "official_grpo_v02", "phase": "T1024", "completed": 824, "total": 1024, "checked_utc": "2026-10-14T14:04:31.160832+00:00"}
+INFO 10-14 22:04:31 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 22:04:32 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 22:04:34 [block_pool.py:378] Successfully reset prefix cache
+ACTIVE_TRAJ_NUM: [8, 8, 6, 0]
+--------------------------------
+Golden answers: ['"1989" (2014)']
+Extracted answer: Damn
+Solution string: <think>
+To answer the question, we need to find out which album included Kendrick Lamar's first number-one single on the US "Billboard" Hot 100. We'll start by identifying his first number-one single and then determine the album it was included in.
+</think>
+
+<search> Kendrick Lamar's first number-one single on the US "Billboard" Hot 100 </search><think>
+From the information found, Kendrick Lamar's first number-one single on the US "Billboard" Hot 100 is ""Humble"". Now we need to find out which album this song was included in.
+</think>
+
+<search> album which included Kendrick Lamar's first number-one single ""Humble"" </search><think>
+Kendrick Lamar's first number-one single ""Humble"" was included in his fourth studio album ""Damn"".
+</think>
+
+<answer> Damn </answer>
+[评价进度] {"status": "running", "model": "official_grpo_v02", "phase": "T1024", "completed": 832, "total": 1024, "checked_utc": "2026-10-14T14:04:37.923279+00:00"}
+INFO 10-14 22:04:37 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 22:04:39 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 22:04:41 [block_pool.py:378] Successfully reset prefix cache
+ACTIVE_TRAJ_NUM: [8, 8, 5, 0]
+[评价进度] {"status": "running", "model": "official_grpo_v02", "phase": "T1024", "completed": 840, "total": 1024, "checked_utc": "2026-10-14T14:04:44.419624+00:00"}
+INFO 10-14 22:04:44 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 22:04:46 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 22:04:47 [block_pool.py:378] Successfully reset prefix cache
+ACTIVE_TRAJ_NUM: [8, 8, 6, 0]
+[评价进度] {"status": "running", "model": "official_grpo_v02", "phase": "T1024", "completed": 848, "total": 1024, "checked_utc": "2026-10-14T14:04:49.423807+00:00"}
+INFO 10-14 22:04:49 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 22:04:51 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 22:04:53 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 22:04:58 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 22:05:03 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 22:05:09 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 22:05:16 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 22:05:22 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 22:05:28 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 22:05:35 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 22:05:39 [block_pool.py:378] Successfully reset prefix cache
+ACTIVE_TRAJ_NUM: [8, 8, 8, 2, 2, 2, 2, 2, 2, 1, 1, 0]
+[评价进度] {"status": "running", "model": "official_grpo_v02", "phase": "T1024", "completed": 856, "total": 1024, "checked_utc": "2026-10-14T14:05:40.274164+00:00"}
+INFO 10-14 22:05:40 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 22:05:44 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 22:05:49 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 22:05:54 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 22:05:59 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 22:06:03 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 22:06:07 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 22:06:12 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 22:06:16 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 22:06:21 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 22:06:25 [block_pool.py:378] Successfully reset prefix cache
+ACTIVE_TRAJ_NUM: [8, 8, 6, 1, 1, 1, 1, 1, 1, 1, 1, 0]
+[评价进度] {"status": "running", "model": "official_grpo_v02", "phase": "T1024", "completed": 864, "total": 1024, "checked_utc": "2026-10-14T14:06:29.927573+00:00"}
+INFO 10-14 22:06:29 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 22:06:31 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 22:06:34 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 22:06:36 [block_pool.py:378] Successfully reset prefix cache
+ACTIVE_TRAJ_NUM: [8, 8, 4, 1, 0]
+[评价进度] {"status": "running", "model": "official_grpo_v02", "phase": "T1024", "completed": 872, "total": 1024, "checked_utc": "2026-10-14T14:06:37.005932+00:00"}
+INFO 10-14 22:06:37 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 22:06:38 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 22:06:41 [block_pool.py:378] Successfully reset prefix cache
+ACTIVE_TRAJ_NUM: [8, 8, 7, 0]
+[评价进度] {"status": "running", "model": "official_grpo_v02", "phase": "T1024", "completed": 880, "total": 1024, "checked_utc": "2026-10-14T14:06:44.006522+00:00"}
+INFO 10-14 22:06:44 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 22:06:45 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 22:06:48 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 22:06:50 [block_pool.py:378] Successfully reset prefix cache
+ACTIVE_TRAJ_NUM: [8, 8, 4, 1, 0]
+[评价进度] {"status": "running", "model": "official_grpo_v02", "phase": "T1024", "completed": 888, "total": 1024, "checked_utc": "2026-10-14T14:06:51.820978+00:00"}
+INFO 10-14 22:06:51 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 22:06:53 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 22:06:55 [block_pool.py:378] Successfully reset prefix cache
+ACTIVE_TRAJ_NUM: [8, 8, 6, 0]
+[评价进度] {"status": "running", "model": "official_grpo_v02", "phase": "T1024", "completed": 896, "total": 1024, "checked_utc": "2026-10-14T14:06:57.322735+00:00"}
+INFO 10-14 22:06:57 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 22:06:59 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 22:07:01 [block_pool.py:378] Successfully reset prefix cache
+ACTIVE_TRAJ_NUM: [8, 8, 8, 0]
+[评价进度] {"status": "running", "model": "official_grpo_v02", "phase": "T1024", "completed": 904, "total": 1024, "checked_utc": "2026-10-14T14:07:03.191413+00:00"}
+INFO 10-14 22:07:03 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 22:07:05 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 22:07:06 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 22:07:08 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 22:07:12 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 22:07:13 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 22:07:18 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 22:07:22 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 22:07:26 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 22:07:31 [block_pool.py:378] Successfully reset prefix cache
+ACTIVE_TRAJ_NUM: [8, 8, 6, 1, 1, 1, 1, 1, 1, 1, 0]
+[评价进度] {"status": "running", "model": "official_grpo_v02", "phase": "T1024", "completed": 912, "total": 1024, "checked_utc": "2026-10-14T14:07:35.934986+00:00"}
+INFO 10-14 22:07:35 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 22:07:37 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 22:07:40 [block_pool.py:378] Successfully reset prefix cache
+ACTIVE_TRAJ_NUM: [8, 8, 4, 0]
+[评价进度] {"status": "running", "model": "official_grpo_v02", "phase": "T1024", "completed": 920, "total": 1024, "checked_utc": "2026-10-14T14:07:42.623137+00:00"}
+INFO 10-14 22:07:42 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 22:07:44 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 22:07:46 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 22:07:48 [block_pool.py:378] Successfully reset prefix cache
+ACTIVE_TRAJ_NUM: [8, 8, 8, 1, 0]
+[评价进度] {"status": "running", "model": "official_grpo_v02", "phase": "T1024", "completed": 928, "total": 1024, "checked_utc": "2026-10-14T14:07:49.834703+00:00"}
+INFO 10-14 22:07:49 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 22:07:51 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 22:07:52 [block_pool.py:378] Successfully reset prefix cache
+ACTIVE_TRAJ_NUM: [8, 8, 5, 0]
+[评价进度] {"status": "running", "model": "official_grpo_v02", "phase": "T1024", "completed": 936, "total": 1024, "checked_utc": "2026-10-14T14:07:54.637405+00:00"}
+INFO 10-14 22:07:54 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 22:07:56 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 22:07:59 [block_pool.py:378] Successfully reset prefix cache
+ACTIVE_TRAJ_NUM: [8, 8, 7, 0]
+--------------------------------
+Golden answers: ['Kairi in the video game series "Kingdom Hearts".']
+Extracted answer: Tails
+Solution string: <think>
+To answer the question, we need to find out which video game character the voice actress from the animated film Alpha and Omega voiced. First, we need to identify the voice actress from Alpha and Omega.
+</think>
+
+<search> who is the voice actress in the animated film Alpha and Omega </search><think>
+From the search results, we can see that Kate Higgins is the voice actress for Kate in Alpha and Omega. Now we need to find out which video game character she voiced.
+</think>
+
+<search> which video game character did Kate Higgins voice </search><think>
+Kate Higgins voiced Tails in the video game series Sonic the Hedgehog.
+</think>
+
+<think>
+Thus, the video game character Kate Higgins voiced is Tails.
+</think>
+
+<answer> Tails </answer>
+[评价进度] {"status": "running", "model": "official_grpo_v02", "phase": "T1024", "completed": 944, "total": 1024, "checked_utc": "2026-10-14T14:08:01.475210+00:00"}
+INFO 10-14 22:08:01 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 22:08:03 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 22:08:05 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 22:08:07 [block_pool.py:378] Successfully reset prefix cache
+ACTIVE_TRAJ_NUM: [8, 8, 8, 1, 0]
+[评价进度] {"status": "running", "model": "official_grpo_v02", "phase": "T1024", "completed": 952, "total": 1024, "checked_utc": "2026-10-14T14:08:08.438182+00:00"}
+INFO 10-14 22:08:08 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 22:08:10 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 22:08:12 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 22:08:14 [block_pool.py:378] Successfully reset prefix cache
+ACTIVE_TRAJ_NUM: [8, 8, 7, 1, 0]
+[评价进度] {"status": "running", "model": "official_grpo_v02", "phase": "T1024", "completed": 960, "total": 1024, "checked_utc": "2026-10-14T14:08:15.239350+00:00"}
+INFO 10-14 22:08:15 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 22:08:16 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 22:08:19 [block_pool.py:378] Successfully reset prefix cache
+ACTIVE_TRAJ_NUM: [8, 8, 6, 0]
+[评价进度] {"status": "running", "model": "official_grpo_v02", "phase": "T1024", "completed": 968, "total": 1024, "checked_utc": "2026-10-14T14:08:21.821111+00:00"}
+INFO 10-14 22:08:21 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 22:08:23 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 22:08:25 [block_pool.py:378] Successfully reset prefix cache
+ACTIVE_TRAJ_NUM: [8, 8, 5, 0]
+[评价进度] {"status": "running", "model": "official_grpo_v02", "phase": "T1024", "completed": 976, "total": 1024, "checked_utc": "2026-10-14T14:08:29.734156+00:00"}
+INFO 10-14 22:08:29 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 22:08:32 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 22:08:34 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 22:08:39 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 22:08:43 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 22:08:47 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 22:08:51 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 22:08:56 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 22:09:00 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 22:09:05 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 22:09:09 [block_pool.py:378] Successfully reset prefix cache
+ACTIVE_TRAJ_NUM: [8, 8, 4, 1, 1, 1, 1, 1, 1, 1, 1, 0]
+[评价进度] {"status": "running", "model": "official_grpo_v02", "phase": "T1024", "completed": 984, "total": 1024, "checked_utc": "2026-10-14T14:09:10.589465+00:00"}
+INFO 10-14 22:09:10 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 22:09:12 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 22:09:15 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 22:09:20 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 22:09:24 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 22:09:28 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 22:09:33 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 22:09:37 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 22:09:42 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 22:09:46 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 22:09:50 [block_pool.py:378] Successfully reset prefix cache
+ACTIVE_TRAJ_NUM: [8, 8, 6, 1, 1, 1, 1, 1, 1, 1, 1, 0]
+[评价进度] {"status": "running", "model": "official_grpo_v02", "phase": "T1024", "completed": 992, "total": 1024, "checked_utc": "2026-10-14T14:09:55.377916+00:00"}
+INFO 10-14 22:09:55 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 22:09:57 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 22:09:59 [block_pool.py:378] Successfully reset prefix cache
+ACTIVE_TRAJ_NUM: [8, 8, 7, 0]
+[评价进度] {"status": "running", "model": "official_grpo_v02", "phase": "T1024", "completed": 1000, "total": 1024, "checked_utc": "2026-10-14T14:10:01.005133+00:00"}
+INFO 10-14 22:10:01 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 22:10:02 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 22:10:05 [block_pool.py:378] Successfully reset prefix cache
+ACTIVE_TRAJ_NUM: [8, 8, 7, 0]
+[评价进度] {"status": "running", "model": "official_grpo_v02", "phase": "T1024", "completed": 1008, "total": 1024, "checked_utc": "2026-10-14T14:10:08.347920+00:00"}
+INFO 10-14 22:10:08 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 22:10:10 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 22:10:12 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 22:10:17 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 22:10:21 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 22:10:25 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 22:10:30 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 22:10:34 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 22:10:38 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 22:10:43 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 22:10:47 [block_pool.py:378] Successfully reset prefix cache
+ACTIVE_TRAJ_NUM: [8, 8, 5, 1, 1, 1, 1, 1, 1, 1, 1, 0]
+[评价进度] {"status": "running", "model": "official_grpo_v02", "phase": "T1024", "completed": 1016, "total": 1024, "checked_utc": "2026-10-14T14:10:52.229667+00:00"}
+INFO 10-14 22:10:52 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 22:10:54 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 22:10:56 [block_pool.py:378] Successfully reset prefix cache
+INFO 10-14 22:10:59 [block_pool.py:378] Successfully reset prefix cache
+ACTIVE_TRAJ_NUM: [8, 8, 8, 1, 0]
+--------------------------------
+Golden answers: ['Wanda Metropolitano']
+Extracted answer: Dalian Sports Center Stadium
+Solution string: <think>
+To find out where Yannick Ferreira Carrasco plays home games, I need to identify his team first. Then I can find the home stadium of that team.
+</think>
+
+<search> Yannick Ferreira Carrasco plays home games </search><think>
+From the information found, Yannick Ferreira Carrasco plays for Dalian Yifang. Now I need to find out where Dalian Yifang plays their home games.
+</think>
+
+<search> Where does Dalian Yifang play home games </search><think>
+Dalian Yifang plays their home games at Dalian Sports Center Stadium.
+</think>
+
+<answer> Dalian Sports Center Stadium </answer>
+[评价进度] {"status": "running", "model": "official_grpo_v02", "phase": "T1024", "completed": 1024, "total": 1024, "checked_utc": "2026-10-14T14:10:59.911147+00:00"}

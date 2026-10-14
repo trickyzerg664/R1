@@ -1,0 +1,29 @@
+{
+  "model": "base_qwen25_7b",
+  "policy": "T1024-equivalence-v1",
+  "evaluation_complete": true,
+  "review_complete": true,
+  "n": 1024,
+  "original_correct": 229,
+  "equivalent_added": 236,
+  "incorrect": 485,
+  "uncertain": 60,
+  "label_issue": 14,
+  "pending": 0,
+  "original_em": 0.2236328125,
+  "semantic_correct_confirmed": 465,
+  "semantic_accuracy": 0.4541015625,
+  "records_digest": "2da7df08aa324c7ada814e8b48006e1d00a8e531723691643f8575b70f5d2f19",
+  "sources": {
+    "nq": {
+      "n": 335,
+      "original_correct": 86,
+      "semantic_correct": 179
+    },
+    "hotpotqa": {
+      "n": 689,
+      "original_correct": 143,
+      "semantic_correct": 286
+    }
+  }
+}

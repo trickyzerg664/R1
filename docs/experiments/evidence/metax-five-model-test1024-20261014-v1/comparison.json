@@ -1,7 +1,8 @@
 {
   "completed_models": [
     "checkpoint80",
-    "base_qwen25_7b"
+    "base_qwen25_7b",
+    "official_grpo_v02"
   ],
   "model_order": [
     "checkpoint80",
@@ -75,6 +76,38 @@
         "total_seconds": 1553.3034512735903,
         "generation_seconds": 1490.182536708191,
         "search_seconds": 26.32419397123158
+      }
+    },
+    "official_grpo_v02": {
+      "summary": {
+        "n": 1024,
+        "correct": 456.0,
+        "em": 0.4453125,
+        "missing_answer": 18,
+        "format_anomaly": 18,
+        "model_information": 0,
+        "rewarded_model_information": 0,
+        "actual_search_queries": 1677,
+        "generated_tokens": 211843,
+        "forced_final": 22,
+        "generation_limit_hits": 187,
+        "sources": {
+          "hotpotqa": {
+            "n": 689,
+            "correct": 283.0,
+            "em": 0.4107402031930334
+          },
+          "nq": {
+            "n": 335,
+            "correct": 173.0,
+            "em": 0.5164179104477612
+          }
+        }
+      },
+      "cost": {
+        "total_seconds": 1552.9874150101095,
+        "generation_seconds": 1523.4648084733635,
+        "search_seconds": 9.417540716007352
       }
     }
   }
