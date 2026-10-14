@@ -1,0 +1,53 @@
+{
+  "schema_version": 1,
+  "output_dir": "/mnt/public/code/lyk/lzy/runs/metax-five-model-test1024-20261014-v1",
+  "formal_config": "/mnt/public/code/lyk/lzy/runs/metax-five-model-test1024-20261014-v1/formal-config.yaml",
+  "models": [
+    {
+      "label": "checkpoint80",
+      "step": 80,
+      "path": "/mnt/public/code/lyk/lzy/runs/metax-qwen7b-actionstop-resume40-20261013-v2/train/checkpoints/step_80/actor",
+      "checkpoint_root": "/mnt/public/code/lyk/lzy/runs/metax-qwen7b-actionstop-resume40-20261013-v2/train/checkpoints/step_80"
+    },
+    {
+      "label": "base_qwen25_7b",
+      "step": 0,
+      "path": "/mnt/public/model/huggingface/Qwen2.5-7B",
+      "baseline": "original Qwen2.5-7B initial model"
+    },
+    {
+      "label": "official_grpo_v02",
+      "step": 0,
+      "path": "/mnt/public/code/lyk/lzy/models/official-search-r1-v02/SearchR1-nq_hotpotqa_train-qwen2.5-7b-em-grpo-v0.2",
+      "official_revision": "deaa9d14b92dd4d481414e77b9f733c934df830a",
+      "official_manifest": "/mnt/public/code/lyk/lzy/models/official-search-r1-v02/SearchR1-nq_hotpotqa_train-qwen2.5-7b-em-grpo-v0.2/COMPLETE.json"
+    },
+    {
+      "label": "checkpoint60",
+      "step": 60,
+      "path": "/mnt/public/code/lyk/lzy/runs/metax-qwen7b-actionstop-resume40-20261013-v2/train/checkpoints/step_60/actor",
+      "checkpoint_root": "/mnt/public/code/lyk/lzy/runs/metax-qwen7b-actionstop-resume40-20261013-v2/train/checkpoints/step_60"
+    },
+    {
+      "label": "official_ppo_v02",
+      "step": 0,
+      "path": "/mnt/public/code/lyk/lzy/models/official-search-r1-v02/SearchR1-nq_hotpotqa_train-qwen2.5-7b-em-ppo-v0.2",
+      "official_revision": "053b6e1addc3affc5bf7e920b654b8ac9610c7ba",
+      "official_manifest": "/mnt/public/code/lyk/lzy/models/official-search-r1-v02/SearchR1-nq_hotpotqa_train-qwen2.5-7b-em-ppo-v0.2/COMPLETE.json"
+    }
+  ],
+  "batch_size": 8,
+  "seed": 20261014,
+  "datasets": {
+    "D256": "/mnt/public/code/lyk/lzy/runs/metax-five-model-test1024-20261014-v1/test1024-with-ids.parquet"
+  },
+  "dataset_name": "T1024",
+  "source_dataset": "/mnt/public/code/lyk/lzy/data/runs/paper-comparison-sampled-1024-20261014-v1/test1024.parquet",
+  "source_dataset_sha256": "9714767acdc73f98cdc1525519f472e4c245590507de1b57be3104e8a39d26e8",
+  "dataset_sha256": "d9a0f0e64f1ff608f65a32c19c692aae36728a7e5e4facb1dda73913fce8d094",
+  "expected_count": 1024,
+  "label_risk_ids": [],
+  "evaluation_phase": "T1024",
+  "process_checks_enabled": true,
+  "dataset_alias_note": "Shared evaluator maps non-D32 phases to datasets.D256; actual input is frozen T1024."
+}

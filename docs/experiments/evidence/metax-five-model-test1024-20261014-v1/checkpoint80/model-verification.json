@@ -1,0 +1,29 @@
+{
+  "model": {
+    "label": "checkpoint80",
+    "step": 80,
+    "path": "/mnt/public/code/lyk/lzy/runs/metax-qwen7b-actionstop-resume40-20261013-v2/train/checkpoints/step_80/actor",
+    "checkpoint_root": "/mnt/public/code/lyk/lzy/runs/metax-qwen7b-actionstop-resume40-20261013-v2/train/checkpoints/step_80"
+  },
+  "hashes": {
+    "added_tokens.json": "58b54bbe36fc752f79a24a271ef66a0a0830054b4dfad94bde757d851968060b",
+    "chat_template.jinja": "44d5f08f3f72b837eaad09f13a54c1f9f4eb58d75240334548b7fd52a5437fa5",
+    "config.json": "8e4eb92dc3d2d2ece63e10ad133706ece2270b67ba8feb3b94233f01673839ec",
+    "generation_config.json": "ce8f331663b06a8432e8531185822a55f95cc92cde3ff9518e05e0c73d6918d3",
+    "merges.txt": "8831e4f1a044471340f7c0a83d7bd71306a5b867e95fd870f74d0c5308a904d5",
+    "model-00001-of-00007.safetensors": "49475c716d999600c094ff6225f255ab0d67d3cce08a96d4009e89edf726edf9",
+    "model-00002-of-00007.safetensors": "0151a8993b3b41c6d4d55295985622aefad7ddc9d6a215f1ecbe8708bfb02207",
+    "model-00003-of-00007.safetensors": "6ea12b1b5d1b004c51f817c29c92cae991742d3d1ee9d2028c8d65ee58b8e771",
+    "model-00004-of-00007.safetensors": "f9c49fc9710595b83ad2f9e530f2ddf08f1e2677491248b198ead6ec2fab46ed",
+    "model-00005-of-00007.safetensors": "bb8561b40054b0ae99630fe8e95e85c0449d15dfab862e99a505497e2087c369",
+    "model-00006-of-00007.safetensors": "f5a3099315c33784d35a468c102e5b976879e3435e31c415496f00fb47681b22",
+    "model-00007-of-00007.safetensors": "5d95ae592bcfe8f5d8617f086a19b8ec86636f41c60b6ef55b730807c03e57bb",
+    "model.safetensors.index.json": "ce33f158b02459f5061781e8d4d003edffc90c8e6cc178da4634cebcb21e1e7c",
+    "special_tokens_map.json": "6676f091c8bc4d1b50146427cfde92073402866b87b6e39223227931b70083e9",
+    "tokenizer.json": "9c5ae00e602b8860cbd784ba82a8aa14e8feecec692e7076590d014d7b7fdafa",
+    "tokenizer_config.json": "60f6e7bc948cedd377a20f01d022ef664d026fbc93d72e0a9bdac233f8632181",
+    "vocab.json": "ca10d7e9fb3ed18575dd1e277a2579c16d108e32f27439684afa0e10b1440910"
+  },
+  "identity": "9bf7cfba6d483c556297fda33d4d72c3a22c94c69e09f2ff85fc104c48d2cc31",
+  "optimizer_state_verified_here": false
+}
