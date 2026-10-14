@@ -1,0 +1,142 @@
+{
+  "checked_utc": "2026-10-14T11:18:40.226382+00:00",
+  "dataset": "/mnt/public/code/lyk/lzy/runs/metax-checkpoint-curve-d256-20261005-v2/D256.parquet",
+  "dataset_sha256": "4ba6e0289186d3ef5fb2536d098d62efaf9fa6f6fb1361f061fe9d34f0e11216",
+  "identical_questions_prompts_targets_order": true,
+  "source_counts": {
+    "nq": 120,
+    "hotpotqa": 136
+  },
+  "score": "validation-answers.jsonl reward; binary answer EM, checked against legacy_reward",
+  "comparison_limit": "Steps20/40 used pre-action-stop generation; steps60/80 used action_stop=true. Historical comparisons across this boundary include inference protocol change.",
+  "checkpoints": [
+    {
+      "step": 20,
+      "run_id": "metax-qwen7b-quality-100-20261012-v1",
+      "n": 256,
+      "correct": 114,
+      "em": 0.4453125,
+      "sources": {
+        "hotpotqa": {
+          "n": 136,
+          "correct": 62,
+          "em": 0.45588235294117646
+        },
+        "nq": {
+          "n": 120,
+          "correct": 52,
+          "em": 0.43333333333333335
+        }
+      },
+      "empty_extracted_answer": 0,
+      "first_record_utc": "2026-10-12T19:21:05.791718+00:00",
+      "last_record_utc": "2026-10-12T19:44:12.769382+00:00",
+      "legacy_score_differences": 0,
+      "action_stop": false
+    },
+    {
+      "step": 40,
+      "run_id": "metax-qwen7b-quality-100-20261012-v1",
+      "n": 256,
+      "correct": 124,
+      "em": 0.484375,
+      "sources": {
+        "hotpotqa": {
+          "n": 136,
+          "correct": 70,
+          "em": 0.5147058823529411
+        },
+        "nq": {
+          "n": 120,
+          "correct": 54,
+          "em": 0.45
+        }
+      },
+      "empty_extracted_answer": 0,
+      "first_record_utc": "2026-10-13T05:01:37.774389+00:00",
+      "last_record_utc": "2026-10-13T05:44:57.506500+00:00",
+      "legacy_score_differences": 0,
+      "action_stop": false
+    },
+    {
+      "step": 60,
+      "run_id": "metax-qwen7b-actionstop-resume40-20261013-v2",
+      "n": 256,
+      "correct": 129,
+      "em": 0.50390625,
+      "sources": {
+        "hotpotqa": {
+          "n": 136,
+          "correct": 71,
+          "em": 0.5220588235294118
+        },
+        "nq": {
+          "n": 120,
+          "correct": 58,
+          "em": 0.48333333333333334
+        }
+      },
+      "empty_extracted_answer": 0,
+      "first_record_utc": "2026-10-13T19:21:05.890471+00:00",
+      "last_record_utc": "2026-10-13T19:56:56.094374+00:00",
+      "legacy_score_differences": 0,
+      "action_stop": true
+    },
+    {
+      "step": 80,
+      "run_id": "metax-qwen7b-actionstop-resume40-20261013-v2",
+      "n": 256,
+      "correct": 130,
+      "em": 0.5078125,
+      "sources": {
+        "hotpotqa": {
+          "n": 136,
+          "correct": 77,
+          "em": 0.5661764705882353
+        },
+        "nq": {
+          "n": 120,
+          "correct": 53,
+          "em": 0.44166666666666665
+        }
+      },
+      "empty_extracted_answer": 0,
+      "first_record_utc": "2026-10-14T10:33:50.614342+00:00",
+      "last_record_utc": "2026-10-14T11:04:06.809783+00:00",
+      "legacy_score_differences": 0,
+      "action_stop": true
+    }
+  ],
+  "paired_vs80": [
+    {
+      "old_step": 20,
+      "new_step": 80,
+      "wrong_to_correct": 27,
+      "correct_to_wrong": 11,
+      "both_correct": 103,
+      "both_wrong": 115,
+      "net_correct_delta": 16,
+      "exact_mcnemar_p": 0.013852965261321515
+    },
+    {
+      "old_step": 40,
+      "new_step": 80,
+      "wrong_to_correct": 20,
+      "correct_to_wrong": 14,
+      "both_correct": 110,
+      "both_wrong": 112,
+      "net_correct_delta": 6,
+      "exact_mcnemar_p": 0.39152830513194203
+    },
+    {
+      "old_step": 60,
+      "new_step": 80,
+      "wrong_to_correct": 16,
+      "correct_to_wrong": 15,
+      "both_correct": 114,
+      "both_wrong": 111,
+      "net_correct_delta": 1,
+      "exact_mcnemar_p": 1.0
+    }
+  ]
+}

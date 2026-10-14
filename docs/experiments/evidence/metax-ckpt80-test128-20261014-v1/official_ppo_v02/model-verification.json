@@ -1,0 +1,30 @@
+{
+  "model": {
+    "label": "official_ppo_v02",
+    "step": 0,
+    "path": "/mnt/public/code/lyk/lzy/models/official-search-r1-v02/SearchR1-nq_hotpotqa_train-qwen2.5-7b-em-ppo-v0.2",
+    "official_revision": "053b6e1addc3affc5bf7e920b654b8ac9610c7ba",
+    "official_manifest": "/mnt/public/code/lyk/lzy/models/official-search-r1-v02/SearchR1-nq_hotpotqa_train-qwen2.5-7b-em-ppo-v0.2/COMPLETE.json"
+  },
+  "hashes": {
+    "COMPLETE.json": "48528cf8b4bc8864d43c953ba0a05dd2cc4848ed4ee44e54c39ca95db22bbf3b",
+    "added_tokens.json": "58b54bbe36fc752f79a24a271ef66a0a0830054b4dfad94bde757d851968060b",
+    "config.json": "08ef4a77735c715635f38c0aa5bcb8939775130160ed11c701642f7b19446a1d",
+    "generation_config.json": "61c976d8443e6a7b4956b1847e4f970ab1ff5ad0db2b3ca3970b711c098c299f",
+    "merges.txt": "8831e4f1a044471340f7c0a83d7bd71306a5b867e95fd870f74d0c5308a904d5",
+    "model-00001-of-00007.safetensors": "1d535181c20bb7fab7345354d989f4ca17c7b1fec4e4edb1193c7391e85a9501",
+    "model-00002-of-00007.safetensors": "10f488b36a64e4c23b8c713bf3a2b35ac7859ee2aee404e93faa4d042e469c54",
+    "model-00003-of-00007.safetensors": "0faac10332fd480f43c0acba4ae88e686bce444bb8e077daf820fafd4b45489d",
+    "model-00004-of-00007.safetensors": "a1c3ac9984a53f933593e26e505ba76553c91e8f7609debfae59e3f75cfdd677",
+    "model-00005-of-00007.safetensors": "d5ef01aca6fc6d2ff6d4dc439cc9671d38abdc420f456ca9a3e0cd3657b1a32a",
+    "model-00006-of-00007.safetensors": "083bff0c835345c899f3f02d4bb81cc26ddee86dff6bb37175a76b805a27770e",
+    "model-00007-of-00007.safetensors": "d4783a6d60bda6ffc58e61d56b13f93f5736a1ec25a963b6f9dc079557d1c730",
+    "model.safetensors.index.json": "3cb581aa586322d386864a9f80d0adbaa1f0f838cc310d7d7670990fa42121be",
+    "special_tokens_map.json": "6676f091c8bc4d1b50146427cfde92073402866b87b6e39223227931b70083e9",
+    "tokenizer.json": "9c5ae00e602b8860cbd784ba82a8aa14e8feecec692e7076590d014d7b7fdafa",
+    "tokenizer_config.json": "a5dae0102f342a3b6bc2a4d03f430ed83666dcab8879c9ee44c08a3d9095132d",
+    "vocab.json": "ca10d7e9fb3ed18575dd1e277a2579c16d108e32f27439684afa0e10b1440910"
+  },
+  "identity": "e9f43c39718f142dde14d291feb25b21096170d57bf46d150ae0106e490e649a",
+  "optimizer_state_verified_here": false
+}

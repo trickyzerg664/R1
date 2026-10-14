@@ -1,0 +1,41 @@
+{
+  "schema_version": 1,
+  "output_dir": "/mnt/public/code/lyk/lzy/runs/metax-ckpt80-test128-20261014-v1",
+  "formal_config": "/mnt/public/code/lyk/lzy/runs/metax-ckpt80-test128-20261014-v1/formal-config.yaml",
+  "models": [
+    {
+      "label": "checkpoint80",
+      "step": 80,
+      "path": "/mnt/public/code/lyk/lzy/runs/metax-qwen7b-actionstop-resume40-20261013-v2/train/checkpoints/step_80/actor",
+      "checkpoint_root": "/mnt/public/code/lyk/lzy/runs/metax-qwen7b-actionstop-resume40-20261013-v2/train/checkpoints/step_80"
+    },
+    {
+      "label": "official_grpo_v02",
+      "step": 0,
+      "path": "/mnt/public/code/lyk/lzy/models/official-search-r1-v02/SearchR1-nq_hotpotqa_train-qwen2.5-7b-em-grpo-v0.2",
+      "official_revision": "deaa9d14b92dd4d481414e77b9f733c934df830a",
+      "official_manifest": "/mnt/public/code/lyk/lzy/models/official-search-r1-v02/SearchR1-nq_hotpotqa_train-qwen2.5-7b-em-grpo-v0.2/COMPLETE.json"
+    },
+    {
+      "label": "official_ppo_v02",
+      "step": 0,
+      "path": "/mnt/public/code/lyk/lzy/models/official-search-r1-v02/SearchR1-nq_hotpotqa_train-qwen2.5-7b-em-ppo-v0.2",
+      "official_revision": "053b6e1addc3affc5bf7e920b654b8ac9610c7ba",
+      "official_manifest": "/mnt/public/code/lyk/lzy/models/official-search-r1-v02/SearchR1-nq_hotpotqa_train-qwen2.5-7b-em-ppo-v0.2/COMPLETE.json"
+    }
+  ],
+  "batch_size": 8,
+  "seed": 20261014,
+  "datasets": {
+    "D256": "/mnt/public/code/lyk/lzy/runs/metax-ckpt80-test128-20261014-v1/test128-with-ids.parquet"
+  },
+  "dataset_name": "T128",
+  "source_dataset": "/mnt/public/code/lyk/lzy/data/runs/paper-comparison-sampled-128-20261014-v1/test128.parquet",
+  "source_dataset_sha256": "8d6414f06366a0eb451f6828987db99ad1c6a1aa14b603813bdee21934f396a2",
+  "dataset_sha256": "d926941e88ec3632e1c99b7646b2d3e7ecfcc56864f52299acb2207631dcd60c",
+  "expected_count": 128,
+  "label_risk_ids": [],
+  "evaluation_phase": "T128",
+  "process_checks_enabled": true,
+  "dataset_alias_note": "Shared evaluator maps non-D32 phase to datasets.D256; actual frozen file is test128 and output phase T128."
+}

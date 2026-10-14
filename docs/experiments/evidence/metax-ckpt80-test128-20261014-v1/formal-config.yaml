@@ -1,0 +1,245 @@
+data:
+  tokenizer: null
+  train_files: /mnt/public/code/lyk/lzy/data/runs/formal-pdt-7b8-v1/P.parquet
+  val_files: /mnt/public/code/lyk/lzy/runs/metax-checkpoint-curve-d256-20261005-v2/D256.parquet
+  train_data_num: null
+  val_data_num: null
+  prompt_key: prompt
+  max_prompt_length: 4096
+  max_response_length: 256
+  max_start_length: 256
+  max_obs_length: 2048
+  train_batch_size: 32
+  val_batch_size: 8
+  return_raw_input_ids: false
+  return_raw_chat: false
+  shuffle_train_dataloader: true
+  observation_truncation: structured
+  context_policy: bounded
+  record_generation_diagnostics: true
+  record_token_diagnostics: true
+actor_rollout_ref:
+  experiment_seed: null
+  hybrid_engine: true
+  model:
+    path: /mnt/public/model/huggingface/Qwen2.5-7B
+    external_lib: null
+    override_config: {}
+    enable_gradient_checkpointing: true
+    attn_implementation: flash_attention_2
+    use_remove_padding: false
+  actor:
+    strategy: fsdp
+    ppo_mini_batch_size: 128
+    ppo_micro_batch_size: 8
+    use_dynamic_bsz: false
+    ppo_max_token_len_per_gpu: 16384
+    grad_clip: 1.0
+    state_masking: true
+    clip_ratio: 0.2
+    entropy_coeff: 0.001
+    use_kl_loss: true
+    kl_loss_coef: 0.001
+    kl_loss_type: low_var_kl
+    ppo_epochs: 1
+    shuffle: false
+    ulysses_sequence_parallel_size: 1
+    optim:
+      lr: 1.0e-06
+      warmup_steps: 10
+      lr_warmup_steps_ratio: 0.0
+      min_lr_ratio: null
+      warmup_style: constant
+      total_training_steps: -1
+    fsdp_config:
+      wrap_policy:
+        min_num_params: 0
+      param_offload: true
+      grad_offload: false
+      optimizer_offload: true
+      fsdp_size: -1
+      grad_scaler_init_scale: 16
+    response_logits_only: true
+    checkpoint_token_statistics: true
+    loss_numerics: safe_v1
+    token_statistics_chunk_size: 32
+    activation_offload: true
+    memory_diagnostics: true
+    stability_diagnostics:
+      enabled: true
+      probe_after_update: false
+      parameter_sample_size: 256
+  ref:
+    model_path: /mnt/public/model/huggingface/Qwen2.5-7B
+    fsdp_config:
+      param_offload: true
+      wrap_policy:
+        min_num_params: 0
+      fsdp_size: -1
+    log_prob_micro_batch_size: 8
+    log_prob_use_dynamic_bsz: false
+    log_prob_max_token_len_per_gpu: 16384
+    ulysses_sequence_parallel_size: 1
+    token_statistics_chunk_size: 32
+    response_logits_only: true
+    memory_diagnostics: true
+  rollout:
+    name: vllm
+    temperature: 0.0
+    top_k: -1
+    top_p: 1.0
+    prompt_length: 4096
+    response_length: 256
+    dtype: float16
+    gpu_memory_utilization: 0.45
+    ignore_eos: false
+    enforce_eager: true
+    free_cache_engine: false
+    load_format: hf
+    tensor_model_parallel_size: 1
+    max_num_batched_tokens: 4352
+    max_num_seqs: 64
+    log_prob_micro_batch_size: 8
+    log_prob_use_dynamic_bsz: false
+    log_prob_max_token_len_per_gpu: 16384
+    do_sample: false
+    'n': 1
+    n_agent: 1
+    offload_weights_to_cpu: false
+    action_stop: true
+critic:
+  strategy: fsdp
+  optim:
+    lr: 1.0e-05
+    lr_warmup_steps_ratio: 0.0
+    min_lr_ratio: null
+    warmup_style: constant
+    total_training_steps: -1
+  model:
+    path: ~/models/deepseek-llm-7b-chat
+    tokenizer_path: /mnt/public/model/huggingface/Qwen2.5-7B
+    override_config: {}
+    external_lib: null
+    enable_gradient_checkpointing: false
+    use_remove_padding: false
+    fsdp_config:
+      param_offload: false
+      grad_offload: false
+      optimizer_offload: false
+      wrap_policy:
+        min_num_params: 0
+      fsdp_size: -1
+  ppo_mini_batch_size: 128
+  ppo_micro_batch_size: 64
+  forward_micro_batch_size: 64
+  use_dynamic_bsz: false
+  ppo_max_token_len_per_gpu: 32768
+  forward_max_token_len_per_gpu: 32768
+  ulysses_sequence_parallel_size: 1
+  ppo_epochs: 1
+  shuffle: false
+  grad_clip: 1.0
+  cliprange_value: 0.5
+reward_model:
+  answer_mode: response_only_v1
+  validation_audit_path: /mnt/public/code/lyk/lzy/runs/metax-qwen7b-actionstop-resume40-20261013-v2/train/validation-answers.jsonl
+  enable: false
+  strategy: fsdp
+  model:
+    input_tokenizer: /mnt/public/model/huggingface/Qwen2.5-7B
+    path: ~/models/FsfairX-LLaMA3-RM-v0.1
+    external_lib: null
+    use_remove_padding: false
+    fsdp_config:
+      min_num_params: 0
+      param_offload: false
+  micro_batch_size: 64
+  max_length: null
+  ulysses_sequence_parallel_size: 1
+  use_dynamic_bsz: false
+  forward_max_token_len_per_gpu: 32768
+  structure_format_score: 0
+  final_format_score: 0
+  retrieval_score: 0
+retriever:
+  timeout: 600
+  url: http://127.0.0.1:8000/retrieve
+  topk: 3
+algorithm:
+  gamma: 1.0
+  lam: 1.0
+  adv_estimator: grpo
+  no_think_rl: false
+  kl_penalty: kl
+  kl_ctrl:
+    type: fixed
+    kl_coef: 0.001
+  state_masking:
+    start_state_marker: <information>
+    end_state_marker: </information>
+trainer:
+  total_epochs: 30
+  total_training_steps: 100
+  project_name: metax_process_r1_100_b32
+  experiment_name: metax-qwen7b-actionstop-resume40-20261013-v2-train
+  logger:
+  - console
+  nnodes: 1
+  n_gpus_per_node: 8
+  save_freq: 20
+  test_freq: 20
+  critic_warmup: 0
+  default_hdfs_dir: null
+  default_local_dir: /mnt/public/code/lyk/lzy/runs/metax-qwen7b-actionstop-resume40-20261013-v2/train/checkpoints
+  val_before_train: false
+max_turns: 10
+do_search: true
+difficulty:
+  enabled: true
+  mode: train
+  seed: 42
+  score_seed: 1729
+  score_batch_size: 8
+  dynamic_filter:
+    enabled: true
+    max_rounds: 16
+    eligibility: answer_correct_3_6
+    on_exhaustion: refill_7_8_v1
+  score_trace_chars: 0
+  output_dir: /mnt/public/code/lyk/lzy/runs/metax-qwen7b-actionstop-resume40-20261013-v2/train
+  labels: null
+  ratios: null
+  score_output: null
+  refresh_steps: []
+  refresh_every: 0
+  resume: /mnt/public/code/lyk/lzy/runs/metax-qwen7b-quality-100-20261012-v1/train/checkpoints/step_40
+  resume_mode: continue
+  additional_steps: null
+  retrieval_id: wiki18-e5-metax-gpu-fp32-shard8-20261008-v1
+  lineage: null
+  initial_model_id: null
+  resume_generation_adaptation: action_stop_v1
+  resume_sampling_adaptation: refill_7_8_v1
+process_checks:
+  enabled: true
+  reward_gate: true
+  missing_answer_penalty: 0.1
+  audit_path: /mnt/public/code/lyk/lzy/runs/metax-ckpt80-test128-20261014-v1/unused-global-audit.jsonl
+  reward_variant: bounded_invalid_v1
+  invalid_action_penalty: 0.02
+  process_penalty_cap: 0.12
+  repetition:
+    enabled: true
+trajectory_logging:
+  enabled: false
+  console_samples_per_source: 1
+  every_n_batches: 1
+  max_chars_per_trajectory: 12000
+  file_path: /mnt/public/code/lyk/lzy/runs/metax-qwen7b-actionstop-resume40-20261013-v2/train/trajectories.readable.log
+  file_samples_per_source: 0
+  search_result_max_chars: 1000
+hydra:
+  run:
+    dir: /mnt/public/code/lyk/lzy/runs/metax-qwen7b-quality-100-20261012-v1/train/hydra
+  job:
+    chdir: false
