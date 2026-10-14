@@ -3,7 +3,8 @@
     "checkpoint80",
     "base_qwen25_7b",
     "official_grpo_v02",
-    "checkpoint60"
+    "checkpoint60",
+    "official_ppo_v02"
   ],
   "model_order": [
     "checkpoint80",
@@ -141,6 +142,38 @@
         "total_seconds": 897.8609451688826,
         "generation_seconds": 831.1066023278981,
         "search_seconds": 25.580290896818042
+      }
+    },
+    "official_ppo_v02": {
+      "summary": {
+        "n": 1024,
+        "correct": 485.0,
+        "em": 0.4736328125,
+        "missing_answer": 0,
+        "format_anomaly": 1,
+        "model_information": 0,
+        "rewarded_model_information": 0,
+        "actual_search_queries": 2620,
+        "generated_tokens": 192208,
+        "forced_final": 1,
+        "generation_limit_hits": 3,
+        "sources": {
+          "hotpotqa": {
+            "n": 689,
+            "correct": 307.0,
+            "em": 0.4455732946298984
+          },
+          "nq": {
+            "n": 335,
+            "correct": 178.0,
+            "em": 0.5313432835820896
+          }
+        }
+      },
+      "cost": {
+        "total_seconds": 1071.5225839745253,
+        "generation_seconds": 1032.0025816187263,
+        "search_seconds": 16.10111854970455
       }
     }
   }
