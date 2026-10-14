@@ -1,0 +1,12 @@
+{
+  "checked_utc": "2026-10-14T14:39:37.280469+00:00",
+  "reason": "独立发布索引未推进工作区HEAD；用户授权修复Git不同步",
+  "cpu_regression": "7项真实临时Git CPU回归通过",
+  "gpu_evaluation_unchanged": true,
+  "original_script_backup": "/mnt/public/code/lyk/lzy/maintenance/test1024-five-models-20261014/git-sync-fix/async_publish1024.before.py",
+  "files": {
+    "git_checkout_sync.py": "159b257dfd2db7072a470a6d3b91cab1f81b83d5c49e3fba93ac6396c84654fc",
+    "test_git_checkout_sync.py": "5fd5984bc89fb1bbc556c8dd291c9854164a9a222a9ae711b20435fcff4a42df",
+    "async_publish1024.py": "7d6fec1b8a1d58f35da400e9a81fca1399e633469fecb87badf297353e29092d"
+  }
+}
