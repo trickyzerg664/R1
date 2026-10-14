@@ -1,0 +1,207 @@
+{
+  "status": "completed",
+  "repo": "trickyzerg/R1-mx",
+  "prefix": "runs/metax-five-model-test1024-20261014-v1",
+  "verified": true,
+  "errors": [],
+  "files": {
+    "TEST_RESULTS_SUMMARY.md": {
+      "bytes": 1219,
+      "sha256": "286b1ff17b51a25febbad02a205e7ddaa3c505255696a1ac134058b4859312f7"
+    },
+    "base_qwen25_7b/T1024/llm-as-a-judge/judgments.jsonl": {
+      "bytes": 517128,
+      "sha256": "230ba9c591ce297bce904254ed8e683eceb5283717fb55f4c9a0e86f45a4cad6"
+    },
+    "base_qwen25_7b/T1024/llm-as-a-judge/llm-as-a-judge.json": {
+      "bytes": 1260,
+      "sha256": "e9f476bb77007316d74ec633bcca475c8171c775d9e0df07806db5139c290966"
+    },
+    "base_qwen25_7b/T1024/llm-as-a-judge/review.md": {
+      "bytes": 270134,
+      "sha256": "3e35634c86b05907ce1a627f38c9f5e4349271df5cf04027a76b5476d350f928"
+    },
+    "base_qwen25_7b/T1024/llm-as-a-judge/summary.json": {
+      "bytes": 678,
+      "sha256": "d838045c484a5f4f0866b4b935004afc720f29dee6f7af4e6b8c0f4f5326a173"
+    },
+    "checkpoint60/T1024/llm-as-a-judge/judgments.jsonl": {
+      "bytes": 458473,
+      "sha256": "cf2a985e3190893c4905c575ff3c6acf1ca876418a412f4b7bfa6fdec0a9861b"
+    },
+    "checkpoint60/T1024/llm-as-a-judge/llm-as-a-judge.json": {
+      "bytes": 1255,
+      "sha256": "87932c93e63a74c41954097c76e72285827534701035bb428bd0998269405c55"
+    },
+    "checkpoint60/T1024/llm-as-a-judge/review.md": {
+      "bytes": 161451,
+      "sha256": "7e1fd15a8a0b46675a346fc0fd6fff408a9570814d90a282625bd29c4530eaf2"
+    },
+    "checkpoint60/T1024/llm-as-a-judge/summary.json": {
+      "bytes": 673,
+      "sha256": "3acca3a227da97a5bc6be5be384185c666b62185f16a0ce3457dbd8c5d4c3290"
+    },
+    "checkpoint80/T1024/llm-as-a-judge/judgments.jsonl": {
+      "bytes": 456383,
+      "sha256": "538462b404e79ffd5807cec0419e6a65e51aef725fb6e5f62c6f70d19bba6643"
+    },
+    "checkpoint80/T1024/llm-as-a-judge/llm-as-a-judge.json": {
+      "bytes": 1255,
+      "sha256": "b256c2c5a10c1f0d637a9ed83f10a0b6c5438a2512294589bb6fb6862df52738"
+    },
+    "checkpoint80/T1024/llm-as-a-judge/review.md": {
+      "bytes": 157021,
+      "sha256": "681566a76dbf3d57dfaa6d3057060089de8d834e16dece34ab88c42f29c59adc"
+    },
+    "checkpoint80/T1024/llm-as-a-judge/summary.json": {
+      "bytes": 673,
+      "sha256": "2e1bcc7cd50e49c3606a4ed45a359f8bf5948fe71152b016f52dfc43a17565ba"
+    },
+    "official_grpo_v02/T1024/llm-as-a-judge/judgments.jsonl": {
+      "bytes": 458300,
+      "sha256": "170fcf8390b769d24b23aa02c739ec944f3a004957b1204e91630a8afcd0e168"
+    },
+    "official_grpo_v02/T1024/llm-as-a-judge/llm-as-a-judge.json": {
+      "bytes": 1261,
+      "sha256": "afebd8a5360abf8640327f5339f87534569122977b5cca3fb9b4928cef1b4213"
+    },
+    "official_grpo_v02/T1024/llm-as-a-judge/review.md": {
+      "bytes": 165333,
+      "sha256": "8413a379e2d25cd17a8ec2fe3ff6dac593fb838ba77e76c13e1d86df3805d7ac"
+    },
+    "official_grpo_v02/T1024/llm-as-a-judge/summary.json": {
+      "bytes": 679,
+      "sha256": "f526a39e876fd026e6ad48052d6d60dfcba7a850e4db0a05ea24ca8f82ecf4fc"
+    },
+    "official_ppo_v02/T1024/llm-as-a-judge/judgments.jsonl": {
+      "bytes": 456660,
+      "sha256": "98cb6e66a03f5cdddb0e09a0e2a182adb68b731f0ca25647eb67452626eb0d04"
+    },
+    "official_ppo_v02/T1024/llm-as-a-judge/llm-as-a-judge.json": {
+      "bytes": 1262,
+      "sha256": "a4867ef9223a17fd83af26aae78fa508b3bcc24b142c3d2231e4b4575eb45099"
+    },
+    "official_ppo_v02/T1024/llm-as-a-judge/review.md": {
+      "bytes": 157472,
+      "sha256": "4b8a7c1097b3ca28e0e09ce618096e48155f9a5665bb13950353689d277836a6"
+    },
+    "official_ppo_v02/T1024/llm-as-a-judge/summary.json": {
+      "bytes": 680,
+      "sha256": "988e6a0c19963c45d7a30fa0e5ddb7e7edafbd6d35489ce555dbff6a3cf010f9"
+    },
+    "semantic-review/POLICY.md": {
+      "bytes": 2105,
+      "sha256": "77b876c6b5bb620a5a22fe2d43a39238de8f8e38d06856ea927915befb3240ee"
+    },
+    "semantic-review/base_qwen25_7b/judgments.jsonl": {
+      "bytes": 517128,
+      "sha256": "230ba9c591ce297bce904254ed8e683eceb5283717fb55f4c9a0e86f45a4cad6"
+    },
+    "semantic-review/base_qwen25_7b/llm-as-a-judge.json": {
+      "bytes": 1260,
+      "sha256": "e9f476bb77007316d74ec633bcca475c8171c775d9e0df07806db5139c290966"
+    },
+    "semantic-review/base_qwen25_7b/review.md": {
+      "bytes": 270134,
+      "sha256": "3e35634c86b05907ce1a627f38c9f5e4349271df5cf04027a76b5476d350f928"
+    },
+    "semantic-review/base_qwen25_7b/summary.json": {
+      "bytes": 678,
+      "sha256": "d838045c484a5f4f0866b4b935004afc720f29dee6f7af4e6b8c0f4f5326a173"
+    },
+    "semantic-review/checkpoint60/judgments.jsonl": {
+      "bytes": 458473,
+      "sha256": "cf2a985e3190893c4905c575ff3c6acf1ca876418a412f4b7bfa6fdec0a9861b"
+    },
+    "semantic-review/checkpoint60/llm-as-a-judge.json": {
+      "bytes": 1255,
+      "sha256": "87932c93e63a74c41954097c76e72285827534701035bb428bd0998269405c55"
+    },
+    "semantic-review/checkpoint60/review.md": {
+      "bytes": 161451,
+      "sha256": "7e1fd15a8a0b46675a346fc0fd6fff408a9570814d90a282625bd29c4530eaf2"
+    },
+    "semantic-review/checkpoint60/summary.json": {
+      "bytes": 673,
+      "sha256": "3acca3a227da97a5bc6be5be384185c666b62185f16a0ce3457dbd8c5d4c3290"
+    },
+    "semantic-review/checkpoint80/judgments.jsonl": {
+      "bytes": 456383,
+      "sha256": "538462b404e79ffd5807cec0419e6a65e51aef725fb6e5f62c6f70d19bba6643"
+    },
+    "semantic-review/checkpoint80/llm-as-a-judge.json": {
+      "bytes": 1255,
+      "sha256": "b256c2c5a10c1f0d637a9ed83f10a0b6c5438a2512294589bb6fb6862df52738"
+    },
+    "semantic-review/checkpoint80/review.md": {
+      "bytes": 157021,
+      "sha256": "681566a76dbf3d57dfaa6d3057060089de8d834e16dece34ab88c42f29c59adc"
+    },
+    "semantic-review/checkpoint80/summary.json": {
+      "bytes": 673,
+      "sha256": "2e1bcc7cd50e49c3606a4ed45a359f8bf5948fe71152b016f52dfc43a17565ba"
+    },
+    "semantic-review/comparison.md": {
+      "bytes": 1219,
+      "sha256": "286b1ff17b51a25febbad02a205e7ddaa3c505255696a1ac134058b4859312f7"
+    },
+    "semantic-review/decisions.json": {
+      "bytes": 1220884,
+      "sha256": "acf46dbe6dd9243b5d4e52c41e664644b940d1288cc26ea0c04244b1ee0345f3"
+    },
+    "semantic-review/judge-metadata.json": {
+      "bytes": 537,
+      "sha256": "e460cca029ed150dba2c14473ee696ba944b628542caab89dc24f15a9e9a9bdd"
+    },
+    "semantic-review/official_grpo_v02/judgments.jsonl": {
+      "bytes": 458300,
+      "sha256": "170fcf8390b769d24b23aa02c739ec944f3a004957b1204e91630a8afcd0e168"
+    },
+    "semantic-review/official_grpo_v02/llm-as-a-judge.json": {
+      "bytes": 1261,
+      "sha256": "afebd8a5360abf8640327f5339f87534569122977b5cca3fb9b4928cef1b4213"
+    },
+    "semantic-review/official_grpo_v02/review.md": {
+      "bytes": 165333,
+      "sha256": "8413a379e2d25cd17a8ec2fe3ff6dac593fb838ba77e76c13e1d86df3805d7ac"
+    },
+    "semantic-review/official_grpo_v02/summary.json": {
+      "bytes": 679,
+      "sha256": "f526a39e876fd026e6ad48052d6d60dfcba7a850e4db0a05ea24ca8f82ecf4fc"
+    },
+    "semantic-review/official_ppo_v02/judgments.jsonl": {
+      "bytes": 456660,
+      "sha256": "98cb6e66a03f5cdddb0e09a0e2a182adb68b731f0ca25647eb67452626eb0d04"
+    },
+    "semantic-review/official_ppo_v02/llm-as-a-judge.json": {
+      "bytes": 1262,
+      "sha256": "a4867ef9223a17fd83af26aae78fa508b3bcc24b142c3d2231e4b4575eb45099"
+    },
+    "semantic-review/official_ppo_v02/review.md": {
+      "bytes": 157472,
+      "sha256": "4b8a7c1097b3ca28e0e09ce618096e48155f9a5665bb13950353689d277836a6"
+    },
+    "semantic-review/official_ppo_v02/summary.json": {
+      "bytes": 680,
+      "sha256": "988e6a0c19963c45d7a30fa0e5ddb7e7edafbd6d35489ce555dbff6a3cf010f9"
+    },
+    "semantic-review/original-results-integrity.json": {
+      "bytes": 774,
+      "sha256": "3a1996f0a317f232daa7f8b03bab2f21f74353edd02b1ef8cfd915be9d16c708"
+    },
+    "semantic-review/pending.json": {
+      "bytes": 3,
+      "sha256": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570"
+    },
+    "semantic-review/pending.jsonl": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "semantic-review/status.json": {
+      "bytes": 4078,
+      "sha256": "6bd7f1246429708cdf11e8b82f5c2a30b1b7d86166b46979ec57c602be638c8a"
+    }
+  },
+  "bytes": 7766881,
+  "checked_utc": "2026-10-14T14:56:09.709295+00:00"
+}

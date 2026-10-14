@@ -1,0 +1,29 @@
+{
+  "model": "checkpoint80",
+  "policy": "T1024-equivalence-v1",
+  "evaluation_complete": true,
+  "review_complete": true,
+  "n": 1024,
+  "original_correct": 488,
+  "equivalent_added": 134,
+  "incorrect": 325,
+  "uncertain": 62,
+  "label_issue": 15,
+  "pending": 0,
+  "original_em": 0.4765625,
+  "semantic_correct_confirmed": 622,
+  "semantic_accuracy": 0.607421875,
+  "records_digest": "0dda732e4230aec13b29a3a7748033ecc67a82f264c9626d3c90377045f8997b",
+  "sources": {
+    "nq": {
+      "n": 335,
+      "original_correct": 179,
+      "semantic_correct": 209
+    },
+    "hotpotqa": {
+      "n": 689,
+      "original_correct": 309,
+      "semantic_correct": 413
+    }
+  }
+}

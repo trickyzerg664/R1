@@ -1,0 +1,15 @@
+{
+  "method": "EM_false_negative_semantic_review",
+  "display_name": "LLM-as-a-Judge / Codex语义复核",
+  "reviewer": "Codex逐题审阅",
+  "policy": "T1024-equivalence-v1",
+  "scope": "仅逐题复核原始EM错误；原EM正确项保留原判",
+  "external_judge_model": null,
+  "judge_temperature": null,
+  "labels_modified": false,
+  "raw_results_modified": false,
+  "uncertain_counted_correct": false,
+  "gpu_inference_started": false,
+  "all_models_review_complete": true,
+  "checked_utc": "2026-10-14T14:52:50.093931+00:00"
+}

@@ -1,6 +1,6 @@
 {
   "policy": "T1024-equivalence-v1",
-  "checked_utc": "2026-10-14T14:41:46.575283+00:00",
+  "checked_utc": "2026-10-14T14:52:48.879241+00:00",
   "models": [
     {
       "model": "checkpoint80",
@@ -120,8 +120,32 @@
     },
     {
       "model": "official_ppo_v02",
-      "evaluation_complete": false,
-      "review_complete": false
+      "policy": "T1024-equivalence-v1",
+      "evaluation_complete": true,
+      "review_complete": true,
+      "n": 1024,
+      "original_correct": 485,
+      "equivalent_added": 141,
+      "incorrect": 307,
+      "uncertain": 77,
+      "label_issue": 14,
+      "pending": 0,
+      "original_em": 0.4736328125,
+      "semantic_correct_confirmed": 626,
+      "semantic_accuracy": 0.611328125,
+      "records_digest": "7b67158adb4e32efb0ce97582cbf8ac35e752785e45181d0335f8c7dcee6d1fe",
+      "sources": {
+        "nq": {
+          "n": 335,
+          "original_correct": 178,
+          "semantic_correct": 209
+        },
+        "hotpotqa": {
+          "n": 689,
+          "original_correct": 307,
+          "semantic_correct": 417
+        }
+      }
     }
   ]
 }

@@ -1,0 +1,44 @@
+{
+  "model": "official_grpo_v02",
+  "policy": "T1024-equivalence-v1",
+  "evaluation_complete": true,
+  "review_complete": true,
+  "n": 1024,
+  "original_correct": 456,
+  "equivalent_added": 131,
+  "incorrect": 335,
+  "uncertain": 87,
+  "label_issue": 15,
+  "pending": 0,
+  "original_em": 0.4453125,
+  "semantic_correct_confirmed": 587,
+  "semantic_accuracy": 0.5732421875,
+  "records_digest": "29b077346c29816132765665e8a416541a156a2618e1970cd4def79c265e4ee0",
+  "sources": {
+    "nq": {
+      "n": 335,
+      "original_correct": 173,
+      "semantic_correct": 200
+    },
+    "hotpotqa": {
+      "n": 689,
+      "original_correct": 283,
+      "semantic_correct": 387
+    }
+  },
+  "assessment": {
+    "method": "EM_false_negative_semantic_review",
+    "display_name": "LLM-as-a-Judge / Codex语义复核",
+    "reviewer": "Codex逐题审阅",
+    "policy": "T1024-equivalence-v1",
+    "scope": "仅逐题复核原始EM错误；原EM正确项保留原判",
+    "external_judge_model": null,
+    "judge_temperature": null,
+    "labels_modified": false,
+    "raw_results_modified": false,
+    "uncertain_counted_correct": false,
+    "gpu_inference_started": false,
+    "all_models_review_complete": true,
+    "checked_utc": "2026-10-14T14:52:50.093931+00:00"
+  }
+}

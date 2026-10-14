@@ -2,7 +2,7 @@
 
 根因：独立发布器以远程最新SHA为父提交，使用独立index执行commit-tree/push，未推进检出分支与主index。用户请求判断并处理。工作区原HEAD ec179e3，无独立本地提交，落后远端f90d011五个文档结果提交。
 
-首次同步先核验远程最新SHA、暂存区为空、祖先关系及远端文件已在工作区；备份所有受影响文件与主index后mixed reset快进到f90d011。70个文件原字节保留（以实际initial-sync.json计数为准），既有未提交记录保留，设置origin/data-difficulty-muxi跟踪。
+首次同步先核验远程最新SHA、暂存区为空、祖先关系及远端文件已在工作区；备份所有受影响文件与主index后mixed reset快进到f90d011。60个文件原字节保留（以实际initial-sync.json计数为准），既有未提交记录保留，设置origin/data-difficulty-muxi跟踪。
 
 修复独立发布器：Git远程验收后调用独立git_checkout_sync模块同步主分支/主index；保护不同分支、用户暂存、分叉、非文档代码变化及尚未物化远端文件。mixed不改工作树文件，不使用hard reset，不强推。备份与SHA证据在maintenance/test1024-five-models-20261014/git-checkout-sync。无推理/训练代码或参数变化。
 
