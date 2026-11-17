@@ -30,5 +30,5 @@ backend:
 output:
   root: runs/sft
   save_every_batches: 10
-  # 两份完整状态的事务峰值 + FP32 HF 导出；正式运行前按实际模型核实。
-  disk_bytes_per_parameter: 36
+  # 保存新旧两份状态与离线导出分阶段进行，取最大值并留10%余量。
+  disk_margin_ratio: 0.1

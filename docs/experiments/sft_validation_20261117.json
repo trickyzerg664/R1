@@ -55,5 +55,18 @@
     "evaluation_exclusions_complete": false
   },
   "formal_7b_training_started": false,
-  "full_7b_base_available": false
+  "full_7b_base_available": false,
+  "disk_budget_correction": {
+    "cpu_tests_passed": 26,
+    "cpu_test_seconds": 4.47,
+    "budget": {
+      "checkpoint_bytes": 91387398144,
+      "saving_peak_bytes": 182774796288,
+      "export_peak_bytes": 121849864192,
+      "margin_ratio": 0.1,
+      "required_free_bytes": 201052275917
+    },
+    "new_two_gpu_run": false,
+    "reason": "Use max(checkpoint transaction peak, offline export peak) instead of adding phases"
+  }
 }

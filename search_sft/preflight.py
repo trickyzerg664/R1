@@ -6,8 +6,25 @@ import json
 from pathlib import Path
 import shutil
 import subprocess
+import math
 from . import BASE_COMMIT
 from .common import configured_path, load_config, sha256, write_json
+
+
+def training_disk_budget(parameters, margin_ratio=0.1):
+    """当前 ZeRO-3/CPUAdam：FP32主权重+m+v=12字节/参数；梯度不进checkpoint。
+
+    保存时新旧两份状态短暂共存；离线导出时旧状态已清理，因此取阶段峰值的最大值。
+    基座权重须已存在，调用者传入的是剩余空间，不重复预留已经占用的基座文件。
+    """
+    if parameters < 1 or not math.isfinite(margin_ratio) or margin_ratio < 0:
+        raise ValueError('Positive parameter count and nonnegative finite disk margin required')
+    checkpoint = parameters * 12
+    saving_peak = checkpoint * 2
+    export_peak = checkpoint + parameters * 4
+    return {'checkpoint_bytes':checkpoint, 'saving_peak_bytes':saving_peak,
+            'export_peak_bytes':export_peak, 'margin_ratio':margin_ratio,
+            'required_free_bytes':math.ceil(max(saving_peak,export_peak)*(1+margin_ratio))}
 
 
 def verify_base(model_path, expected_path):

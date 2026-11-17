@@ -129,3 +129,15 @@ PYTHONPATH="$PWD:$PWD/.cache/sft-test-deps" \
 SDK修复仅在SFT缓存：nvcc12.1.105、cuRAND及开发库10.3.2.106；CPUAdam已实际编译加载。验证环境继承只读系统Torch，尚不能据此宣布正式全新隔离环境或7B全参资源验收完成。
 
 真实DeepSeek草案中，保留的1,814题没有观察裁剪标记；最终评价排重、数据来源及证据可见性复核仍未全部完成，status保持draft。当前尚缺符合历史哈希的完整7B基座和全部评价题单，未启动真实数据pilot/full。实际数据清单和测试摘要另见 `sft_validation_20261117.json`。
+
+## 2026-11-17：已有权重搜索与磁盘预算修正
+
+按用户要求扫描容器 `/root/myprojects` 中其它项目。完整候选有 `QDR/models/Qwen2.5-Coder-7B-Instruct`、`reward_sql/RewardSQL/checkpoints/PRM-Models`（配置来源Coder-7B-Instruct）、`reward_sql/RewardSQL/checkpoints/GRPO-Models`（Qwen3）；另有Coder-3B。`reward_sql/RewardSQL/checkpoints/qwen2.5-coder-7b-instruct` 缺前三个权重分片。两个完整Qwen2.5 7B候选的config哈希均与历史Base不同，eos_token_id为151645。未找到符合本实验身份的Qwen2.5-7B Base，不用这些候选替代正式对照基座。
+
+原255.3GiB门槛为每参数36字节，过于保守，且把保存/导出两个阶段叠加。读取已验证的双卡ZeRO-3文件确认：模型状态文件没有额外参数张量；两个optimizer分片主要保存FP32主参数和Adam m/v，总计12字节/参数（小模型共249,216字节/20,768参数），另有小量元数据和随机状态。
+
+按7,615,616,512参数估算：原始BF16/FP16权重14.2GiB；一份完整恢复状态约85.1GiB；保存新状态时两份短暂共存约170.2GiB；训练结束、旧状态清理后，一份状态加FP32导出约113.5GiB。因此取最大阶段170.2GiB，再留10%余量，新的启动门槛约187.2GiB。基座已存在时，其占用已体现在当前剩余空间中，不再重复预留。预算针对当前CPUAdam/ZeRO-3及串行训练→导出流程。
+
+实现集中在preflight.training_disk_budget，训练器记录各阶段预算和可用字节，配置改为disk_margin_ratio=0.1。新增阶段峰值、7B数值及非法输入回归。当前项目盘约214GiB，不应再按旧255GiB门槛判为硬阻塞；尚需预留下载基座和正式环境的新增占用。CPU内存估算是另一项预算，未随磁盘修正而改变。未启动真实数据训练。
+
+本次磁盘修正回归：26项CPU测试通过（4.47s），`git diff --check`通过。只调整资源门槛及其记录，没有改变训练损失、累积、保存格式或导出数学；双卡验证沿用前节已记录的首轮证据，没有重新跑GPU或真实数据训练。

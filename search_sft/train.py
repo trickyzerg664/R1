@@ -18,7 +18,7 @@ from .checkpoint import load as load_checkpoint, save as save_checkpoint
 from .common import configured_path, load_config, sha256, write_json
 from .data import global_batches, load_release, micro_slots, model_batch
 from .loss import backward_loss, target_loss_sum
-from .preflight import verify_base
+from .preflight import verify_base, training_disk_budget
 
 
 def version_check():
@@ -102,11 +102,12 @@ def run(config,stage,run_id,resume=False,stop_after_batches=None):
     model.gradient_checkpointing_enable(gradient_checkpointing_kwargs={'use_reentrant':False})
     parameters=sum(p.ds_numel if hasattr(p,'ds_numel') else p.numel() for p in model.parameters())
     def check_space():
-        required=parameters*config['output']['disk_bytes_per_parameter']
-        if shutil.disk_usage(root).free<required:
-            raise ValueError(f'Need {required} free disk bytes for rolling states and HF export')
-        return required
-    rank0_result(check_space)
+        budget=training_disk_budget(parameters,config['output'].get('disk_margin_ratio',0.1))
+        budget['available_bytes']=shutil.disk_usage(root).free
+        if budget['available_bytes']<budget['required_free_bytes']:
+            raise ValueError('Insufficient disk for sequential checkpoint/export phases: '+json.dumps(budget))
+        return budget
+    disk_budget=rank0_result(check_space)
     warmup=max(1,math.ceil(len(batches)*t['warmup_ratio']))
     def scheduler(optimizer):
         def factor(step):
@@ -119,7 +120,7 @@ def run(config,stage,run_id,resume=False,stop_after_batches=None):
     if rank==0:
         write_json(root/'run.json',{'signature':signature,'base_commit':BASE_COMMIT,'resolved_model_path':str(model_path),
                    'parameters':parameters,'planned_batches':len(batches),'training_rows':len(rows),'validation_rows':len(val),
-                   'warmup_updates':warmup,'backend':ds_config,'mode':stage,'status':'running'})
+                   'warmup_updates':warmup,'backend':ds_config,'disk_budget':disk_budget,'mode':stage,'status':'running'})
     device=torch.device('cuda',local_rank)
     engine.train()
     log=(root/'metrics.jsonl').open('a',encoding='utf-8') if rank==0 else None
