@@ -1,0 +1,59 @@
+{
+  "date": "2026-11-17",
+  "base_commit": "598e61bd1d36895726d28a8d06b3a15bed19f5d3",
+  "branch": "sft",
+  "host": "host3",
+  "container": "lzy_yolo11",
+  "path": "/root/myprojects/R1/R1",
+  "cpu_tests": {
+    "passed": 21,
+    "seconds": 4.63
+  },
+  "synthetic_two_gpu": {
+    "synthetic_only": true,
+    "world_size": 2,
+    "parameters": 20768,
+    "continuous_resume_max_abs_diff": 0.0,
+    "updated_parameter_tensors_vs_fp16_initial": 27,
+    "cold_load_verified": true,
+    "draft_observation_truncated_questions": 0
+  },
+  "deepseek_data": {
+    "status": "draft",
+    "raw_questions": 3011,
+    "raw_sha256": "d210492c2583c878f466869010a43dcb25b86161f58af5ad181c1d5197f62519",
+    "questions": 1814,
+    "statistics": {
+      "train": {
+        "questions": 1632,
+        "rows": 3897,
+        "sources": {
+          "hotpotqa": 1230,
+          "nq": 402
+        },
+        "target_tokens": 243299
+      },
+      "val": {
+        "questions": 182,
+        "rows": 440,
+        "sources": {
+          "hotpotqa": 137,
+          "nq": 45
+        },
+        "target_tokens": 27847
+      },
+      "pilot": {
+        "questions": 256,
+        "rows": 615,
+        "sources": {
+          "hotpotqa": 193,
+          "nq": 63
+        },
+        "target_tokens": 37956
+      }
+    },
+    "evaluation_exclusions_complete": false
+  },
+  "formal_7b_training_started": false,
+  "full_7b_base_available": false
+}

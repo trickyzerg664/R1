@@ -120,3 +120,12 @@ tests/e2e/toy_examples/deepspeed/synchronous/output.txt
 log/
 
 **logs
+# Local SFT environment and generated experiment assets
+/.envs/
+/.tools/
+/.cache/
+/data/sft/
+/runs/sft/
+/docs/local_environment.md
+/env/*
+!/env/sft/

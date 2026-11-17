@@ -1,0 +1,34 @@
+# 分支名只表达 SFT；具体数据、设备与模型由配置和实验文档记录。
+model:
+  path: ${R1_SFT_MODEL}
+  attention: sdpa
+  expected_hashes: configs/sft/base_model_hashes.json
+data:
+  raw_file: data/sft/raw/accepted.jsonl
+  raw_sha256: d210492c2583c878f466869010a43dcb25b86161f58af5ad181c1d5197f62519
+  release_dir: data/sft/releases/deepseek-v1
+  evaluation_manifest: data/sft/evaluation/manifest.json
+  required_evaluation_sets: [D1000, D256, T2000, T1024, T128, official_test]
+  validation_ratio: 0.1
+  pilot_questions: 256
+protocol:
+  max_target_tokens: 256
+  max_observation_tokens: 2048
+  max_total_tokens: 4096
+  max_turns: 10
+training:
+  world_size: 2
+  global_batch_size: 32
+  seed: 42
+  learning_rate: 0.000005
+  warmup_ratio: 0.05
+  betas: [0.9, 0.95]
+  weight_decay: 0.01
+  clip_grad: 1.0
+backend:
+  config: configs/sft/zero3_cpu.json
+output:
+  root: runs/sft
+  save_every_batches: 10
+  # 两份完整状态的事务峰值 + FP32 HF 导出；正式运行前按实际模型核实。
+  disk_bytes_per_parameter: 36

@@ -1,0 +1,13 @@
+# 官方工程历史依赖不整体安装；独立环境避免改变原 RL 环境。
+torch==2.4.0
+transformers==4.47.1
+deepspeed==0.15.4
+accelerate==1.2.1
+numpy==1.26.4
+PyYAML==6.0.2
+safetensors==0.4.5
+huggingface-hub==0.27.1
+pytest==8.3.4
+pandas==2.2.3
+pyarrow==18.1.0
+ninja==1.13.2
