@@ -1,6 +1,6 @@
 # 分支名只表达 SFT；具体数据、设备与模型由配置和实验文档记录。
 model:
-  path: ${R1_SFT_MODEL}
+  path: .cache/models/Qwen2.5-7B
   attention: sdpa
   expected_hashes: configs/sft/base_model_hashes.json
 data:
@@ -28,7 +28,7 @@ training:
 backend:
   config: configs/sft/zero3_cpu.json
 output:
-  root: runs/sft
+  root: /root/data/search-r1/sft-runs
   save_every_batches: 10
   # 保存新旧两份状态与离线导出分阶段进行，取最大值并留10%余量。
   disk_margin_ratio: 0.1

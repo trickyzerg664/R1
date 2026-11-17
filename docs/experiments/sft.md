@@ -1,3 +1,5 @@
+> 正式接手入口已固定为 [sft/README.md](sft/README.md)。实验设计以 PLAN.md、命令以 RUNBOOK.md、当前状态以 HANDOFF.md 为准。本文保留历史实现及验收过程，其中旧路径/旧空间门槛不是当前执行配置。
+
 # SFT：DeepSeek 搜索轨迹，host3 TITAN
 
 更新日期：2026-11-17。分支：`sft`。代码基点固定为官方 Search-R1 `598e61bd1d36895726d28a8d06b3a15bed19f5d3`。
