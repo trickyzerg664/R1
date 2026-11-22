@@ -142,12 +142,35 @@ def materialize(questions):
     return rows
 
 
+def load_review(path, source_hash):
+    """Load source-bound review decisions; keeps never bypass other filters."""
+    if path is None:
+        return {}, None
+    review = json.loads(path.read_text(encoding='utf-8'))
+    if review.get('source_sha256') != source_hash:
+        raise ValueError('Semantic review source identity mismatch')
+    decisions = {}
+    for item in review['decisions']:
+        if item['id'] in decisions or item['verdict'] not in ('keep', 'exclude', 'quarantine'):
+            raise ValueError('Invalid/duplicate semantic review decision')
+        if not item.get('reason') or not isinstance(item.get('source_line'), int):
+            raise ValueError('Review requires source line and concrete reason')
+        decisions[item['id']] = item
+    return decisions, {'path': str(path.resolve()), 'sha256': sha256(path),
+                       'reviewer': review.get('reviewer'),
+                       'scope': review.get('scope'),
+                       'verdicts': dict(Counter(x['verdict'] for x in decisions.values()))}
+
+
 def prepare(config, draft=False, output=None):
     from transformers import AutoTokenizer
     data = config['data']
     source = configured_path(data['raw_file'])
     if sha256(source) != data['raw_sha256']:
         raise ValueError('Raw data hash mismatch')
+    review_path = configured_path(data['review_manifest']) if data.get('review_manifest') else None
+    decisions, review_evidence = load_review(review_path, data['raw_sha256'])
+    review_seen = set()
     model = configured_path(config['model']['path'])
     tokenizer = AutoTokenizer.from_pretrained(model, local_files_only=True)
     eval_path = configured_path(data['evaluation_manifest']) if data.get('evaluation_manifest') else None
@@ -162,6 +185,13 @@ def prepare(config, draft=False, output=None):
         counts['raw_questions'] += 1
         key = normalize(row['question'])
         reasons = []
+        decision = decisions.get(row['id'])
+        if decision is not None:
+            if decision['source_line'] != line:
+                raise ValueError('Semantic review line/id mismatch')
+            review_seen.add(row['id'])
+            if decision['verdict'] != 'keep':
+                reasons.append('semantic_review_' + decision['verdict'])
         if key in seen:
             reasons.append('duplicate_question')
         else:
@@ -181,6 +211,8 @@ def prepare(config, draft=False, output=None):
         if reasons:
             counts.update(reasons)
             rejects.append({'id':row['id'], 'source_line':line, 'reasons':reasons})
+    if review_seen != set(decisions):
+        raise ValueError('Semantic review references missing source IDs')
     splits = split_questions(usable, config['training']['seed'], data['validation_ratio'], data['pilot_questions'])
     destination.mkdir(parents=True)
     files, stats = {}, {}
@@ -204,6 +236,7 @@ def prepare(config, draft=False, output=None):
                 'compiler_hashes':{p.name:sha256(p) for p in Path(__file__).parent.glob('*.py')},
                 'protocol':config['protocol'], 'files':files, 'statistics':stats,
                 'evaluation_exclusions_complete':complete, 'evaluation_evidence':eval_evidence,
+                'semantic_review_evidence':review_evidence,
                 'filter_counts_overlapping':dict(counts), 'usable_questions':len(usable), 'seed':config['training']['seed']}
     write_json(destination/'manifest.json', manifest)
     print(json.dumps({'release':str(destination), 'status':manifest['status'], 'statistics':stats,'filter_counts':dict(counts)},ensure_ascii=False))
