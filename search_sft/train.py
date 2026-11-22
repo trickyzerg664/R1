@@ -21,6 +21,19 @@ from .loss import backward_loss, target_loss_sum
 from .preflight import verify_base, training_disk_budget
 
 
+def parameter_probe(model):
+    """Small deterministic FP16 shard sample; consumes no training RNG."""
+    samples={}
+    for name,p in model.named_parameters():
+        value=getattr(p,'ds_tensor',p).detach().reshape(-1)
+        if p.requires_grad and name.endswith('weight') and value.numel():
+            count=min(2048,value.numel())
+            indices=torch.arange(count,device=value.device,dtype=torch.long)*(value.numel()-1)//max(1,count-1)
+            samples[name]=value.index_select(0,indices).float().cpu().clone()
+            if len(samples)==20:break
+    return samples
+
+
 def version_check():
     expected={'transformers':'4.47.1','deepspeed':'0.15.4'}
     for package,version in expected.items():
@@ -104,6 +117,17 @@ def run(config,stage,run_id,resume=False,stop_after_batches=None):
     def check_space():
         budget=training_disk_budget(parameters,config['output'].get('disk_margin_ratio',0.1))
         budget['available_bytes']=shutil.disk_usage(root).free
+        # A complete checkpoint already occupies disk on resume; avoid reserving
+        # that same checkpoint a second time against the remaining free space.
+        existing=0
+        latest=root/'checkpoints/latest.json'
+        if resume and latest.is_file():
+            tag=json.loads(latest.read_text())['tag']
+            checkpoint=(root/'checkpoints'/tag).resolve()
+            if checkpoint.parent==(root/'checkpoints').resolve() and (checkpoint/'complete.json').is_file():
+                existing=sum(min(p.stat().st_size,p.stat().st_blocks*512) for p in checkpoint.rglob('*') if p.is_file())
+        budget['existing_checkpoint_credit_bytes']=min(existing,budget['checkpoint_bytes'])
+        budget['required_free_bytes']-=budget['existing_checkpoint_credit_bytes']
         if budget['available_bytes']<budget['required_free_bytes']:
             raise ValueError('Insufficient disk for sequential checkpoint/export phases: '+json.dumps(budget))
         return budget
@@ -119,9 +143,11 @@ def run(config,stage,run_id,resume=False,stop_after_batches=None):
     if resume:state=load_checkpoint(engine,root/'checkpoints',signature)
     if rank==0:
         write_json(root/'run.json',{'signature':signature,'base_commit':BASE_COMMIT,'resolved_model_path':str(model_path),
-                   'parameters':parameters,'planned_batches':len(batches),'training_rows':len(rows),'validation_rows':len(val),
+                   'parameters':parameters,'trainable_parameters':sum(p.ds_numel if hasattr(p,'ds_numel') else p.numel() for p in model.parameters() if p.requires_grad),
+                   'planned_batches':len(batches),'training_rows':len(rows),'validation_rows':len(val),
                    'warmup_updates':warmup,'backend':ds_config,'disk_budget':disk_budget,'mode':stage,'status':'running'})
     device=torch.device('cuda',local_rank)
+    previous_probe=parameter_probe(engine.module)
     engine.train()
     log=(root/'metrics.jsonl').open('a',encoding='utf-8') if rank==0 else None
     try:
@@ -130,6 +156,8 @@ def run(config,stage,run_id,resume=False,stop_after_batches=None):
             slots=micro_slots(batch,world)
             measured=torch.zeros((),device=device)
             skipped_before=engine.skipped_steps
+            lr_used=optimizer.param_groups[0]['lr']
+            if rank==0:print(json.dumps({'phase':'training_batch_start','batch':batch_index+1,'rows':len(batch),'lr_used':lr_used}),flush=True)
             for micro_index,slot in enumerate(slots):
                 index=slot[rank]
                 row=rows[index] if index is not None else None
@@ -143,9 +171,21 @@ def run(config,stage,run_id,resume=False,stop_after_batches=None):
                 engine.step()
             dist.all_reduce(measured)
             applied=engine.skipped_steps==skipped_before
+            current_probe=parameter_probe(engine.module)
+            differences=[current_probe[name]-value for name,value in previous_probe.items()]
+            changed=sum(int(torch.count_nonzero(value)) for value in differences)
+            max_delta=max((float(value.abs().max()) for value in differences),default=0.)
+            previous_probe=current_probe
+            grad_norm=engine.get_global_grad_norm()
+            grad_norm=float(grad_norm) if grad_norm is not None else None
+            if applied and (grad_norm is None or not math.isfinite(grad_norm)):
+                raise FloatingPointError('Successful optimizer update needs finite gradient norm')
             state={'cursor':batch_index+1,'updates':state['updates']+int(applied)}
             metric={'batch':state['cursor'],'actual_updates':state['updates'],'actual_batch_rows':len(batch),
                     'loss':measured.item()/world,'lr':optimizer.param_groups[0]['lr'],'overflow_skipped':not applied,
+                    'lr_used':lr_used,'grad_norm':grad_norm,
+                    'sampled_fp16_values_changed':changed,'sampled_values':sum(x.numel() for x in current_probe.values()),
+                    'max_abs_fp16_delta':max_delta,
                     'peak_gpu_bytes':torch.cuda.max_memory_allocated(device)}
             if rank==0:log.write(json.dumps(metric)+'\n');log.flush();print(json.dumps(metric),flush=True)
             if state['cursor']%config['output']['save_every_batches']==0 or state['cursor']==len(batches):
@@ -160,6 +200,13 @@ def run(config,stage,run_id,resume=False,stop_after_batches=None):
         if rank==0:
             write_json(root/'result.json',dict(state,validation_loss=val_loss,status='complete' if state['cursor']==len(batches) else 'stopped_at_checkpoint',stage=stage,
                          formal_training_run=stage!='smoke',resume_verified=False,export_verified=False))
+        if state['cursor']==len(batches) and ds_config['zero_optimization'].get('offload_optimizer',{}).get('device')=='nvme':
+            from .export import export_native
+            def export_destination():
+                if (root/'hf').exists():raise ValueError('Do not overwrite existing HF export')
+                return str(root/'hf')
+            destination=rank0_result(export_destination)
+            export_native(engine,destination,model_path,{'signature':signature,'state':state})
     finally:
         if log:log.close()
         # 对象保持到训练结束，HF 初始化的 ZeRO 配置不能提前被垃圾回收。

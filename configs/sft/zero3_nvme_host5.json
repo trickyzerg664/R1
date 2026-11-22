@@ -1,0 +1,55 @@
+{
+  "train_batch_size": 32,
+  "train_micro_batch_size_per_gpu": 1,
+  "gradient_accumulation_steps": 32,
+  "gradient_clipping": 1.0,
+  "communication_data_type": "fp32",
+  "fp16": {
+    "enabled": true,
+    "loss_scale": 0,
+    "initial_scale_power": 4
+  },
+  "bf16": {
+    "enabled": false
+  },
+  "optimizer": {
+    "type": "AdamW",
+    "params": {
+      "lr": 5e-06,
+      "betas": [
+        0.9,
+        0.95
+      ],
+      "eps": 1e-08,
+      "weight_decay": 0.01
+    }
+  },
+  "zero_optimization": {
+    "stage": 3,
+    "offload_optimizer": {
+      "device": "nvme",
+      "nvme_path": "/root/data/search-r1/sft-resource-checks/host5-sft-swap-20261119/pilot-v2",
+      "buffer_count": 4,
+      "pin_memory": false,
+      "pipeline_read": false,
+      "pipeline_write": false,
+      "fast_init": false
+    },
+    "contiguous_gradients": true,
+    "overlap_comm": false,
+    "reduce_bucket_size": 10000000,
+    "stage3_prefetch_bucket_size": 10000000,
+    "stage3_param_persistence_threshold": 100000,
+    "sub_group_size": 20000000,
+    "stage3_gather_16bit_weights_on_model_save": true
+  },
+  "steps_per_print": 1000000,
+  "wall_clock_breakdown": false,
+  "aio": {
+    "block_size": 1048576,
+    "queue_depth": 8,
+    "thread_count": 1,
+    "single_submit": false,
+    "overlap_events": false
+  }
+}

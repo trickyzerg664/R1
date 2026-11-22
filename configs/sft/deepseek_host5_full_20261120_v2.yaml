@@ -1,0 +1,41 @@
+model:
+  path: .cache/models/Qwen2.5-7B
+  attention: sdpa
+  expected_hashes: configs/sft/base_model_hashes.json
+data:
+  raw_file: data/sft/raw/accepted.jsonl
+  raw_sha256: d210492c2583c878f466869010a43dcb25b86161f58af5ad181c1d5197f62519
+  release_dir: data/sft/releases/deepseek-host5-20261120-holdout-v3
+  evaluation_manifest: data/sft/evaluation/manifest.json
+  required_evaluation_sets:
+  - D1000
+  - D256
+  - T2000
+  - T1024
+  - T128
+  - official_test
+  validation_ratio: 0.1
+  pilot_questions: 256
+  review_manifest: data/sft/reviews/host5-evidence-20261119-v1.json
+protocol:
+  max_target_tokens: 256
+  max_observation_tokens: 2048
+  max_total_tokens: 4096
+  max_turns: 10
+training:
+  world_size: 1
+  global_batch_size: 32
+  seed: 42
+  learning_rate: 5.0e-06
+  warmup_ratio: 0.05
+  betas:
+  - 0.9
+  - 0.95
+  weight_decay: 0.01
+  clip_grad: 1.0
+backend:
+  config: configs/sft/zero3_nvme_host5_full_20261120_v2.json
+output:
+  root: /root/data/search-r1/sft-runs
+  save_every_batches: 10
+  disk_margin_ratio: 0.1

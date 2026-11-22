@@ -8,6 +8,27 @@ from pathlib import Path
 from .common import configured_path, load_config, write_json
 
 
+def export_native(engine, output, model_path, provenance):
+    """Save execution-precision weights while NVMe optimizer state is live."""
+    import torch
+    import torch.distributed as dist
+    from transformers import AutoConfig, AutoTokenizer
+    out = Path(output)
+    if not engine.save_16bit_model(str(out), save_filename='pytorch_model.bin'):
+        raise RuntimeError('DeepSpeed native FP16 export did not save weights')
+    if dist.get_rank() == 0:
+        config = AutoConfig.from_pretrained(model_path, local_files_only=True)
+        config.torch_dtype = torch.float16
+        config.save_pretrained(out)
+        AutoTokenizer.from_pretrained(model_path, local_files_only=True).save_pretrained(out)
+        source = Path(model_path) / 'generation_config.json'
+        if source.is_file():
+            shutil.copyfile(source, out / source.name)
+        write_json(out / 'sft_provenance.json', dict(provenance,
+            export_precision='fp16', method='DeepSpeed.save_16bit_model'))
+    dist.barrier()
+
+
 def export(checkpoints, output, model_path):
     from deepspeed.utils.zero_to_fp32 import convert_zero_checkpoint_to_fp32_state_dict
     from transformers import AutoConfig,AutoTokenizer
