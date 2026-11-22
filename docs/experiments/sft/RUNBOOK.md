@@ -125,3 +125,20 @@ bash scripts/sft/run_host3.sh full --run-id 原full标识 --resume
 评价在独立冻结工作区加载Base/RL60/RL80/SFT四组，按PLAN统一设置。复用已有Wiki/E5/索引/Arrow缓存，不在SFT期间同时加载60GiB索引。正式评价前做固定查询和模型回归。用户尚未指定该评价工作区的最终路径，需在建立时登记，不假定本分支已有完整统一评价入口。
 
 每次结束或交接：更新HANDOFF中的代码、状态、日志/产物、阻塞、下一条可执行步骤；更新真实run记录。只有实际检查过的进程、模型或checkpoint才能写“已验证”。
+
+
+## host5迁移补充 2026-11-18T22:42:57.899256+08:00
+
+host5入口：ssh host5，然后docker exec -it lzy bash；项目目录source scripts/sft/host5_env.sh。原run_host3.sh硬编码两rank，host5单卡不得直接使用其训练入口；正式运行和资源配置门禁见HOST5_MIGRATION.md。
+
+## host5单卡入口（2026-11-19）
+
+新增scripts/sft/run_host5.sh和configs/sft/deepseek_host5.yaml；world1、global32、micro1、累积32，原host3入口保留。CPU卸载是否适用于host5仍由独立资源候选决定。正式pilot必须等待final数据、资源验收和环境快照；当前未启动。命令：bash scripts/sft/run_host5.sh pilot --run-id host5-pilot-20261119-v1。此处仅为待执行命令，不作为已启动记录。
+
+## host5磁盘卸载正式SFT（2026-11-19）
+
+configs/sft/deepseek_host5.yaml现在选择zero3_nvme_host5.json，临时工作目录为/root/data/search-r1/sft-resource-checks/host5-sft-swap-20261119/pilot。冻结复核清单并prepare新final后启动pilot。NVMe后端训练末尾自动原生FP16导出，训练结束运行bash scripts/sft/run_host5.sh export --output /root/data/search-r1/sft-runs/实际run_id/hf --verify-only做独立冷加载。不得把CPU失败或合成输入记为正式SFT步数。
+
+## Host5 full run with independent test holdout, 2026-11-20
+
+Run in host5/lzy from the repository root. Supervisor: .cache/host5-full-20261120-v2/controller.py. Training command: SFT_CONFIG=configs/sft/deepseek_host5_full_20261120_v2.yaml bash scripts/sft/run_host5.sh full --run-id host5-full-20261120-v2. This is a fresh Base run. The test questions and gold answers are in data/sft/releases/deepseek-host5-20261120-holdout-v3/test_questions.jsonl. The training loader reads only train and validation.

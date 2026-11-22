@@ -23,6 +23,7 @@
 - 原始3,011题，73,835,966字节。
 - SHA256：`d210492c2583c878f466869010a43dcb25b86161f58af5ad181c1d5197f62519`。
 - 只用该thinking-disabled、content显式think的DeepSeek成功批次；失败history不拼入监督数据，原始文件只读保留。
+- 原始7,166个已接受轮次的请求模型均为 `deepseek-v4-flash-0731`，响应模型标识均为 `deepseek-v4-flash-ga-260731`，temperature=0.7、thinking.type=disabled；这些是教师生成参数，学生评价仍按第6节greedy口径。
 
 ## 3. 数据政策与最终发布
 
@@ -92,3 +93,63 @@
 修改基座、数据筛选、监督目标、长度、训练组、超参数或评价规则时，追加新版本、变更原因和受影响运行；历史版本保留。部署路径、下载进度和资源快照更新HANDOFF，实际命令更新RUNBOOK。
 
 历史结果依据：`docs/experiments/evidence/metax-five-model-test1024-20261014-v1/` 在GitHub的 `6ff2d742` 版本。原始Base严格EM229/1024，RL60为475/1024，RL80为488/1024；新硬件/后端正式对照需统一重评，不直接混用旧分数。
+
+## 资源验证补充 v1.1（2026-11-18）
+
+用户授权在现有设备验证全参数SFT。使用real7b-feasibility-20261118-v1独立scratch与合成4096-token输入；先测原CPU optimizer offload，如触及内存保护则另测NVMe卸载。后者仅为资源候选，须记录实际配置、保存恢复与冷加载结果；正式训练配置、数据与比较方案不自动变更。
+
+## 资源验证补充 v1.2（2026-11-18）
+
+设备恢复后用户明确要求双卡试验。real7b-dual-20261118-v2沿用v1.0真实7B、全参数、4K/global32/CPU optimizer offload；新增独立源码的同步阶段日志与FP32主参数探针，并核对实际模块路径。只测试合成输入；正式数据和训练配置不变。
+
+## 资源验证补充 v1.2（2026-11-18）
+
+设备恢复后用户明确要求双卡试验。real7b-dual-20261118-v3沿用v1.0真实7B、全参数、4K/global32/CPU optimizer offload；新增独立源码的同步阶段日志与FP32主参数探针，并核对实际模块路径。只测试合成输入；正式数据和训练配置不变。
+
+## 资源验证补充 v1.2（2026-11-18）
+
+用户确认物理GPU0空闲后要求单卡试验；world1、global32、累积32，仅绑定GPU0 UUID。real7b-single-20261118-v1沿用v1.0真实7B、全参数、4K/global32/CPU optimizer offload；新增独立源码的同步阶段日志与FP32主参数探针，并核对实际模块路径。只测试合成输入；正式数据和训练配置不变。
+
+## 资源验证补充 v1.4（2026-11-18）
+
+用户确认物理GPU1空闲后要求单卡试验；world1、global32、累积32，仅绑定GPU1 UUID。real7b-single-gpu1-20261118-v1沿用v1.0真实7B、全参数、4K/global32/CPU optimizer offload；新增独立源码的同步阶段日志与FP32主参数探针，并核对实际模块路径。只测试合成输入；正式数据和训练配置不变。
+
+## 资源验证补充 v1.4（2026-11-18）
+
+用户确认物理GPU1空闲后要求单卡试验；world1、global32、累积32，仅绑定GPU1 UUID。real7b-single-gpu1-20261118-v2沿用v1.0真实7B、全参数、4K/global32/CPU optimizer offload；新增独立源码的同步阶段日志与FP32主参数探针，并核对实际模块路径。只测试合成输入；正式数据和训练配置不变。
+
+## 资源验证补充 v1.5（2026-11-18）
+
+用户确认物理GPU1空闲后要求单卡试验；world1、global32、累积32，仅绑定GPU1 UUID。real7b-single-gpu1-gloo-20261118-v3沿用v1.0真实7B、全参数、4K/global32/CPU optimizer offload；单卡通信后端改为Gloo避开故障卡NVML枚举，并新增独立源码的同步阶段日志与FP32主参数探针，并核对实际模块路径。只测试合成输入；正式数据和训练配置不变。
+
+## 资源验证补充 v1.6（2026-11-18）
+
+用户确认物理GPU1空闲后要求单卡试验；world1、global32、累积32，仅绑定GPU1 UUID。real7b-single-gpu1-nvme-20261118-v4沿用v1.0真实7B、全参数、4K/global32/NVMe optimizer offload；单卡通信后端改为Gloo避开故障卡NVML枚举，并新增独立源码的同步阶段日志与FP32主参数探针，并核对实际模块路径。只测试合成输入；正式数据和训练配置不变。
+
+## host5资源候选 v1.7（2026-11-19）
+
+host5-real7b-cpu-20261119-v1：单卡world1/global32/accum32，原CPU optimizer offload及NCCL；资源合成run使用warmup0验证两次非零更新，正式pilot/full仍5% warmup。复用迁移环境快照并冻结包版本；候选通过不自动发布draft数据。内存/磁盘保护和实际结果见runs/host5-real7b-cpu-20261119-v1.md。
+
+## host5单卡部署 v1.8（2026-11-19）
+
+用户授权准备完成后开始host5实验；正式候选独立config采用world1、global32、累积32，其余模型、教师来源、监督目标、学习率及5%预热不变。沿用已迁入并完成26项CPU/扩展/GPU检查的环境快照，pip清单存资源候选，未将其表述为全新隔离安装。历史评测清单恢复、语义复核及final发布仍需实际完成。
+
+更正资源v1.7预期：调度源码warmup=max(1,...)，故资源配置虽warmup_ratio=0，实际仍有一步零学习率预热；两批只期望第二批非零变化，不能写成两次非零更新。
+
+## host5正式SFT部署 v1.9（2026-11-19）
+
+用户明确要求正式教师轨迹SFT，不继续合成资源短跑。沿用host3通过的磁盘optimizer offload、FP16/SDPA/ZeRO3/world1/global32/accum32，host5健康单卡使用已通过基础检查的NCCL。磁盘工作区实际在SATA SSD(/dev/sda2)，DeepSpeed配置device=nvme是磁盘后端名称，不把该物理盘称为NVMe；checkpoint与HF输出仍在NVMe(/dev/nvme0n1p5)。正式warmup5%、学习率等不变。
+
+原CPU候选在首次optimizer边界MemAvailable<4GiB停止，0次完成更新，保留失败日志。host5旧checkpoint1重复副本已整理释放约85GiB，host3原件、host5 checkpoint2与HF保留。磁盘后端资源机制已有host3真实7B证据；host5只通过基础环境检查，pilot本身记录本机实际运行结果，不另启动smoke。
+
+完成原固定D1000/D256/T2000/T1024/T128及官方全测试集排重。补充逐题证据复核清单，对缺少关键事实支持的跳跃隔离、矛盾推理剔除，保留确有证据的所有格/别名/计算等情况；原始教师文件不变，复核决策身份写入新release。该复核由助手执行，不冒称用户人工审核全部完成。
+
+磁盘optimizer训练末尾采用已在host3验证的DeepSpeed原生FP16 HF导出；训练退出后另起CPU新进程冷加载。无需使用不支持该NVMe外置状态的FP32离线合并。恢复磁盘预检扣除已存在完整checkpoint的占用；记录实际lr_used、有限梯度与小样本参数变化，区分零学习率预热步和非零更新。
+
+## host5记录逻辑修正 v1.10（2026-11-19）
+
+只修复参数采样基准的初始化作用域，不改损失、模型、数据、超参数。v1无完整checkpoint，重启使用新run_id v2及新swap子目录，从同一Base开始，保留失败历史。不把已完成lr0引擎调用当成非零权重更新。
+
+## Host5 full SFT holdout, 2026-11-20
+
+Keep the existing 166-question validation set. Freeze a distinct 331-question test set (about 20% of the audited source pool) from the same audited teacher release, stratified by source with SHA-256 seed 42, excluding pilot train/validation exposure and known exact overlap with the historical RL training pool. Exclude those test questions and their trajectories from full train, and check normalized and near-duplicate overlap against the remaining train and validation. The test set is reserved for final evaluation. Full initializes the original Qwen2.5-7B Base and a new optimizer, with the pilot hyperparameters and an independent offload directory.
